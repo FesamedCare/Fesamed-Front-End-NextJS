@@ -5,7 +5,7 @@ import Footer from "./ui/navigation/footer";
 import { Metadata } from "next";
 
 export const metadata: Metadata =  {
-  title: 'Fesamed Care',
+  title: 'FesamedCare',
 }
 
 export default function Home() {
