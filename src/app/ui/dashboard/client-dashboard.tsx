@@ -3,26 +3,46 @@
 import { FiEdit2, FiChevronRight, FiHeart, FiHelpCircle, FiLogOut, FiSettings, FiShield } from 'react-icons/fi';
 import Link from 'next/link';
 import { useState } from 'react';
+import { on } from 'events';
 
 export default function ClientDashboard() {
-  const [activeTab, setActiveTab] = useState('proximas');
+    const [activeTab, setActiveTab] = useState('proximas');
+    const [errorMessage, setErrorMessage] = useState('');
 
 
+    const handleLogout = async () => {
+        try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/logout`, {
+            method: 'POST',
+            credentials: 'include',
+        });
 
+        if (response.ok) {
+            alert('Sesión cerrada con éxito');
+            window.location.href = '/login';
+            
+        } else {
+            const data = await response.json();
+            setErrorMessage(data.message || 'Error al cerrar sesión');
+        }
+        } catch (error) {
+        console.error(error);
+        setErrorMessage('Error de red. Inténtalo de nuevo.');
+        }
+    };
 
-  const handleFileChange = () => {   
-  }
-
-  const handleFileUpload = async () => {
-  }
-
-  //dummy data until fetch data from the server
-    const userData = {
-        name: 'David',
-        phone_number: '+57 3207263798',
-        email: 'example@fesamed.com'
+    const handleFileChange = () => {   
     }
- 
+
+    const handleFileUpload = async () => {
+    }
+
+    //dummy data until fetch data from the server
+        const userData = {
+            name: 'David',
+            phone_number: '+57 3207263798',
+            email: 'example@fesamed.com'
+        }
 
   return (
 
@@ -65,19 +85,19 @@ export default function ClientDashboard() {
               { icon: FiSettings, text: 'Configuración' },
               { icon: FiHelpCircle, text: 'Ayuda y Soporte' },
               { icon: FiShield, text: 'Terminos y Condiciones' },
-              { icon: FiLogOut, text: 'Salir', className: 'text-red-500' },
+              { icon: FiLogOut, text: 'Salir', className: 'text-red-500', onClick: handleLogout },
             ].map((item, index) => (
-              <Link 
+              <div 
               key={index}
-              href={item.path || '/'}
-              className={`w-full flex justify-between items-center p-2 rounded hover:bg-gray-100 ${item.className || ''}`}
+              onClick={item.onClick}
+              className={`w-full flex cursor-pointer justify-between items-center p-2 rounded hover:bg-gray-100 ${item.className || ''}`}
               >
                 <div className="flex items-center">
                   <item.icon className="mr-2 h-4 w-4" />
                   {item.text}
                 </div>
                 <FiChevronRight className="h-4 w-4" />
-              </Link>
+              </div>
             ))}
           </div>
           <div>
