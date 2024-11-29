@@ -1,7 +1,49 @@
+'use client';
+
 import { form } from "framer-motion/client";
 import Link from "next/link";
+import { useState } from "react";
+import { on } from "stream";
+
 
 function Form() {
+  const [errorMessage, setErrorMessage] = useState(''); 
+
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+});
+
+const { email, password } = formData;
+
+const onChange = (e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+
+      e.preventDefault();
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ username: email, password }),
+          credentials: "include", // Importante para incluir cookies
+        });
+
+        console.log(response);
+
+        if (response.ok) {
+          alert("Inicio de sesión exitoso");
+          window.location.href = "/dashboard";
+        } else {
+          const data = await response.json();
+          setErrorMessage(data.detail || "Error al iniciar sesión");
+        }
+      } catch (err) {
+        console.error(err);
+        setErrorMessage("Error de red. Inténtalo de nuevo.");
+      }
+  
+}
   return (
     <div className="pt-16">
       <section className="bg-white">
@@ -15,13 +57,13 @@ function Form() {
                 Esperamos que estés bien!
               </p>
               <div className="flex flex-col items-center">
-                <form className="flex flex-col gap-6 w-80" action="#">
+                <form onSubmit={onSubmit} className="flex flex-col gap-6 w-80" action="#">
                   <div>
                     <input
                       type="email"
                       name="email"
-                      // value={}
-                      // onChange={e => {}}
+                      value={email}
+                      onChange={e => {onChange(e)}}
                       id="email"
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 "
                       placeholder="Correo"
@@ -32,8 +74,8 @@ function Form() {
                     <input
                       type="password"
                       name="password"
-                      // value={password}
-                      // onChange={e =>{}}
+                      value={password}
+                      onChange={e =>{onChange(e)}}
                       id="password"
                       placeholder="Contraseña"
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 "

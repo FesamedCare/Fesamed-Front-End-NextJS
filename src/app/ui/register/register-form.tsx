@@ -1,8 +1,90 @@
+'use client';
+
 import Link from "next/link";
 import "@/app/globals.css";
+import { useState } from "react";
 
 
 function Form() {
+      //manejos de estados
+      const [enabled, setEnabled] = useState(false);// Estado para manejar  si se aceptan los términos y condiciones
+      const [errorMessage, setErrorMessage] = useState('');// Estado para manejar los mensajes de error
+      const [errorAuth, setErrorAuth] = useState(null);// Estado para manejar los errores
+
+      //manejo de datos del formulario
+
+    const [formData, setFormData] = useState({
+      name: '',
+      lastname: '',
+      email: '',
+      plain_password: '',
+      plain_password_confirm: ''
+  });
+
+  const {
+      name,
+      lastname,
+      email,
+      plain_password,
+      plain_password_confirm
+  } = formData;
+  
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const onCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => setEnabled(e.target.checked);
+
+  //manejo de submit del formulario
+
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) =>{
+      e.preventDefault();
+
+      if (plain_password !== plain_password_confirm) {
+          alert('Las contraseñas no coinciden');
+          return;
+      }
+      if (enabled) {
+         const fetchData = async () => {
+              try {
+                  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/register`, {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ name, lastname, email, plain_password, plain_password_confirm })
+                      
+                  });
+                  const data = await res.json();
+                  if (res.status === 201) {
+                    setFormData({
+                        name: '',
+                        lastname: '',
+                        email: '',
+                        plain_password: '',
+                        plain_password_confirm: ''
+                    });
+                    
+                console.log(res.status);
+                console.log(data);
+                alert('Usuario creado correctamente');
+                // redireccionar a la página de inicio de sesión
+                window.location.href = '/login';
+                  } else {
+                      setErrorAuth(data.detail);
+                  }
+              } catch (error) {
+                  console.error(error);
+              }
+            } 
+            fetchData();
+            setErrorMessage('');
+      }
+            else {
+          setErrorMessage('Debes aceptar los terminos y condiciones');
+      }
+      
+  }
+
     return (
         <div className="pt-16">
           <section className="bg-white">
@@ -16,13 +98,13 @@ function Form() {
                     Estamos aquí para ayudarte!
                   </p>
                   <div className="flex flex-col items-center gap-1">
-                    <form  className="flex flex-col gap-5 w-80" action="#">
+                    <form onSubmit={onSubmit}  className="flex flex-col gap-5 w-80" action="#">
                       <div>
                         <input 
                           type="text" 
                           name="name"
-                        //   value={name}
-                        //   onChange={} 
+                          value={name}
+                          onChange={onChange}
                           id="name" 
                           className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full px-2.5" 
                           placeholder="Nombre" 
@@ -33,8 +115,8 @@ function Form() {
                         <input 
                           type="text" 
                           name="lastname"
-                        //   value={lastname}
-                        //   onChange={onChange} 
+                          value={lastname}
+                          onChange={onChange} 
                           id="lastname" 
                           className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full px-2.5" 
                           placeholder="Apellido" 
@@ -45,8 +127,8 @@ function Form() {
                         <input 
                           type="email" 
                           name="email"
-                        //   value={email}
-                        //   onChange={onChange} 
+                          value={email}
+                          onChange={onChange} 
                           id="email" 
                           className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" 
                           placeholder="Correo" 
@@ -57,8 +139,8 @@ function Form() {
                         <input 
                           type="password" 
                           name="plain_password"
-                        //   value={plain_password}
-                        //   onChange={onChange} 
+                          value={plain_password}
+                          onChange={onChange} 
                           id="password" 
                           placeholder="Contraseña" 
                           className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" 
@@ -69,8 +151,8 @@ function Form() {
                         <input 
                           type="password" 
                           name="plain_password_confirm"
-                        //   value={plain_password_confirm}
-                        //   onChange={onChange}
+                          value={plain_password_confirm}
+                          onChange={onChange}
                           id="plain_password_confirm" 
                           placeholder="Confirmar Contraseña" 
                           className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" 
@@ -82,8 +164,8 @@ function Form() {
                           <input 
                             type="checkbox" 
                             id="terms"
-                            // checked={enabled}
-                            // onChange={onCheckboxChange}
+                            checked={enabled}
+                            onChange={onCheckboxChange}
                             className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300"
                           />
                         </div>
@@ -96,8 +178,8 @@ function Form() {
                           </label>
                         </div>
                       </div>
-                      {/* {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-                      {errorAuth && <p style={{ color: 'red' }}>{errorAuth}</p>} */}
+                      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+                      {errorAuth && <p style={{ color: 'red' }}>{errorAuth}</p>}
                       <button 
                         type="submit" 
                         className="w-full text-white bg-blue-950 hover:bg-primary-700 focus:ring-2 focus:outline-none focus:ring-blue-300 focus:text-blue-500 focus:bg-white font-medium rounded-full text-lg px-5 py-1.5 text-center"
