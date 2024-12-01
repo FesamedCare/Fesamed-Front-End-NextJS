@@ -9,43 +9,47 @@ type BlogSearchProps = {
   setPosts: (posts: Post[]) => void;
 };
 
-export default function BlogSearch({ setPosts } : BlogSearchProps) {
+export default function BlogSearch({ setPosts }: BlogSearchProps) {
   const [category, setCategory] = useState('All');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-
-  const fetchPosts = useCallback(async (selectedCategory:any) => {
+  const fetchPosts = useCallback(async (selectedCategory: string) => {
     setLoading(true);
     try {
-      const queryParams = new URLSearchParams({
-        category: selectedCategory !== 'All' ? selectedCategory : '',
-        limit: '6',
-        offset: '0',
-      });
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/?${queryParams.toString()}`);
+      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/posts`;
+  
+        // Construimos los parámetros de consulta
+    const queryParams = new URLSearchParams({
+      limit: '6',
+      offset: '0',
+      ...(selectedCategory !== 'All' && { category: selectedCategory }) // Solo agrega categoría si no es "All"
+    });
+  
+      const response = await fetch(`${endpoint}?${queryParams.toString()}`);
+      console.log(`${endpoint}?${queryParams.toString()}`)
       const data = await response.json();
-      console.log('posts',data.posts);
+      console.log('posts', data.posts);
       setPosts(data.posts);
     } catch (error) {
-    // Convertimos el error a string de forma segura
-    const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error inesperado';
-    setError(errorMessage);
-    console.error(error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Ocurrió un error inesperado';
+      setError(errorMessage);
+      console.error(error);
     } finally {
       setLoading(false);
     }
-  }, [setPosts]); // Añade setPosts como dependencia si es necesario
+  }, [setPosts]);
+  
 
   useEffect(() => {
     fetchPosts(category);
-  }, [category, fetchPosts]); // Añade category y fetchPosts como dependencias
+  }, [category, fetchPosts]);
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedCategory = e.target.value;
     setCategory(selectedCategory);
-    console.log('selectedCategory',selectedCategory);
+    console.log('selectedCategory', selectedCategory);
   };
 
   return (
@@ -58,9 +62,9 @@ export default function BlogSearch({ setPosts } : BlogSearchProps) {
             onChange={handleCategoryChange}
             className="w-full appearance-none bg-white border border-gray-300 rounded-md py-2 pl-3 pr-10 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option>Todas</option>
-            <option>Odontologia</option>
-            <option>Nutricion</option>
+            <option value="All">Todas</option>
+            <option value="Odontologia">Odontología</option>
+            <option value="Nutricion">Nutrición</option>
           </select>
         </div>
 
@@ -84,9 +88,25 @@ export default function BlogSearch({ setPosts } : BlogSearchProps) {
       <div className="mt-4 h-2">
         {loading ? (
           <div className="text-center">
-            <svg className="animate-spin h-5 w-5 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            <svg
+              className="animate-spin h-5 w-5 text-blue-500 mx-auto"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8H4z"
+              ></path>
             </svg>
           </div>
         ) : (
