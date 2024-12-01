@@ -2,6 +2,7 @@ import { FC } from 'react';
 import PropTypes from 'prop-types'; // Importar PropTypes para validación de tipos
 import { Post } from '../../types/types';
 import Link from 'next/link'; 
+import Image from 'next/image';
 
 
 interface BlogCardHorizontalProps {
@@ -21,10 +22,12 @@ export const BlogCardHorizontal: FC<BlogCardHorizontalProps> = ({ posts }) => {
             {posts?.map((post) => (
               <div key={post.id} className="flex flex-col overflow-hidden rounded-lg shadow-navbar">
                 <div className="flex-shrink-0">
-                  <img
+                  <Image
                     className="h-48 w-full object-cover"
-                    src={post.thumbnail || "https://via.placeholder.com/400"} // Placeholder por si no hay thumbnail
+                    src={post.thumbnail?.url || "https://via.placeholder.com/400"} // Placeholder por si no hay thumbnail
                     alt={post.title}
+                    width={400}
+                    height={200}
                   />
                 </div>
                 <div className="flex flex-1 flex-col justify-between bg-white p-6">
