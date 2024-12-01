@@ -1,15 +1,17 @@
 export interface Post {
+  id: string;
+  title: string;
+  description: string;
+  slug: string;
+  category: {
     id: number;
-    title: string;
-    content: string;
-    description?: string;
+    name: string;
     slug: string;
-    thumbnail?: string;
-    category?: {
-      slug: string;
-      name: string;
-    };
-    time_read: number;
-    published: string;
-  }
-  
+    views: number;
+  };
+  thumbnail: {
+    url: string;
+  } | null; // Puede ser un objeto o null
+  time_read: number;
+  published: string;
+}
