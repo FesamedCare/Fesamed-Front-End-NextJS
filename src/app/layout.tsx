@@ -9,6 +9,9 @@ export const metadata: Metadata = {
     default: 'FesamedCare',
   },
   description: 'FesamedCare es una plataforma innovadora con sede en Cali, Colombia, dedicada a mejorar la calidad de vida de las personas a través de servicios médicos y dentales de primera clase.',
+  icons: {
+    icon: '/favicon.png',
+  }
 }
 
 export default function RootLayout({
