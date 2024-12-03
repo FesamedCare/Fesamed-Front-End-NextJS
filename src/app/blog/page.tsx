@@ -3,16 +3,18 @@ import { BlogCardHorizontal } from "../ui/blog/blog-card";
 import { Post } from "../types/types";
 import { Metadata } from "next";
 
-export const metadata: Metadata =  {
-  title: 'Blog',
-}
+export const metadata: Metadata = {
+  title: "Blog",
+};
 
 interface PageProps {
   searchParams: { category?: string };
 }
 
 export default async function Page({ searchParams }: PageProps) {
-  const category = searchParams.category || "All";
+  // Acceder a `searchParams` de manera asíncrona
+  const params = await searchParams;
+  const category = params.category || "All";
 
   const queryParams = new URLSearchParams({
     limit: "6",
