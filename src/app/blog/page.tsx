@@ -2,6 +2,7 @@ import BlogSearch from "../ui/blog/categoriesHeader";
 import { BlogCardHorizontal } from "../ui/blog/blog-card";
 import { Post } from "../types/types";
 import { Metadata } from "next";
+import Footer from "../ui/navigation/footer";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -33,6 +34,7 @@ export default async function Page({ searchParams }: PageProps) {
     <div>
       <BlogSearch selectedCategory={category} />
       <BlogCardHorizontal posts={posts} />
+      <Footer />
     </div>
   );
 }

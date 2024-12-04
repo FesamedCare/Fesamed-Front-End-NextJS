@@ -12,7 +12,7 @@ interface BlogCardHorizontalProps {
 export const BlogCardHorizontal: FC<BlogCardHorizontalProps> = ({ posts }) => {
 
   // Verificar si no hay posts
-  if (posts?.length === 0) return <div>No posts available</div>; 
+  if (posts?.length === 0) return <div className='flex items-center justify-center text-gray-400'>No posts available</div>; 
 
   return (
     <div className="bg-gray-50 py-12 sm:py-16 lg:py-20">
@@ -28,6 +28,7 @@ export const BlogCardHorizontal: FC<BlogCardHorizontalProps> = ({ posts }) => {
                     alt={post.title}
                     width={400}
                     height={200}
+                    priority
                   />
                 </div>
                 <div className="flex flex-1 flex-col justify-between bg-white p-6">
