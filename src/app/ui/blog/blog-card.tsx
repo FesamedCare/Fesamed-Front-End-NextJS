@@ -22,6 +22,7 @@ export const BlogCardHorizontal: FC<BlogCardHorizontalProps> = ({ posts }) => {
             {posts?.map((post) => (
               <div key={post.id} className="flex flex-col overflow-hidden rounded-lg shadow-navbar">
                 <div className="flex-shrink-0">
+                  <Link href={`blog/${post.slug}`}>
                   <Image
                     className="h-48 w-full object-cover"
                     src={post.thumbnail?.url || "https://via.placeholder.com/400"} // Placeholder por si no hay thumbnail
@@ -30,15 +31,16 @@ export const BlogCardHorizontal: FC<BlogCardHorizontalProps> = ({ posts }) => {
                     height={200}
                     priority
                   />
+                  </Link>
                 </div>
                 <div className="flex flex-1 flex-col justify-between bg-white p-6">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-blue-600">
-                      <Link href={`/category/${post.category?.slug}`} className="hover:underline">
+                      <Link href={`blog/category/${post.category?.slug}`} className="hover:underline">
                         {post.category?.name || "Uncategorized"}
                       </Link>
                     </p>
-                    <Link href={`/posts/${post.slug}`} className="mt-2 block">
+                    <Link href={`blog/${post.slug}`} className="mt-2 block">
                       <p className="text-xl font-semibold text-gray-900 line-clamp-2">{post.title}</p>
                       <p className="mt-3 text-base text-gray-500 line-clamp-2">{post.description}</p>
                     </Link>
