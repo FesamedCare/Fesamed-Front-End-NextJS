@@ -15,3 +15,29 @@ export interface Post {
   time_read: number;
   published: string;
 }
+export interface Doctor {
+  id: string
+  name: string
+  profilePicture: string
+  specialty: string
+  location: string
+  about: string
+  stats: {
+    patients: number
+    experience: number
+    rating: number
+    reviews: number
+  }
+  workingHours: string
+}
+
+export interface TimeSlot {
+  time: string
+  available: boolean
+}
+
+export interface AppointmentFormData {
+  date: Date | undefined
+  timeSlot: string | undefined
+}
+

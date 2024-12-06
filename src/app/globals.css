@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+html body[data-scroll-locked] {
+  overflow: visible !important;
+  margin-right: 0 !important;
+} 
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -272,3 +277,4 @@ opacity: 8%;
 .custom-phone-input .form-control {
 padding: 8px 14px 8px 58px !important; /* Ajusta los valores según lo que prefieras */
 }
+

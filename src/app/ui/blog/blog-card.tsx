@@ -15,7 +15,7 @@ export const BlogCardHorizontal: FC<BlogCardHorizontalProps> = ({ posts }) => {
   if (posts?.length === 0) return <div className='flex items-center justify-center text-gray-400'>No posts available</div>; 
 
   return (
-    <div className="bg-gray-50 py-12 sm:py-16 lg:py-20">
+    <div className="bg-white py-12 sm:py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:max-w-none">
           <div className="grid gap-8 lg:grid-cols-3">
