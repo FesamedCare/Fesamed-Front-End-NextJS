@@ -145,9 +145,9 @@ export default function Form () {
                         name='budget'
                         onChange={e=>{}}
                         // value={budget}
-                        className="block w-full pl-3 pr-10 rounded-md text-base border text-gray-500 border-gray-300 "
+                        className="block py-2 w-full pl-3 pr-10 rounded-md text-base border text-gray-500 border-gray-300 "
                     >
-                        <option value="" className="text-gray-400">Selecciona un presupuesto (Optional)</option>
+                        <option value="" className="text-gray-400">Selecciona un presupuesto (Opcional)</option>
                         <option value="0-5k" className="text-gray-600">$0 - 5000</option>
                         <option value="5-10k" className="text-gray-600">$5,000 - 10,000</option>
                         <option value="10-25k" className="text-gray-600">$10,000 - 25,000</option>

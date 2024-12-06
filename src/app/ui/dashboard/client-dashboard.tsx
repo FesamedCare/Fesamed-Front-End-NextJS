@@ -4,11 +4,16 @@ import { FiEdit2, FiChevronRight, FiHeart, FiHelpCircle, FiLogOut, FiSettings, F
 import Link from 'next/link';
 import { useState } from 'react';
 import { on } from 'events';
+import { CalendarIcon, MapPinIcon } from 'lucide-react'
 
 export default function ClientDashboard() {
     const [activeTab, setActiveTab] = useState('proximas');
     const [errorMessage, setErrorMessage] = useState('');
 
+    const appointments = [
+      { date: 'Agosto 22, 2024 - 10.00 AM', doctor: 'Dr. Julio Jaramillo', specialty: 'Dermatologo', location: 'Imbanaco', img: 'https://fesamedcare.s3.us-east-2.amazonaws.com/doctorsimages/david.png' },
+      { date: 'Septiembre 14, 2024 - 15.00pm', doctor: 'Dr. Daniel Lee', specialty: 'Medico General', location: 'Imbanaco', img: 'https://fesamedcare.s3.us-east-2.amazonaws.com/doctorsimages/jessica.png' },
+    ]
 
     const handleLogout = async () => {
         try {
@@ -43,6 +48,8 @@ export default function ClientDashboard() {
             phone_number: '+57 3207263798',
             email: 'example@fesamed.com'
         }
+
+    
 
   return (
 
@@ -141,30 +148,39 @@ export default function ClientDashboard() {
           </div>
           {activeTab === 'proximas' && (
             <div className="space-y-4">
-              {[
-                { date: 'Agosto 22, 2024 - 10.00 AM', doctor: 'Dr. Julio Jaramillo', specialty: 'Dermatologo', location: 'Imbanaco', img: 'https://fesamedcare.s3.us-east-2.amazonaws.com/doctorsimages/david.png' },
-                { date: 'Septiembre 14, 2024 - 15.00pm', doctor: 'Dr. Daniel Lee', specialty: 'Medico General', location: 'Imbanaco', img: 'https://fesamedcare.s3.us-east-2.amazonaws.com/doctorsimages/jessica.png' },
-              ].map((appointment, index) => (
-                <div key={index} className="bg-white rounded-lg drop-shadow-lg p-4">
-                  <p className="font-semibold mb-2">{appointment.date}</p>
-                  <div className="flex items-center">
-                    <img
-                      src={appointment.img}
-                      alt={appointment.doctor}
-                      className="w-20 h-20 rounded-full mr-4"
-                    />
-                    <div>
-                      <h4 className="font-semibold">{appointment.doctor}</h4>
-                      <p className="text-sm text-gray-600">{appointment.specialty}</p>
-                      <p className="text-sm text-gray-600">{appointment.location}</p>
-                    </div>
-                    <div className="ml-auto space-x-2">
-                      <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100">Cancelar</button>
-                      <button className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Re agendar</button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                 <div className="space-y-4 p-4">
+      {appointments.map((appointment, index) => (
+        <div key={index} className="bg-white rounded-lg shadow-md p-4 transition-all hover:shadow-lg">
+          <p className="font-semibold mb-2 text-sm sm:text-base flex items-center">
+            <CalendarIcon className="w-4 h-4 mr-2 text-blue-500" />
+            {appointment.date}
+          </p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center">
+            <img
+              src={appointment.img}
+              alt={appointment.doctor}
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full mb-4 sm:mb-0 sm:mr-4"
+            />
+            <div className="flex-grow mb-4 sm:mb-0">
+              <h4 className="font-semibold text-lg">{appointment.doctor}</h4>
+              <p className="text-sm text-gray-600">{appointment.specialty}</p>
+              <p className="text-sm text-gray-600 flex items-center">
+                <MapPinIcon className="w-4 h-4 mr-1 text-gray-400" />
+                {appointment.location}
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+              <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 text-sm transition-colors duration-200">
+                Cancelar
+              </button>
+              <button className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm transition-colors duration-200">
+                Re agendar
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
             </div>
           )}
           {activeTab === 'pasadas' && <div>{/* Contenido para consultas pasadas */}</div>}
