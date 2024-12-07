@@ -22,23 +22,28 @@ async function fetchPosts(category?: string) {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch posts');
+      throw new Error("Failed to fetch posts");
     }
 
     const data = await response.json();
     return data.posts || [];
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    console.error("Error fetching posts:", error);
     return [];
   }
 }
 
+// Definir `searchParams` como un `Promise`
+type SearchParams = Promise<{ category?: string }>;
+
 export default async function Page({
   searchParams,
 }: {
-  searchParams: { category?: string };
+  searchParams: SearchParams;
 }) {
-  const category = searchParams.category || "All";
+  // Resolver explícitamente el `Promise` de `searchParams`
+  const resolvedSearchParams = await searchParams;
+  const category = resolvedSearchParams.category || "All";
   const posts: Post[] = await fetchPosts(category);
 
   return (
