@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 function Header() {
   return (
@@ -72,17 +73,21 @@ function Header() {
             </div>
 
             <div className="4xl:mt-1 xl:-mt-14 hidden xl:block lg:block">
-              <img
+              <Image
                 src="https://fesamedcare.s3.us-east-2.amazonaws.com/MobileImgLanding.png"
                 alt="mobile-image"
+                width={280}
+                height={320}
                 className="w-[280px] 4xl:w-[320px]"
               />
             </div>
 
             <div className="hidden xl:block lg:hidden md:hidden shadow-navbar">
-              <img
+              <Image
                 src="https://fesamedcare.s3.us-east-2.amazonaws.com/calendar-example.png"
                 alt="calendar-example"
+                width={280}
+                height={350}
                 className="w-[280px] 4xl:w-[350px]"
               />
             </div>

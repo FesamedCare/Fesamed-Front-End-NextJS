@@ -1,21 +1,24 @@
 import Link from "next/link";
+import Image from "next/image";
 import "@/app/globals.css";
 
 function Incentives() {
   return (
-    <div className="faded-div ">
+    <div className="faded-div">
       <div className="2xl:mx-44 lg:mx-28 xl:mx-28 sm:mx-16 mx-5 flex justify-center lg:justify-between xl:justify-between md:justify-between">
         <div className="hidden lg:block xl:block">
           <div className="image-container">
-            <img
+            <Image
               src="https://fesamedcare.s3.us-east-2.amazonaws.com/grid-doctors.png"
               alt="grid-doctors"
               width={500}
+              height={500} // Ajusta esto según tus necesidades
+              priority // Opcional: da prioridad a esta imagen en la carga inicial
             />
           </div>
         </div>
 
-        <div className=" flex-col py-20 lg:ml-10 xl:ml-10">
+        <div className="flex-col py-20 lg:ml-10 xl:ml-10">
           <p className="font-semibold xl:block lg:block md:block md:text-4xl lg:text-4xl xl:text-4xl text-3xl tracking-tight pb-9">
             Miles de especialistas <br /> certificados - Online
           </p>
@@ -33,46 +36,19 @@ function Incentives() {
           </p>
 
           <ul className="flex flex-wrap gap-2 py-5 sm:flex-row items-center">
-            <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
-              <Link
-                href="/services/service1"
-                className=" leading-8 text-gray-600 sm:text-center"
+            {["Doctor General", "Embarazo", "Oftalmología", "Psiquiatría", "Otros"].map((service, index) => (
+              <li
+                key={index}
+                className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none"
               >
-                Doctor General {">"}
-              </Link>
-            </li>
-            <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
-              <Link
-                href="/services/service2"
-                className=" leading-8 text-gray-600 sm:text-center"
-              >
-                Embarazo {">"}
-              </Link>
-            </li>
-            <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
-              <Link
-                href="/services/service3"
-                className="  leading-8 text-gray-600 sm:text-center"
-              >
-                Oftalmología {">"}
-              </Link>
-            </li>
-            <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
-              <Link
-                href="/services/service3"
-                className="  leading-8 text-gray-600 sm:text-center"
-              >
-                Psiquiatría {">"}
-              </Link>
-            </li>
-            <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
-              <Link
-                href="/services/service3"
-                className="  leading-8 text-gray-600 sm:text-center"
-              >
-                Otros {">"}
-              </Link>
-            </li>
+                <Link
+                  href={`/services/service${index + 1}`}
+                  className="leading-8 text-gray-600 sm:text-center"
+                >
+                  {service} {">"}
+                </Link>
+              </li>
+            ))}
           </ul>
 
           <div className="mt-8 flex gap-x-4">
