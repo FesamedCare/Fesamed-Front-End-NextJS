@@ -1,34 +1,45 @@
+import { Metadata } from "next";
 import BlogSearch from "../ui/blog/categoriesHeader";
 import { BlogCardHorizontal } from "../ui/blog/blog-card";
 import { Post } from "../types/types";
-import { Metadata } from "next";
 import Footer from "../ui/navigation/footer";
 
 export const metadata: Metadata = {
   title: "Blog",
 };
 
-interface PageProps {
-  searchParams: { category?: string };
-}
-
-export default async function Page({ searchParams }: PageProps) {
-  // Acceder a `searchParams` de manera asíncrona
-  const params = await searchParams;
-  const category = params.category || "All";
-
+// Server-side function to fetch posts
+async function fetchPosts(category?: string) {
   const queryParams = new URLSearchParams({
     limit: "6",
     offset: "0",
-    ...(category !== "All" && { category }),
+    ...(category && category !== "All" && { category }),
   });
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts?${queryParams}`, {
-    cache: "no-store", // Para evitar que los datos se almacenen en caché
-  });
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts?${queryParams}`, {
+      cache: "no-store",
+    });
 
-  const data = await response.json();
-  const posts: Post[] = data.posts || [];
+    if (!response.ok) {
+      throw new Error('Failed to fetch posts');
+    }
+
+    const data = await response.json();
+    return data.posts || [];
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    return [];
+  }
+}
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: { category?: string };
+}) {
+  const category = searchParams.category || "All";
+  const posts: Post[] = await fetchPosts(category);
 
   return (
     <div>

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 
 const navigation = {
     clientes: [
@@ -88,7 +89,7 @@ export default function Footer () {
         <div className="mx-auto max-w-full py-12 px-4 sm:px-6 lg:py-16 lg:px-28">
           <div className="xl:grid xl:grid-cols-3 xl:gap-8">
             <div className="space-y-8 xl:col-span-1">
-              <img
+              <Image
                 src='https://fesamedcare.s3.us-east-2.amazonaws.com/footer-logo.png'
                 width={120}
                 height={100}

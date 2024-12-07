@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Heart, MapPin, Star, Users, Clock, MessageSquare } from 'lucide-react'
 import { cn } from "@/lib/utils"
-import type { Doctor, TimeSlot, AppointmentFormData } from "@/app//types/types"
+import Image from "next/image"
+import type { Doctor, TimeSlot, AppointmentFormData } from "@/app/types/types"
 
 const timeSlots: TimeSlot[] = [
   { time: "09:00 AM", available: true },
@@ -85,10 +86,12 @@ export default function AppointmentPage() {
             </div>
 
             <div className="flex gap-4 items-start mb-6">
-              <img
+              <Image
                 src={doctorData.profilePicture}
                 alt={doctorData.name}
-                className="rounded-full w-20 h-20 object-cover"
+                width={80}
+                height={80}
+                className="rounded-full object-cover"
               />
               <div>
                 <h2 className="text-xl font-semibold">{doctorData.name}</h2>
@@ -142,10 +145,12 @@ export default function AppointmentPage() {
               </div>
               <div className="bg-muted p-4 rounded-lg">
                 <div className="flex gap-3 mb-2">
-                  <img
+                  <Image
                     src="https://via.placeholder.com/150"
                     alt="Reviewer"
-                    className="rounded-full w-10 h-10"
+                    width={40}
+                    height={40}
+                    className="rounded-full"
                   />
                   <div>
                     <div className="font-semibold">Camila Narvaez</div>
@@ -219,4 +224,3 @@ export default function AppointmentPage() {
     </div>
   )
 }
-
