@@ -88,6 +88,27 @@ export default function ClientDashboard() {
               <p className="text-gray-600">adress here #45-98</p>
             </div>
           </div>
+          <div className="space-y-2 bg-white rounded-lg drop-shadow-lg p-2">
+            {[
+              { icon: FiEdit2, text: 'Editar Perfil', path: '/edit-profile' },
+              { icon: FiSettings, text: 'Configuración' },
+              { icon: FiHelpCircle, text: 'Ayuda y Soporte' },
+              { icon: FiShield, text: 'Terminos y Condiciones' },
+              { icon: FiLogOut, text: 'Salir', className: 'text-red-500', onClick: handleLogout },
+            ].map((item, index) => (
+              <div 
+              key={index}
+              onClick={item.onClick}
+              className={`w-full flex cursor-pointer justify-between items-center p-2 rounded hover:bg-gray-100 ${item.className || ''}`}
+              >
+                <div className="flex items-center">
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.text}
+                </div>
+                <FiChevronRight className="h-4 w-4" />
+              </div>
+            ))}
+          </div>
           <div>
             <h3 className="font-semibold mb-2">Favoritos</h3>
             <div className="bg-white rounded-lg drop-shadow-lg p-4">
