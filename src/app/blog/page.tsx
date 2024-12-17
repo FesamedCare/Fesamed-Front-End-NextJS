@@ -3,6 +3,7 @@ import BlogSearch from "../ui/blog/categoriesHeader";
 import { BlogCardHorizontal } from "../ui/blog/blog-card";
 import { Post } from "../types/types";
 import Footer from "../ui/navigation/footer";
+import FilterTags from "../ui/blog/filterTags";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -49,6 +50,7 @@ export default async function Page({
   return (
     <div>
       <BlogSearch selectedCategory={category} />
+      <FilterTags />
       <BlogCardHorizontal posts={posts} />
       <Footer />
     </div>

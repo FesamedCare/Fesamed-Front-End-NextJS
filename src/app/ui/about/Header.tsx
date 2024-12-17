@@ -42,7 +42,7 @@ function Header() {
               <p className='py-3 text-blue-400 font-semibold text-lg'>
                 FesamedCare | Qué hacemos ? 🧐
               </p>
-              <div className="font-semibold text-center xl:block lg:block md:block md:text-5xl text-3xl lg:text-5xl tracking-tight pb-9">
+              <div className="font-semibold text-center xl:block lg:block md:block md:text-7xl text-3xl lg:text-8xl tracking-tight pb-9">
                 Transformamos la Salud,<br />
                 Mejoramos <span></span>
                 <span id='WritingContainer' ref={typewriterRef}>

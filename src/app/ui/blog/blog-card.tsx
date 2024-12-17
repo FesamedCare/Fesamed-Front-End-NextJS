@@ -11,7 +11,7 @@ export const BlogCardHorizontal: FC<BlogCardHorizontalProps> = ({ posts }) => {
   // Verificar si no hay posts
   if (!posts || posts.length === 0) {
     return (
-      <div className='flex items-center justify-center text-gray-400 py-12'>
+      <div className='flex items-center justify-center text-gray-400 min-h-96'>
         No hay publicaciones disponibles
       </div>
     );

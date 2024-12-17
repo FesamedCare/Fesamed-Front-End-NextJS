@@ -278,3 +278,7 @@ opacity: 8%;
 padding: 8px 14px 8px 58px !important; /* Ajusta los valores según lo que prefieras */
 }
 
+.group:hover .arrow-icon {
+   /*mover la flecha en forma diagonal hacia la derecha */
+  transform: translateX(3px) translateY(-3px);
+}
