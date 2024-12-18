@@ -3,6 +3,8 @@ export interface Post {
   title: string;
   description: string;
   slug: string;
+  content: string;
+  views: number;
   category: {
     id: number;
     name: string;
@@ -10,6 +12,7 @@ export interface Post {
     views: number;
   };
   thumbnail: {
+    content_path: string | null;
     url: string;
   } | null; // Puede ser un objeto o null
   time_read: number;

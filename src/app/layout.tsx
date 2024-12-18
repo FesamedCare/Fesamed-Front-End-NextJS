@@ -2,6 +2,9 @@ import "./globals.css";
 import Navbar from "./ui/navigation/Navbar";
 import { Metadata } from "next";
 import PageTransitionWrapper from "./Transition";
+import {Inter} from 'next/font/google'
+
+export const inter = Inter({subsets: ['latin']})
 
 export const metadata: Metadata = {
   title: {

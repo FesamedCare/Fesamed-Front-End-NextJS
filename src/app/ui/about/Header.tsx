@@ -59,7 +59,7 @@ function Header() {
               </div>
               </div>
 
-              <p className='text-lg lg:text-center xl:text-center md:text-center text-justify  text-gray-600'>
+              <p className='text-lg lg:text-center xl:text-center md:text-center text-justify  text-gray-500'>
               En FesamedCare, estamos revolucionando la forma en que recibes atención médica. Nuestro objetivo es conectar a los pacientes con especialistas certificados y experimentados en el momento que más lo necesitan. Creemos en brindar un servicio de calidad que sea accesible y eficiente, sin las molestias de las largas esperas y las filas interminables.
               </p>
 
