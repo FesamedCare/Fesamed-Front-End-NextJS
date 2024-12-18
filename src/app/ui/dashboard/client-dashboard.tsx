@@ -83,9 +83,9 @@ export default function ClientDashboard() {
             </div>
             <div className="text-center">
               <h2 className="text-xl font-semibold">{userData.name}</h2>
-              <p className="text-gray-600">{userData.phone_number}</p>
-              <p className="text-gray-600">{userData.email}</p>
-              <p className="text-gray-600">adress here #45-98</p>
+              <p className="text-gray-500">{userData.phone_number}</p>
+              <p className="text-gray-500">{userData.email}</p>
+              <p className="text-gray-500">adress here #45-98</p>
             </div>
           </div>
           <div className="space-y-2 bg-white rounded-lg drop-shadow-lg p-2">
@@ -122,12 +122,12 @@ export default function ClientDashboard() {
                 />
                 <div>
                   <h4 className="font-semibold">Dr. Michael Biancha</h4>
-                  <p className="text-sm text-gray-600">Otorrino</p>
-                  <p className="text-sm text-gray-600">CORL Cali</p>
+                  <p className="text-sm text-gray-500">Otorrino</p>
+                  <p className="text-sm text-gray-500">CORL Cali</p>
                   <div className="flex items-center">
                     <span className="text-yellow-400">★</span>
                     <span className="text-sm ml-1">4.7</span>
-                    <span className="text-sm text-gray-600 ml-1">
+                    <span className="text-sm text-gray-500 ml-1">
                       (5,223 Reviews)
                     </span>
                   </div>
@@ -177,10 +177,10 @@ export default function ClientDashboard() {
                       <h4 className="font-semibold text-lg">
                         {appointment.doctor}
                       </h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-500">
                         {appointment.specialty}
                       </p>
-                      <p className="text-sm text-gray-600 flex items-center">
+                      <p className="text-sm text-gray-500 flex items-center">
                         <MapPinIcon className="w-4 h-4 mr-1 text-gray-400" />
                         {appointment.location}
                       </p>

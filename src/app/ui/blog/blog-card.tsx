@@ -27,7 +27,7 @@ export const BlogCardHorizontal: FC<BlogCardHorizontalProps> = ({ posts }) => {
                 <div className="flex-shrink-0">
                   <Link href={`blog/${post.slug}`}>
                     <Image
-                      className="h-48 w-full object-cover"
+                      className="h-48 w-full object-cover rounded-lg" 
                       src={post.thumbnail?.url || "https://via.placeholder.com/400"}
                       alt={post.title}
                       width={400}
@@ -45,7 +45,7 @@ export const BlogCardHorizontal: FC<BlogCardHorizontalProps> = ({ posts }) => {
                     </p>
                     <Link href={`blog/${post.slug}`} className="mt-2 block">
                       <p className="text-xl font-semibold text-gray-900 line-clamp-2">{post.title}</p>
-                      <p className="mt-3 text-base text-gray-500 line-clamp-2">{post.description}</p>
+                      <p className="mt-3 text-sm text-gray-500 line-clamp-2">{post.description}</p>
                     </Link>
                   </div>
                   <div className="mt-6 flex items-center">

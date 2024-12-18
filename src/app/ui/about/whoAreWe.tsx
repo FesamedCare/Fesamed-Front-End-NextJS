@@ -12,7 +12,7 @@ function WhoAreWe() {
             Quienes somos ?
           </p>
 
-          <p className="text-lg text-gray-600 mb-8">
+          <p className="text-lg text-gray-500 mb-8">
             Somos una plataforma innovadora con sede en Cali, Colombia, dedicada
             a mejorar la calidad de vida de las personas a través de servicios
             médicos y dentales de primera clase. Ofrecemos una amplia gama de
@@ -29,7 +29,7 @@ function WhoAreWe() {
             <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
               <Link
                 href="/services/service1"
-                className=" leading-8 text-gray-600 sm:text-center"
+                className=" leading-8 text-gray-500 sm:text-center"
               >
                 Doctor General {">"}
               </Link>
@@ -37,7 +37,7 @@ function WhoAreWe() {
             <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
               <Link
                 href="/services/service2"
-                className=" leading-8 text-gray-600 sm:text-center"
+                className=" leading-8 text-gray-500 sm:text-center"
               >
                 Embarazo {">"}
               </Link>
@@ -45,7 +45,7 @@ function WhoAreWe() {
             <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
               <Link
                 href="/services/service3"
-                className="  leading-8 text-gray-600 sm:text-center"
+                className="  leading-8 text-gray-500 sm:text-center"
               >
                 Oftalmología {">"}
               </Link>
@@ -53,7 +53,7 @@ function WhoAreWe() {
             <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
               <Link
                 href="/services/service3"
-                className="  leading-8 text-gray-600 sm:text-center"
+                className="  leading-8 text-gray-500 sm:text-center"
               >
                 Psiquiatría {">"}
               </Link>
@@ -61,7 +61,7 @@ function WhoAreWe() {
             <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
               <Link
                 href="/services/service3"
-                className="  leading-8 text-gray-600 sm:text-center"
+                className="  leading-8 text-gray-500 sm:text-center"
               >
                 Otros {">"}
               </Link>

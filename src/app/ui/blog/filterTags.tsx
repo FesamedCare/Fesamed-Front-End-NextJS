@@ -10,7 +10,7 @@ interface FilterTag {
 }
 
 const filterTags: FilterTag[] = [
-  { id: 'recent', label: 'RECENT' },
+  { id: 'reciente', label: 'RECIENTE' },
   { id: 'popular', label: 'POPULAR' },
   { id: 'scroll', label: 'SCROLL' },
   { id: 'mouse', label: 'MOUSE' },
@@ -22,7 +22,7 @@ const filterTags: FilterTag[] = [
 ]
 
 export default function FilterTags() {
-  const [selectedTag, setSelectedTag] = useState('recent')
+  const [selectedTag, setSelectedTag] = useState('reciente')
 
   return (
     <div  className="w-full overflow-x-auto no-scrollbar lg:overflow-visible">

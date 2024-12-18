@@ -20,7 +20,7 @@ function Header() {
                 Cambiando la forma en que recibes atención médica
               </p>
 
-              <p className="text-lg text-gray-600 mb-8">
+              <p className="text-lg text-gray-500 mb-8">
                 Aquí tu eliges especialistas certificados y con experiencia{" "}
                 <br /> en el momento que lo necesitas.
               </p>
@@ -28,7 +28,7 @@ function Header() {
                 <li className="inline-flex transition duration-300 ease-in-out border-b-2 border-transparent hover:border-blue-500 ">
                   <Link
                     href="/services/service1"
-                    className=" text-lg leading-8 text-gray-600 sm:text-center"
+                    className=" text-lg leading-8 text-gray-500 sm:text-center"
                   >
                     Carillas de porcelana
                   </Link>
@@ -36,7 +36,7 @@ function Header() {
                 <li className="inline-flex transition duration-300 ease-in-out border-b-2 border-transparent hover:border-blue-500">
                   <Link
                     href="/services/service2"
-                    className=" text-lg leading-8 text-gray-600 sm:text-center"
+                    className=" text-lg leading-8 text-gray-500 sm:text-center"
                   >
                     Cirugias Plásticas
                   </Link>
@@ -44,7 +44,7 @@ function Header() {
                 <li className="inline-flex transition duration-300 ease-in-out border-b-2 border-transparent hover:border-blue-500">
                   <Link
                     href="/services/service3"
-                    className=" text-lg leading-8 text-gray-600 sm:text-center"
+                    className=" text-lg leading-8 text-gray-500 sm:text-center"
                   >
                     Implantes Dentales
                   </Link>

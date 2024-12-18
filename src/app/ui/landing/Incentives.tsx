@@ -23,7 +23,7 @@ function Incentives() {
             Miles de especialistas <br /> certificados - Online
           </p>
 
-          <p className="text-lg text-gray-600 mb-8">
+          <p className="text-lg text-gray-500 mb-8">
             Programa una cita con un Especialista sin hacer filas, sin largas{" "}
             <br /> esperas durante una llamada.{" "}
             <span className="text-blue-400 font-semibold">
@@ -49,7 +49,7 @@ function Incentives() {
               >
                 <Link
                   href={`/services/service${index + 1}`}
-                  className="leading-8 flex justify-center items-center gap-2 text-gray-600 sm:text-center"
+                  className="leading-8 flex justify-center items-center gap-2 text-gray-500 sm:text-center"
                 >
                   {service}
                   <svg

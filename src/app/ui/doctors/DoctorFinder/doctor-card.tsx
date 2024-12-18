@@ -26,7 +26,7 @@ export function DoctorCard({ name, specialty, clinic, imageUrl }: DoctorCardProp
           <div className="space-y-2">
             <p className="text-blue-600 font-medium">{clinic}</p>
             <h3 className="font-semibold text-lg">{name}</h3>
-            <p className="text-gray-600">{specialty}</p>
+            <p className="text-gray-500">{specialty}</p>
             <p className="text-gray-400">Reseñas</p>
           </div>
         </div>
