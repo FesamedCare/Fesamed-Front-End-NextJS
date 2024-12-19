@@ -38,11 +38,11 @@ function Header() {
         <div className='mx-auto md:mx-24 max-w-full xl:mx-24 xl:pt-16 xl:pb-20 lg:pt-16 md:pt-16 lg:pb-36 pt-0 pb-14'>
           <div className='flex items-center justify-center'>
             <div className=' flex flex-col items-center'>
-              <div className='pb-10 text-center'>
+              <div className='pb-10 pt-8 md:pt-0 lg:pt-0 text-center'>
               <p className='py-3 text-blue-400 font-semibold text-lg'>
                 FesamedCare | Qué hacemos ? 🧐
               </p>
-              <div className="font-semibold text-center xl:block lg:block md:block md:text-7xl text-3xl lg:text-8xl tracking-tight pb-9">
+              <div className="font-semibold text-center xl:block lg:block md:block md:text-7xl text-5xl h-52 lg:text-8xl tracking-tight pb-9">
                 Transformamos la Salud,<br />
                 Mejoramos <span></span>
                 <span id='WritingContainer' ref={typewriterRef}>
@@ -59,9 +59,16 @@ function Header() {
               </div>
               </div>
 
-              <p className='text-lg lg:text-center xl:text-center md:text-center text-justify  text-gray-500'>
+              <p className='text-base lg:text-center xl:text-center md:text-center lg:block md:block hidden  text-gray-500'>
               En FesamedCare, estamos revolucionando la forma en que recibes atención médica. Nuestro objetivo es conectar a los pacientes con especialistas certificados y experimentados en el momento que más lo necesitan. Creemos en brindar un servicio de calidad que sea accesible y eficiente, sin las molestias de las largas esperas y las filas interminables.
               </p>
+
+              <article className='text-base sm:block lg:hidden md:hidden  text-gray-500'>
+                <p className="mb-4">En FesamedCare, estamos revolucionando la forma en que recibes atención médica.</p>
+                <p className="mb-4">Nuestro objetivo es conectar a los pacientes con especialistas certificados y experimentados en el momento que más lo necesitan.</p>
+                <p>Creemos en brindar un servicio de calidad que sea accesible y eficiente, sin las molestias de las largas esperas y las filas interminables.</p>
+                
+              </article>
 
               <div className="mt-12 flex gap-x-4 justify-around">
                 <Link
@@ -77,7 +84,7 @@ function Header() {
                   href='/about'
                   className="inline-block rounded-lg px-4 py-1.5 text-base font-semibold leading-7 text-gray-900 ring-1 ring-gray-900/10 hover:ring-gray-900/20"
                 >
-                  Sobre nosotros
+                  Nuestro Blog
                   <span className="text-gray-400" aria-hidden="true">
                     &rarr;
                   </span>
