@@ -12,7 +12,7 @@ function WhoAreWe() {
             Quienes somos ?
           </p>
 
-          <p className="text-lg text-gray-500 mb-8">
+          <p className="text-base text-gray-500 mb-8">
             Somos una plataforma innovadora con sede en Cali, Colombia, dedicada
             a mejorar la calidad de vida de las personas a través de servicios
             médicos y dentales de primera clase. Ofrecemos una amplia gama de
@@ -20,6 +20,14 @@ function WhoAreWe() {
             sonrisa e implantes dentales, así como cirugías plásticas realizadas
             por expertos.
           </p>
+
+          <div className="block lg:hidden xl:hidden md:hidden">
+          <Image
+            src={aboutUsSVG}
+            alt="About Us Illustration"
+            className="w-full h-auto"
+          />
+        </div>
 
           <p className="text-md font-semibold pt-12">
             +25 especialidades médicas a tu disposición.

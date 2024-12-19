@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import './header.css';
 
 function Header() {
   return (
@@ -8,19 +9,19 @@ function Header() {
         <div className="mx-auto md:mx-12 max-w-full xl:mx-24 xl:pt-16 xl:pb-26 lg:pt-16 md:pt-16 lg:pb-36 pt-0 pb-12">
           <div className="flex justify-between items-center">
             <div className="lg:-mt-8">
-              <p className=" 2xl:text-xl py-3 text-blue-400 font-semibold">
+              <p className="text-center md:text-left lg:text-left xl:text-left 2xl:text-xl py-3 text-blue-400 font-semibold">
                 Bienvenid@ a FesamedCare 👋
               </p>
-              <p className="4xl:text-4xl font-semibold xl:block lg:block md:block md:text-4xl lg:text-4xl xl:text-4xl text-3xl tracking-tight pb-9 hidden">
+              <p className="4xl:text-4xl font-semibold xl:block lg:block md:block md:text-4xl lg:text-4xl xl:text-4xl text-4xl tracking-tight pb-9 hidden">
                 Cambiando la forma en que <br /> recibes atención médica
               </p>
 
               {/* mobile text */}
-              <p className="font-semibold xl:hidden md:hidden lg:hidden text-3xl tracking-tight pb-5">
+              <p className="font-semibold xl:hidden md:hidden lg:hidden headertext text-center tracking-tight pb-5">
                 Cambiando la forma en que recibes atención médica
               </p>
 
-              <p className="text-lg text-gray-500 mb-8">
+              <p className="text-lg text-gray-500 md:mb-8 lg:mb-8 xl:mb-8 mb-0 pt-8">
                 Aquí tu eliges especialistas certificados y con experiencia{" "}
                 <br /> en el momento que lo necesitas.
               </p>
