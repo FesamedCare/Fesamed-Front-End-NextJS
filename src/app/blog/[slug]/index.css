@@ -1,42 +1,109 @@
 .markdown {
-    line-height: 1.6;
-    color: #333;
-  }
-  
-  .markdown h1, 
-  .markdown h2, 
-  .markdown h3, 
-  .markdown h4, 
-  .markdown h5, 
-  .markdown h6 {
-    font-weight: bold;
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
-  }
-  
-  .markdown p {
-    margin-bottom: 1em;
-  }
-  
-  .markdown ul, 
-  .markdown ol {
-    margin: 1em 0;
-    padding-left: 20px;
-  }
-  
-  .markdown table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: 1.5em 0;
-  }
-  
-  .markdown th, 
-  .markdown td {
-    padding: 8px;
-    border: 1px solid #ddd;
-  }
-  
-  .markdown th {
-    background-color: #f9f9f9;
-  }
-  
+  line-height: 1.8;
+  color: #2d3748; /* Un tono gris moderno */
+}
+
+.markdown h1, 
+.markdown h2, 
+.markdown h3, 
+.markdown h4, 
+.markdown h5, 
+.markdown h6 {
+  font-weight: 700;
+  color: #1a202c; /* Color gris oscuro */
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+  border-left: 4px solid #3182ce; /* Barra de color para destacar los encabezados */
+  padding-left: 10px;
+}
+
+.markdown p {
+  margin-bottom: 1.25em;
+  font-size: 1rem; /* Texto más grande para legibilidad */
+}
+
+.markdown ul, 
+.markdown ol {
+  margin: 1.5em 0;
+  padding-left: 1.5em;
+  list-style-type: disc; /* Mejor estilo de lista */
+}
+
+.markdown ul li {
+  margin-bottom: 0.75em;
+  position: relative;
+  padding-left: 10px;
+}
+
+.markdown ul li::before {
+  content: "•"; /* Añade un icono personalizado */
+  position: absolute;
+  left: 0;
+  color: #3182ce; /* Color azul moderno */
+}
+
+.markdown table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5em 0;
+  border-radius: 8px; /* Bordes redondeados */
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra para un efecto moderno */
+}
+
+.markdown th, 
+.markdown td {
+  padding: 12px;
+  border: 1px solid #e2e8f0; /* Color gris claro */
+  text-align: left;
+}
+
+.markdown th {
+  background-color: #f7fafc; /* Fondo gris claro */
+  font-weight: 600;
+  color: #2d3748; /* Gris oscuro */
+}
+
+.markdown a {
+  color: #3182ce; /* Azul moderno */
+  text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.markdown a:hover {
+  color: #2b6cb0; /* Azul más oscuro al pasar el mouse */
+}
+
+.markdown blockquote {
+  border-left: 4px solid #3182ce;
+  background-color: #f7fafc; /* Fondo suave */
+  padding: 10px 15px;
+  font-style: italic;
+  margin: 1.5em 0;
+  color: #4a5568; /* Texto gris */
+}
+
+.markdown pre {
+  background-color: #1a202c; /* Fondo oscuro */
+  color: #f7fafc; /* Texto claro */
+  padding: 15px;
+  border-radius: 8px;
+  margin: 1.5em 0;
+  overflow-x: auto;
+}
+
+.markdown code {
+  background-color: #edf2f7; /* Fondo gris claro */
+  color: #2d3748; /* Texto gris oscuro */
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* Imagen destacada */
+.markdown img {
+  border-radius: 8px;
+  max-width: 100%;
+  height: auto;
+  margin: 1.5em 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
