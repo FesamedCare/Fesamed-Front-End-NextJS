@@ -10,23 +10,22 @@ interface FilterTag {
 }
 
 const filterTags: FilterTag[] = [
-  { id: 'recent', label: 'RECENT' },
   { id: 'popular', label: 'POPULAR' },
-  { id: 'scroll', label: 'SCROLL' },
-  { id: 'mouse', label: 'MOUSE' },
-  { id: 'misc', label: 'MISC' },
-  { id: '3d', label: '3D' },
-  { id: 'menu', label: 'MENU' },
-  { id: 'transition', label: 'TRANSITION' },
-  { id: 'landing-page', label: 'LANDING PAGE' },
+  { id: 'general', label: 'GENERAL' },
+  { id: 'cardiologia', label: 'CARDIOLOGÍA' },
+  { id: 'pediatria', label: 'PEDIATRÍA' },
+  { id: 'otorrino', label: 'OTORRINO' },
+  { id: 'ginecologia', label: 'GINECOLOGÍA' },
+  { id: 'odontologia', label: 'ODONTOLOGÍA' },
+  { id: 'nutricion', label: 'NUTRICIÓN' },
 ]
 
 export default function FilterTags() {
-  const [selectedTag, setSelectedTag] = useState('recent')
+  const [selectedTag, setSelectedTag] = useState('popular')
 
   return (
     <div  className="w-full overflow-x-auto no-scrollbar lg:overflow-visible">
-      <div className="flex gap-2 min-w-max justify-center lg:justify-center">
+      <div className="flex px-4  gap-2 min-w-max justify-center lg:justify-center">
         {filterTags.map((tag) => (
           <button
             key={tag.id}

@@ -26,7 +26,7 @@ export default function FilterTags() {
 
   return (
     <div  className="w-full overflow-x-auto no-scrollbar lg:overflow-visible">
-      <div className="flex gap-2 p-2 min-w-max justify-center lg:justify-center">
+      <div className="flex gap-2 px-4 min-w-max justify-center lg:justify-center">
         {filterTags.map((tag) => (
           <button
             key={tag.id}

@@ -5,6 +5,7 @@ import { Post } from "@/app/types/types";
 import './index.css';
 import DOMPurify from "isomorphic-dompurify";
 import Footer from "@/app/ui/navigation/footer";
+import { inter } from "@/app/layout";
 
 // Fetch individual post data
 async function fetchPost(slug: string): Promise<Post | null> {
@@ -52,11 +53,14 @@ export default async function PostPage({ params }: { params: { slug: string } })
 
   return (
     <>
+    <div className={`${inter.className} antialiased`}>
     <div className="bg-white min-h-screen py-10">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <article>
           {/* Título */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">{post.title}</h1>
+          <h1 className="text-4xl font-extrabold text-gray-900 mb-6 border-l-4 border-blue-500 pl-4">
+            {post.title}
+          </h1>
 
           {/* Fecha, tiempo de lectura y vistas */}
           <div className="text-gray-500 text-sm mb-6">
@@ -91,7 +95,9 @@ export default async function PostPage({ params }: { params: { slug: string } })
           </p>
 
           {/* Descripción */}
-          <p className="text-lg text-gray-700 mb-4">{post.description}</p>
+          <div className="bg-gray-100 p-6 rounded-lg shadow-lg">
+  <p className="text-gray-600 text-lg mb-4">{post.description}</p>
+</div>
 
           <hr />
 
@@ -102,6 +108,7 @@ export default async function PostPage({ params }: { params: { slug: string } })
           />
         </article>
       </div>
+    </div>
     </div>
     <Footer />
     </>

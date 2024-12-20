@@ -6,7 +6,7 @@ function UseCases() {
     <div className="">
       <div className="2xl:mx-36 lg:mx-20 xl:mx-20 md:mx-20 sm:mx-16 mx-5 flex lg:justify-between xl:justify-between md:justify-between pb-10 xl:py-16 md:py-16 lg:py-16">
         <div className="flex flex-col gap-10 py-24 lg:ml-10 xl:ml-10">
-          <p className="font-semibold xl:block lg:block md:block md:text-4xl lg:text-4xl xl:text-4xl text-3xl tracking-tight">
+          <p className="4xl:text-5xl font-semibold xl:block lg:block md:block md:text-4xl lg:text-4xl xl:text-4xl text-3xl tracking-tight">
             Agendamiento en un Click <br /> con Doctores Certificados
           </p>
           <div>

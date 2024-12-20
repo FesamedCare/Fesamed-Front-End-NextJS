@@ -19,7 +19,7 @@ function Incentives() {
         </div>
 
         <div className="flex-col py-20 lg:ml-10 xl:ml-10">
-          <p className="font-semibold xl:block lg:block md:block md:text-4xl lg:text-4xl xl:text-4xl text-3xl tracking-tight pb-9">
+          <p className="font-semibold xl:block lg:block md:block md:text-4xl lg:text-4xl 4xl:text-5xl xl:text-4xl text-3xl tracking-tight pb-9">
             Miles de especialistas <br /> certificados - Online
           </p>
 
