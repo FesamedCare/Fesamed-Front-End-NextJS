@@ -57,7 +57,6 @@ export default async function Page({
   return (
     <div>
       <BlogSearch selectedCategory={category} />
-      <FilterTags />
       <BlogCardHorizontal posts={posts} />
 
       {/* Paginación usando ShadCN */}

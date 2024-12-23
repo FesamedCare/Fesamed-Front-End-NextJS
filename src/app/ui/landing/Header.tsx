@@ -1,14 +1,22 @@
 import Link from "next/link";
 import Image from "next/image";
-import './header.css';
+import Spline from "@splinetool/react-spline/next";
+import "./header.css";
 
 function Header() {
   return (
-    <main className="pt-5">
-      <div className=" xl:px-6 px-6  2xl:px-20 sm:px-16">
+    <main className="relative pt-5 h-[90vh]">
+      {/* Fondo de Spline para pantallas grandes */}
+      <div className="hidden xl:block absolute inset-0 z-3 ml-36">
+      <Spline
+       scene="https://prod.spline.design/DtxFAStj7rWMQwhq/scene.splinecode"
+      />
+      </div>
+
+      <div className="xl:px-6 px-6 2xl:px-20 sm:px-16">
         <div className="mx-auto md:mx-12 max-w-full xl:mx-24 xl:pt-16 xl:pb-26 lg:pt-16 md:pt-16 lg:pb-36 pt-0 pb-12">
           <div className="flex justify-between items-center">
-            <div className="lg:-mt-8">
+            <div className="lg:mt-5 z-10">
               <p className="text-center md:text-left lg:text-left xl:text-left 2xl:text-xl pb-3 text-blue-400 text-lg font-semibold">
                 Bienvenid@ a FesamedCare 👋
               </p>
@@ -16,7 +24,7 @@ function Header() {
                 Cambiando la forma en que <br /> recibes atención médica
               </p>
 
-              {/* mobile text */}
+              {/* Texto para móvil */}
               <p className="font-semibold xl:hidden md:hidden lg:hidden headertext text-center tracking-tight pb-5">
                 Cambiando la forma en que recibes atención médica
               </p>
@@ -73,7 +81,8 @@ function Header() {
               </div>
             </div>
 
-            <div className="4xl:mt-1 xl:-mt-14 hidden xl:block lg:block">
+            {/* Imagen adicional para pantallas grandes */}
+            {/* <div className="4xl:mt-1 xl:-mt-14 hidden xl:block lg:block">
               <Image
                 src="https://fesamedcare.s3.us-east-2.amazonaws.com/MobileImgLanding.png"
                 alt="mobile-image"
@@ -81,7 +90,7 @@ function Header() {
                 height={320}
                 className="w-[280px] 4xl:w-[320px]"
               />
-            </div>
+            </div> */}
 
             <div className="hidden xl:block lg:hidden md:hidden shadow-navbar">
               <Image
