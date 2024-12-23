@@ -7,7 +7,7 @@ function Header() {
   return (
     <main className="relative pt-5 h-[90vh]">
       {/* Fondo de Spline para pantallas grandes */}
-      <div className="hidden xl:block absolute inset-0 z-3 ml-36">
+      <div className="hidden xl:block absolute inset-0 z-3 ml-40">
       <Spline
        scene="https://prod.spline.design/DtxFAStj7rWMQwhq/scene.splinecode"
       />
