@@ -2,3 +2,10 @@
     font-size: 46px;
     line-height: 2.75rem;
 }
+
+@media (min-width: 870px) and (max-width: 1300px) {
+    .custom-margin {
+      margin-left: 34rem;
+    }
+  }
+  
