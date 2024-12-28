@@ -7,7 +7,7 @@ function Header() {
   return (
     <main className="relative pt-5 h-[90vh]">
       {/* Fondo de Spline para pantallas grandes */}
-      <div className="hidden xl:block absolute inset-0 z-3 ml-40">
+      <div className="hidden md:block xl:block absolute inset-0 z-3 ml-40 custom-margin">
       <Spline
        scene="https://prod.spline.design/DtxFAStj7rWMQwhq/scene.splinecode"
       />
@@ -81,7 +81,7 @@ function Header() {
               </div>
             </div>
 
-            {/* Imagen adicional para pantallas grandes */}
+            {/* modelo 3d solo para pantalla entre 1080 y 1279 */}
             {/* <div className="4xl:mt-1 xl:-mt-14 hidden xl:block lg:block">
               <Image
                 src="https://fesamedcare.s3.us-east-2.amazonaws.com/MobileImgLanding.png"

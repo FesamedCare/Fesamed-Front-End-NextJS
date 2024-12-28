@@ -1,5 +1,12 @@
 "use client";
-
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import {
   FiEdit2,
   FiChevronRight,
@@ -65,7 +72,18 @@ export default function ClientDashboard() {
 
   return (
     <div className="container mx-auto px-4 md:px-8 lg:px-28 xl:px-16 pb-12 max-w-7xl">
-      <h1 className="text-2xl font-bold mb-6">Mi Perfil</h1>
+      <Breadcrumb className="pb-5 pt-2 font-medium">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">Perfil</BreadcrumbLink>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <div className="grid md:grid-cols-[300px,1fr] gap-8">
         <div className="space-y-6">
           <div className="bg-white rounded-lg drop-shadow-lg p-6">
@@ -90,16 +108,23 @@ export default function ClientDashboard() {
           </div>
           <div className="space-y-2 bg-white rounded-lg drop-shadow-lg p-2">
             {[
-              { icon: FiEdit2, text: 'Editar Perfil', path: '/edit-profile' },
-              { icon: FiSettings, text: 'Configuración' },
-              { icon: FiHelpCircle, text: 'Ayuda y Soporte' },
-              { icon: FiShield, text: 'Terminos y Condiciones' },
-              { icon: FiLogOut, text: 'Salir', className: 'text-red-500', onClick: handleLogout },
+              { icon: FiEdit2, text: "Editar Perfil", path: "/edit-profile" },
+              { icon: FiSettings, text: "Configuración" },
+              { icon: FiHelpCircle, text: "Ayuda y Soporte" },
+              { icon: FiShield, text: "Terminos y Condiciones" },
+              {
+                icon: FiLogOut,
+                text: "Salir",
+                className: "text-red-500",
+                onClick: handleLogout,
+              },
             ].map((item, index) => (
-              <div 
-              key={index}
-              onClick={item.onClick}
-              className={`w-full flex cursor-pointer justify-between items-center p-2 rounded hover:bg-gray-100 ${item.className || ''}`}
+              <div
+                key={index}
+                onClick={item.onClick}
+                className={`w-full flex cursor-pointer justify-between items-center p-2 rounded hover:bg-gray-100 ${
+                  item.className || ""
+                }`}
               >
                 <div className="flex items-center">
                   <item.icon className="mr-2 h-4 w-4" />
