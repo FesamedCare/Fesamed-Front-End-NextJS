@@ -25,15 +25,14 @@ function Header() {
               </p>
 
               {/* Texto para móvil */}
-              <p className="font-semibold xl:hidden md:hidden lg:hidden headertext text-center tracking-tight pb-5">
+              <p className="font-semibold leading-4 xl:hidden md:hidden lg:hidden headertext text-center tracking-tight pb-5">
                 Cambiando la forma en que recibes atención médica
               </p>
 
               <p className="text-lg text-gray-500 md:mb-8 lg:mb-8 xl:mb-8 mb-0 pt-8 md:pt-0">
-                Aquí tu eliges especialistas certificados y con experiencia{" "}
-                <br /> en el momento que lo necesitas.
+                Aquí tu eliges especialistas certificados y con experiencia <br /> en el momento que lo necesitas.
               </p>
-              <ul className="flex flex-col gap-8 py-10 sm:flex-row">
+              <ul className="flex flex-col gap-4 py-10 sm:flex-row">
                 <li className="inline-flex transition duration-300 ease-in-out border-b-2 border-transparent hover:border-blue-500 ">
                   <Link
                     href="/services/service1"
