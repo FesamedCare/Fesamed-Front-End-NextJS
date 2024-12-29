@@ -1,11 +1,37 @@
-.headertext{
-    font-size: 46px;
-    line-height: 3rem;
+.headertext {
+  font-size: 46px;
+  line-height: 3rem;
+  transition: all 0.3s ease-in-out;
+}
+
+.header {
+  transition: all 0.5s ease-in-out;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @media (min-width: 870px) and (max-width: 1300px) {
-    .custom-margin {
+  .custom-margin {
       margin-left: 34rem;
-    }
+      transition: all 0.5s ease-in-out;
+  }
 }
-  
+
+/* Add smooth transitions for responsive breakpoints */
+@media (max-width: 768px) {
+  .header {
+      transform: translateY(20px);
+  }
+}
+
+/* Add fade-in animation for elements */
+@keyframes fadeIn {
+  from {
+      opacity: 0;
+      transform: translateY(20px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
