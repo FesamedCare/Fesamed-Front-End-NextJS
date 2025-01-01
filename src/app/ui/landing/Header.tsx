@@ -5,12 +5,10 @@ import "./header.css";
 
 function Header() {
   return (
-    <main className="relative pt-5 h-[90vh] transition-all duration-300 ease-in-out">
+    <main className="relative pt-5 lg:h-[90vh] md:h-[90vh] xl:lg:h-[90vh] h-auto transition-all duration-300 ease-in-out">
       {/* Spline background for large screens */}
       <div className="opacity-0 md:opacity-100 transform md:transform-none transition-all duration-500 ease-in-out absolute inset-0 z-3 ml-40 custom-margin">
-        <Spline
-          scene="https://prod.spline.design/DtxFAStj7rWMQwhq/scene.splinecode"
-        />
+        <Spline scene="https://prod.spline.design/DtxFAStj7rWMQwhq/scene.splinecode" />
       </div>
 
       <div className="xl:px-6 px-6 2xl:px-20 sm:px-16 transition-all duration-300">
@@ -30,16 +28,20 @@ function Header() {
               </p>
 
               <p className="text-lg text-gray-500 md:mb-8 lg:mb-8 xl:mb-8 mb-0 pt-8 md:pt-0 transform transition-all duration-300">
-                Aquí tu eliges especialistas certificados y con experiencia <br /> en el momento que lo necesitas.
+                Aquí tu eliges especialistas certificados y con experiencia{" "}
+                <br /> en el momento que lo necesitas.
               </p>
-              
+
               <ul className="flex flex-col gap-4 py-10 sm:flex-row transition-all duration-300">
                 {[
                   { href: "/services/service1", text: "Carillas de porcelana" },
                   { href: "/services/service2", text: "Cirugias Plásticas" },
-                  { href: "/services/service3", text: "Implantes Dentales" }
+                  { href: "/services/service3", text: "Implantes Dentales" },
                 ].map((item, index) => (
-                  <li key={index} className="inline-flex transform transition-all duration-300 hover:scale-105">
+                  <li
+                    key={index}
+                    className="inline-flex transform transition-all duration-300 hover:scale-105"
+                  >
                     <Link
                       href={item.href}
                       className="text-lg leading-8 text-gray-500 sm:text-center transition-all duration-300 ease-in-out border-b-2 border-transparent hover:border-blue-500"
@@ -50,13 +52,28 @@ function Header() {
                 ))}
               </ul>
 
+              {/* imagen que solo es visible en mobile */}
+              <div className="block md:hidden transition-all duration-500 ease-in-out">
+                <div className="flex items-center justify-center">
+                <Image
+                  src="https://fesamedcare.s3.us-east-2.amazonaws.com/MobileImgLanding.png"
+                  alt="mobile-img-landing"
+                  width={280}
+                  height={350}
+                />
+                </div>
+              </div>
+
               <div className="mt-8 flex gap-x-4 transition-all duration-300">
                 <Link
                   href="/buscar-doctor"
                   className="inline-block rounded-lg bg-blue-500 px-4 py-1.5 text-base font-semibold leading-7 text-white shadow-sm ring-1 ring-blue-500 hover:bg-blue-500 hover:ring-blue-500 transform transition-all duration-300 hover:scale-105"
                 >
                   Encuentra un doctor
-                  <span className="text-indigo-200 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">
+                  <span
+                    className="text-indigo-200 transition-transform duration-300 group-hover:translate-x-1"
+                    aria-hidden="true"
+                  >
                     &rarr;
                   </span>
                 </Link>
@@ -65,7 +82,10 @@ function Header() {
                   className="inline-block rounded-lg px-4 py-1.5 text-base font-semibold leading-7 text-gray-900 ring-1 ring-gray-900/10 hover:ring-gray-900/20 transform transition-all duration-300 hover:scale-105"
                 >
                   Sobre nosotros
-                  <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">
+                  <span
+                    className="text-gray-400 transition-transform duration-300 group-hover:translate-x-1"
+                    aria-hidden="true"
+                  >
                     &rarr;
                   </span>
                 </Link>
