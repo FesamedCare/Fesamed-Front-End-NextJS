@@ -1,0 +1,4 @@
+.custom-phone-input:focus {
+    border-color:  #1349bf !important; /* Simula focus:ring-primary-600 */
+    box-shadow:  0 0 0 1px #1349bf !important; /* Simula focus:ring-primary-600 */
+  }
