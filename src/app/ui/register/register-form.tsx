@@ -5,13 +5,15 @@ import "@/app/globals.css";
 import { useState } from "react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/bootstrap.css";
-import './style.css';
+import "./style.css";
 
 function Form() {
   const [enabled, setEnabled] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [errorAuth, setErrorAuth] = useState("");
   const [phone, setPhone] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -20,23 +22,27 @@ function Form() {
     password: "",
     password_confirm: "",
     phone_number: "",
-    role: "patient" // Valor por defecto según la documentación
+    role: "patient",
   });
 
-  const { name, lastname, email, password, password_confirm, phone_number } = formData;
+  const { name, lastname, email, password, password_confirm, phone_number } =
+    formData;
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const onPhoneChange = (value: string) => {
     setPhone(value);
-    // Asegurarse de que el número tenga el formato correcto con "+"
-    const formattedPhone = value.startsWith('+') ? value : `+${value}`;
+    const formattedPhone = value.startsWith("+") ? value : `+${value}`;
     setFormData({ ...formData, phone_number: formattedPhone });
   };
 
   const onCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setEnabled(e.target.checked);
+
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const toggleConfirmPasswordVisibility = () =>
+    setShowConfirmPassword(!showConfirmPassword);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -64,8 +70,8 @@ function Form() {
             lastname,
             email,
             password,
-            phone_number,
-            role: "patient"
+            phone_number: formData.phone_number,
+            role: "patient",
           }),
         }
       );
@@ -78,7 +84,7 @@ function Form() {
           password: "",
           password_confirm: "",
           phone_number: "",
-          role: "patient"
+          role: "patient",
         });
         setPhone("");
         alert("Usuario creado correctamente");
@@ -106,10 +112,7 @@ function Form() {
                 Estamos aquí para ayudarte!
               </p>
               <div className="flex flex-col items-center gap-1">
-                <form
-                  onSubmit={onSubmit}
-                  className="flex flex-col gap-5 w-80"
-                >
+                <form onSubmit={onSubmit} className="flex flex-col gap-5 w-80">
                   <div>
                     <input
                       type="text"
@@ -143,27 +146,113 @@ function Form() {
                       required
                     />
                   </div>
-                  <div>
+                  <div className="relative">
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       name="password"
                       value={password}
                       onChange={onChange}
                       placeholder="Contraseña"
-                      className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                      className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={togglePasswordVisibility}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    >
+                      {showPassword ? (
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                          ></path>
+                        </svg>
+                      ) : (
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          ></path>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          ></path>
+                        </svg>
+                      )}
+                    </button>
                   </div>
-                  <div>
+                  <div className="relative">
                     <input
-                      type="password"
+                      type={showConfirmPassword ? "text" : "password"}
                       name="password_confirm"
                       value={password_confirm}
                       onChange={onChange}
                       placeholder="Confirmar Contraseña"
-                      className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                      className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={toggleConfirmPasswordVisibility}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    >
+                      {showConfirmPassword ? (
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                          ></path>
+                        </svg>
+                      ) : (
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          ></path>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          ></path>
+                        </svg>
+                      )}
+                    </button>
                   </div>
                   <div>
                     <label htmlFor="phone" className="sr-only">
@@ -209,7 +298,8 @@ function Form() {
                           href="/terms"
                           className="font-medium text-primary-600 text-blue-500 hover:underline"
                         >
-                          {" "}Términos y condiciones
+                          {" "}
+                          Términos y condiciones
                         </Link>
                       </label>
                     </div>
