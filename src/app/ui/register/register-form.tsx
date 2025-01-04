@@ -8,84 +8,88 @@ import "react-phone-input-2/lib/bootstrap.css";
 import './style.css';
 
 function Form() {
-  //manejos de estados
-  const [enabled, setEnabled] = useState(false); // Estado para manejar  si se aceptan los términos y condiciones
-  const [errorMessage, setErrorMessage] = useState(""); // Estado para manejar los mensajes de error
-  const [errorAuth, setErrorAuth] = useState(null); // Estado para manejar los errores
-
-  //manejo de datos del formulario
+  const [enabled, setEnabled] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [errorAuth, setErrorAuth] = useState("");
+  const [phone, setPhone] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
     lastname: "",
     email: "",
-    plain_password: "",
-    plain_password_confirm: "",
+    password: "",
+    password_confirm: "",
+    phone_number: "",
+    role: "patient" // Valor por defecto según la documentación
   });
 
-  const { name, lastname, email, plain_password, plain_password_confirm } =
-    formData;
+  const { name, lastname, email, password, password_confirm, phone_number } = formData;
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
+  const onPhoneChange = (value: string) => {
+    setPhone(value);
+    // Asegurarse de que el número tenga el formato correcto con "+"
+    const formattedPhone = value.startsWith('+') ? value : `+${value}`;
+    setFormData({ ...formData, phone_number: formattedPhone });
+  };
+
   const onCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setEnabled(e.target.checked);
 
-  //manejo de submit del formulario
-
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (plain_password !== plain_password_confirm) {
+    if (password !== password_confirm) {
       alert("Las contraseñas no coinciden");
       return;
     }
-    if (enabled) {
-      const fetchData = async () => {
-        try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/register`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                name,
-                lastname,
-                email,
-                plain_password,
-                plain_password_confirm,
-              }),
-            }
-          );
-          const data = await res.json();
-          if (res.status === 201) {
-            setFormData({
-              name: "",
-              lastname: "",
-              email: "",
-              plain_password: "",
-              plain_password_confirm: "",
-            });
 
-            console.log(res.status);
-            console.log(data);
-            alert("Usuario creado correctamente");
-            // redireccionar a la página de inicio de sesión
-            window.location.href = "/login";
-          } else {
-            setErrorAuth(data.detail);
-          }
-        } catch (error) {
-          console.error(error);
+    if (!enabled) {
+      setErrorMessage("Debes aceptar los términos y condiciones");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/patient-registry`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            lastname,
+            email,
+            password,
+            phone_number,
+            role: "patient"
+          }),
         }
-      };
-      fetchData();
-      setErrorMessage("");
-    } else {
-      setErrorMessage("Debes aceptar los terminos y condiciones");
+      );
+
+      if (res.status === 201) {
+        setFormData({
+          name: "",
+          lastname: "",
+          email: "",
+          password: "",
+          password_confirm: "",
+          phone_number: "",
+          role: "patient"
+        });
+        setPhone("");
+        alert("Usuario creado correctamente");
+        window.location.href = "/login";
+      } else {
+        const data = await res.json();
+        setErrorAuth(data.detail);
+      }
+    } catch (error) {
+      console.error("Error al registrar usuario:", error);
+      setErrorAuth("Error al conectar con el servidor");
     }
   };
 
@@ -105,7 +109,6 @@ function Form() {
                 <form
                   onSubmit={onSubmit}
                   className="flex flex-col gap-5 w-80"
-                  action="#"
                 >
                   <div>
                     <input
@@ -113,7 +116,6 @@ function Form() {
                       name="name"
                       value={name}
                       onChange={onChange}
-                      id="name"
                       className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full px-2.5"
                       placeholder="Nombre"
                       required
@@ -125,7 +127,6 @@ function Form() {
                       name="lastname"
                       value={lastname}
                       onChange={onChange}
-                      id="lastname"
                       className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full px-2.5"
                       placeholder="Apellido"
                       required
@@ -137,7 +138,6 @@ function Form() {
                       name="email"
                       value={email}
                       onChange={onChange}
-                      id="email"
                       className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                       placeholder="Correo"
                       required
@@ -146,11 +146,21 @@ function Form() {
                   <div>
                     <input
                       type="password"
-                      name="plain_password"
-                      value={plain_password}
+                      name="password"
+                      value={password}
                       onChange={onChange}
-                      id="password"
                       placeholder="Contraseña"
+                      className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="password"
+                      name="password_confirm"
+                      value={password_confirm}
+                      onChange={onChange}
+                      placeholder="Confirmar Contraseña"
                       className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                       required
                     />
@@ -161,22 +171,21 @@ function Form() {
                     </label>
                     <div className="relative mt-1 rounded-md shadow-sm">
                       <PhoneInput
-                        value={""}
-                        onChange={(e) => {}}
+                        value={phone}
+                        onChange={onPhoneChange}
                         country={"co"}
-                        aria-describedby="price-currency"
                         containerClass="custom-phone-input"
                         inputStyle={{
-                          backgroundColor: "#f9fafb", // bg-gray-50
-                          border: "1px solid #d1d5db", // border-gray-300
-                          color: "#111827", // text-gray-900
-                          fontSize: "0.875rem", // text-sm
-                          borderRadius: "0.5rem", // rounded-lg
+                          backgroundColor: "#f9fafb",
+                          border: "1px solid #d1d5db",
+                          color: "#111827",
+                          fontSize: "0.875rem",
+                          borderRadius: "0.5rem",
                           outline: "none",
                           width: "100%",
                           height: "2.3rem",
                         }}
-                         inputClass="custom-phone-input"
+                        inputClass="custom-phone-input"
                       />
                     </div>
                   </div>
@@ -200,7 +209,7 @@ function Form() {
                           href="/terms"
                           className="font-medium text-primary-600 text-blue-500 hover:underline"
                         >
-                          Términos y condiciones
+                          {" "}Términos y condiciones
                         </Link>
                       </label>
                     </div>
@@ -219,7 +228,7 @@ function Form() {
                 <div className="flex flex-col gap-7">
                   <div>
                     <p className="w-full text-sm text-gray-500 text-center pt-2">
-                      Tambien puedes registrarte con:
+                      También puedes registrarte con:
                     </p>
                   </div>
                   <div className="flex justify-center gap-4">
@@ -277,7 +286,7 @@ function Form() {
                     </button>
                   </div>
                   <p className="text-sm font-light text-gray-500">
-                    Ya tienes una cuenta?{" "}
+                    ¿Ya tienes una cuenta?{" "}
                     <Link
                       href="/login"
                       className="font-medium text-primary-600 text-blue-500 hover:underline"
