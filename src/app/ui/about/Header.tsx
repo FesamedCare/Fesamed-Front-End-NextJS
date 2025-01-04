@@ -14,8 +14,7 @@ function Header() {
         if (mutation.type === 'childList') {
           const firstChild = typewriterRef.current?.querySelector('span');
           if (firstChild && firstChild.textContent?.trim() == 'V') {
-            firstChild.classList.add('text-blue-500');
-            console.log('Vidas! is here');
+            firstChild.classList.add('text-blue-500');;
           } else {
             firstChild?.classList.remove('text-blue-500');
           }
@@ -33,7 +32,7 @@ function Header() {
   }, []);
 
   return (
-    <main>
+    <main style={{height: '80vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
       <div className="relative px-6 2xl:px-72 lg:px-8">
         <div className='mx-auto md:mx-24 max-w-full xl:mx-24 xl:pt-16 xl:pb-20 lg:pt-16 md:pt-16 lg:pb-36 pt-0 pb-14'>
           <div className='flex items-center justify-center'>
