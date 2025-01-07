@@ -16,13 +16,25 @@ import {
   FiSettings,
   FiShield,
 } from "react-icons/fi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CalendarIcon, MapPinIcon } from "lucide-react";
 import Image from "next/image";
+
+// Tipo para la información del usuario
+interface UserData {
+  name: string;
+  phone_number: string;
+  email: string;
+  address?: string;
+  profile_image?: string;
+  // Agrega más campos según lo que devuelva tu API
+}
 
 export default function ClientDashboard() {
   const [activeTab, setActiveTab] = useState("proximas");
   const [errorMessage, setErrorMessage] = useState("");
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const appointments = [
     {
@@ -40,6 +52,32 @@ export default function ClientDashboard() {
       img: "https://fesamedcare.s3.us-east-2.amazonaws.com/doctorsimages/jessica.png",
     },
   ];
+
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/me`, {
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          throw new Error("No se pudo obtener la información del usuario");
+        }
+
+        const data = await response.json();
+        console.log("User data:", data);
+        setUserData(data);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setErrorMessage("Error al cargar los datos del usuario");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -62,12 +100,6 @@ export default function ClientDashboard() {
       console.error(error);
       setErrorMessage("Error de red. Inténtalo de nuevo.");
     }
-  };
-
-  const userData = {
-    name: "David",
-    phone_number: "+57 3207263798",
-    email: "example@fesamed.com",
   };
 
   return (
@@ -100,9 +132,9 @@ export default function ClientDashboard() {
               </button>
             </div>
             <div className="text-center">
-              <h2 className="text-xl font-semibold">{userData.name}</h2>
-              <p className="text-gray-500">{userData.phone_number}</p>
-              <p className="text-gray-500">{userData.email}</p>
+              <h2 className="text-xl font-semibold">{userData?.name}</h2>
+              <p className="text-gray-500">{userData?.phone_number}</p>
+              <p className="text-gray-500">{userData?.email}</p>
               <p className="text-gray-500">adress here #45-98</p>
             </div>
           </div>
