@@ -45,7 +45,7 @@ function Incentives() {
             ].map((service, index) => (
               <li
                 key={index}
-                className="group w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none"
+                className="group w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base transition duration-300 ease-in-out focus:outline-none hover:scale-105"
               >
                 <Link
                   href={`/services/service${index + 1}`}
@@ -73,7 +73,7 @@ function Incentives() {
           <div className="mt-8 flex gap-x-4">
             <Link
               href="/register"
-              className="inline-block rounded-lg bg-blue-500 px-4 py-1.5 text-base font-semibold leading-7 text-white shadow-sm ring-1 ring-blue-500 hover:bg-blue-500 hover:ring-blue-500"
+              className="inline-block rounded-lg bg-blue-500 px-4 py-1.5 text-base font-semibold leading-7 text-white shadow-sm ring-1 ring-blue-500 hover:bg-blue-500 hover:ring-blue-500 hover:scale-105 ease-in-out transition duration-300"
             >
               Crear cuenta
               <span className="text-indigo-200" aria-hidden="true">
@@ -82,7 +82,7 @@ function Incentives() {
             </Link>
             <Link
               href="/buscar-doctor"
-              className="inline-block rounded-lg px-4 py-1.5 text-base font-semibold leading-7 text-gray-900 ring-1 ring-gray-900/10 hover:ring-gray-900/20"
+              className="inline-block rounded-lg px-4 py-1.5 text-base font-semibold leading-7 text-gray-900 ring-1 ring-gray-900/10 hover:ring-gray-900/20 hover:scale-105 ease-in-out transition duration-300" 
             >
               Buscar especialista
               <span className="text-gray-400" aria-hidden="true">

@@ -1,20 +1,19 @@
 import { Metadata } from "next";
 import BlogSearch from "../ui/blog/categoriesHeader";
 import { BlogCardHorizontal } from "../ui/blog/blog-card";
-import { Post } from "../types/types";
 import Footer from "../ui/navigation/footer";
-import FilterTags from "../ui/blog/filterTags";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
 
 export const metadata: Metadata = {
   title: "Blog",
 };
 
-async function fetchPosts(category: string, limit: number, offset: number) {
+async function fetchPosts(category: string,name: string, limit: number, offset: number) {
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
     offset: offset.toString(),
     ...(category && category !== "All" && { category }),
+    ...(name && {name})
   });
 
   try {
@@ -38,15 +37,16 @@ async function fetchPosts(category: string, limit: number, offset: number) {
 export default async function Page({
   searchParams,
 }: {
-  searchParams: { category?: string; page?: string };
+  searchParams: { category?: string; name?: string; page?: string };
 }) {
   const category = searchParams.category || "All";
+  const name = searchParams.name || "";
   const currentPage = Number(searchParams.page) || 1;
   const limit = 9; // Número de posts por página
   const offset = (currentPage - 1) * limit;
 
   // Fetch data desde el servidor
-  const { posts, total_posts } = await fetchPosts(category, limit, offset);
+  const { posts, total_posts } = await fetchPosts(category,name, limit, offset);
 
   // Calcular el total de páginas
   const totalPages = Math.ceil(total_posts / limit);

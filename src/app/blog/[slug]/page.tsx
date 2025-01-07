@@ -48,7 +48,7 @@ export default async function PostPage({ params }: { params: { slug: string } })
     notFound();
   }
 
-  const publishedDate = post.published ? new Date(post.published) : null;
+  const publishedDate = post.published_at ? new Date(post.published_at) : null;
   const thumbnailUrl = post.thumbnail?.url;
 
   return (
