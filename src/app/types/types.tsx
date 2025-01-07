@@ -16,7 +16,7 @@ export interface Post {
     url: string;
   } | null; // Puede ser un objeto o null
   time_read: number;
-  published: string;
+  published_at: string;
 }
 export interface Doctor {
   id: string

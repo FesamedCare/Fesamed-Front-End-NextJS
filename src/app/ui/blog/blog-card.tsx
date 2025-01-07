@@ -52,8 +52,8 @@ export const BlogCardHorizontal: FC<BlogCardHorizontalProps> = ({ posts }) => {
                     <div className="ml-3">
                       <p className="text-sm text-gray-500">{post.time_read} min read</p>
                       <div className="flex space-x-1 text-sm text-gray-500">
-                        <time dateTime={new Date(post.published).toISOString()}>
-                          {new Date(post.published).toLocaleDateString()}
+                        <time dateTime={new Date(post.published_at).toISOString()}>
+                          {new Date(post.published_at).toLocaleDateString()}
                         </time>
                       </div>
                     </div>
