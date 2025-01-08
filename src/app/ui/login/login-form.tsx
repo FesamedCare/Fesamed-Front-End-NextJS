@@ -100,7 +100,7 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                       )}
                     </button>
                   </div>
-                  {/* {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>} */}
+                  {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
                   <button
                     type="submit"
                     className="w-full text-white bg-blue-950 hover:bg-primary-700 focus:ring-2 focus:outline-none focus:ring-blue-300 focus:text-blue-500 focus:bg-white font-medium rounded-full text-lg px-5 py-1.5 text-center"
