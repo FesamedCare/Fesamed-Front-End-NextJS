@@ -88,14 +88,14 @@ export default function Navbar() {
       <div className="xl:px-16 px-6  2xl:px-32 sm:px-16">
         <div className="-ml-4 -mt-2 hidden lg:flex flex-wrap items-center justify-between sm:flex-nowrap md:px-14 px-2">
           <div className="flex">
-            <Link href="/" className="mb-4 mt-6">
-              <Image
+            <Link href="/" className="mb-4 mt-6 h-14 w-48">
+            <Image
                 src="https://fesamedcare.s3.us-east-2.amazonaws.com/FesaMedCareLogo.png"
                 width={200}
-                height={180}
+                height={56}  // Assuming 3.57:1 aspect ratio
                 alt="FesaMedCare Logo"
                 priority
-                className=""
+                style={{ width: "auto",height: "auto" }}
               />
             </Link>
             <div className="ml-10 mt-11">
@@ -233,13 +233,13 @@ export default function Navbar() {
 
         {/* Mobile Navbar */}
         <div className="-ml-4 -mt-2 lg:hidden flex flex-wrap items-center justify-between sm:flex-nowrap  md:px-14  px-2">
-          <Link href="/" className="ml-4 mt-6 mb-4">
-            <Image
+          <Link href="/" className="ml-4 mt-6 mb-4 h-12 w-44">
+          <Image
               src="https://fesamedcare.s3.us-east-2.amazonaws.com/FesaMedCareLogo.png"
               width={180}
-              height={160}
+              height={50}  // Maintaining same aspect ratio
               alt="FesaMedCare Logo"
-              className=""
+              style={{ width: "auto", height: "auto" }}
             />
           </Link>
           <div className="ml-4 mt-4 flex-shrink-0">
