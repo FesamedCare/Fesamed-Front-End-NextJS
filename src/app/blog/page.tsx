@@ -35,10 +35,13 @@ async function fetchPosts(category: string,name: string, limit: number, offset: 
 }
 
 export default async function Page({
-  searchParams,
+  searchParams: paramsPromise,
 }: {
-  searchParams: { category?: string; name?: string; page?: string };
+  searchParams: Promise<{ category?: string; name?: string; page?: string }>;
 }) {
+
+  const searchParams = await paramsPromise;
+  
   const category = searchParams.category || "All";
   const name = searchParams.name || "";
   const currentPage = Number(searchParams.page) || 1;
