@@ -13,23 +13,52 @@ function Form() {
   const [errorAuth, setErrorAuth] = useState("");
   const [phone, setPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordRequirements, setPasswordRequirements] = useState({
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    special: false,
+    noRepeat: false,
+    notCommon: true,
+  });
 
   const [formData, setFormData] = useState({
     name: "",
     lastname: "",
     email: "",
     password: "",
-    password_confirm: "",
     phone_number: "",
     role: "patient",
   });
 
-  const { name, lastname, email, password, password_confirm, phone_number } =
-    formData;
+  const { name, lastname, email, password, phone_number } = formData;
 
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const validatePassword = (password: string) => {
+    const requirements = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+      noRepeat: !/(.)\1{2,}/.test(password),
+      notCommon: !/^(123456|password|qwerty|abc123)$/i.test(password)
+    };
+
+    setPasswordRequirements(requirements);
+
+    // Retornar true si todos los requisitos se cumplen
+    return Object.values(requirements).every((req) => req);
+  };
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    if (name === "password") {
+      validatePassword(value);
+    }
+  };
 
   const onPhoneChange = (value: string) => {
     setPhone(value);
@@ -41,14 +70,14 @@ function Form() {
     setEnabled(e.target.checked);
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
-  const toggleConfirmPasswordVisibility = () =>
-    setShowConfirmPassword(!showConfirmPassword);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (password !== password_confirm) {
-      alert("Las contraseñas no coinciden");
+    if (!validatePassword(password)) {
+      setErrorMessage(
+        "Por favor, asegúrate de cumplir todos los requisitos de la contraseña"
+      );
       return;
     }
 
@@ -82,7 +111,6 @@ function Form() {
           lastname: "",
           email: "",
           password: "",
-          password_confirm: "",
           phone_number: "",
           role: "patient",
         });
@@ -98,6 +126,29 @@ function Form() {
       setErrorAuth("Error al conectar con el servidor");
     }
   };
+
+  const PasswordRequirement = ({
+    met,
+    text,
+  }: {
+    met: boolean;
+    text: string;
+  }) => (
+    <div className="flex items-center gap-2 text-sm">
+      <svg
+        className={`w-4 h-4 ${met ? "text-green-500" : "text-gray-300"}`}
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path
+          fillRule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+          clipRule="evenodd"
+        />
+      </svg>
+      <span className={met ? "text-gray-600" : "text-gray-400"}>{text}</span>
+    </div>
+  );
 
   return (
     <div>
@@ -200,60 +251,45 @@ function Form() {
                       )}
                     </button>
                   </div>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      name="password_confirm"
-                      value={password_confirm}
-                      onChange={onChange}
-                      placeholder="Confirmar Contraseña"
-                      className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={toggleConfirmPasswordVisibility}
-                      className="absolute inset-y-0 right-0 flex items-center pr-3"
-                    >
-                      {showConfirmPassword ? (
-                        <svg
-                          className="w-5 h-5 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-                          ></path>
-                        </svg>
-                      ) : (
-                        <svg
-                          className="w-5 h-5 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          ></path>
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          ></path>
-                        </svg>
-                      )}
-                    </button>
-                  </div>
+
+                  {password.length > 0 && (
+                    <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm font-medium text-gray-700 mb-2">
+                        Requisitos de la contraseña:
+                      </p>
+                      <div className="grid grid-cols-1 gap-2">
+                        <PasswordRequirement
+                          met={passwordRequirements.length}
+                          text="Mínimo 8 caracteres"
+                        />
+                        <PasswordRequirement
+                          met={passwordRequirements.uppercase}
+                          text="Al menos una mayúscula"
+                        />
+                        <PasswordRequirement
+                          met={passwordRequirements.lowercase}
+                          text="Al menos una minúscula"
+                        />
+                        <PasswordRequirement
+                          met={passwordRequirements.number}
+                          text="Al menos un número"
+                        />
+                        <PasswordRequirement
+                          met={passwordRequirements.special}
+                          text="Al menos un carácter especial"
+                        />
+                        <PasswordRequirement
+                          met={passwordRequirements.noRepeat}
+                          text="Sin caracteres repetidos consecutivamente"
+                        />
+                        <PasswordRequirement
+                          met={passwordRequirements.notCommon}
+                          text="No usar contraseñas comunes"
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <label htmlFor="phone" className="sr-only">
                       Teléfono

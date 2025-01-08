@@ -1,5 +1,5 @@
 import Footer from "../ui/navigation/footer";
-import Form from "../ui/register/register-form";
+import Form from "../ui/register/client-register-form";
 
 export default function Register() {
     return (
