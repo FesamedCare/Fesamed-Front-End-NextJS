@@ -13,13 +13,13 @@ function Form() {
   const [errorAuth, setErrorAuth] = useState("");
   const [phone, setPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [allRequirementsMet, setAllRequirementsMet] = useState(false);
   const [passwordRequirements, setPasswordRequirements] = useState({
     length: false,
     uppercase: false,
     lowercase: false,
     number: false,
     special: false,
-    noRepeat: false,
     notCommon: true,
   });
 
@@ -41,14 +41,18 @@ function Form() {
       lowercase: /[a-z]/.test(password),
       number: /[0-9]/.test(password),
       special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-      noRepeat: !/(.)\1{2,}/.test(password),
-      notCommon: !/^(123456|password|qwerty|abc123)$/i.test(password)
+      notCommon: !/^(123456|password|qwerty|abc123)$/i.test(password),
     };
 
     setPasswordRequirements(requirements);
 
-    // Retornar true si todos los requisitos se cumplen
-    return Object.values(requirements).every((req) => req);
+    // Verificar si todos los requisitos se cumplen
+    const areAllRequirementsMet = Object.values(requirements).every(
+      (req) => req
+    );
+    setAllRequirementsMet(areAllRequirementsMet);
+
+    return areAllRequirementsMet;
   };
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -252,11 +256,8 @@ function Form() {
                     </button>
                   </div>
 
-                  {password.length > 0 && (
-                    <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-medium text-gray-700 mb-2">
-                        Requisitos de la contraseña:
-                      </p>
+                  {password.length > 0 && !allRequirementsMet ? (
+                    <div className="px-3 bg-gray-50 rounded-lg">
                       <div className="grid grid-cols-1 gap-2">
                         <PasswordRequirement
                           met={passwordRequirements.length}
@@ -279,16 +280,31 @@ function Form() {
                           text="Al menos un carácter especial"
                         />
                         <PasswordRequirement
-                          met={passwordRequirements.noRepeat}
-                          text="Sin caracteres repetidos consecutivamente"
-                        />
-                        <PasswordRequirement
                           met={passwordRequirements.notCommon}
                           text="No usar contraseñas comunes"
                         />
                       </div>
                     </div>
-                  )}
+                  ) : password.length > 0 && allRequirementsMet ? (
+                    <div className=" bg-green-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <svg
+                          className="w-5 h-5 text-green-500"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span className="text-green-700 text-sm">
+                          ¡Contraseña segura! Puedes continuar.
+                        </span>
+                      </div>
+                    </div>
+                  ) : null}
 
                   <div>
                     <label htmlFor="phone" className="sr-only">
