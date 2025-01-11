@@ -23,6 +23,7 @@ import Image from "next/image";
 // Tipo para la información del usuario
 interface UserData {
   name: string;
+  lastname: string;
   phone_number: string;
   email: string;
   address?: string;
@@ -53,13 +54,15 @@ export default function ClientDashboard() {
     },
   ];
 
-
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/me`, {
-          credentials: "include",
-        });
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/user/me`,
+          {
+            credentials: "include",
+          }
+        );
 
         if (!response.ok) {
           throw new Error("No se pudo obtener la información del usuario");
@@ -132,7 +135,9 @@ export default function ClientDashboard() {
               </button>
             </div>
             <div className="text-center">
-              <h2 className="text-xl font-semibold">{userData?.name}</h2>
+              <h2 className="text-xl font-semibold">
+                {[userData?.name, userData?.lastname].filter(Boolean).join(" ")}
+              </h2>
               <p className="text-gray-500">{userData?.phone_number}</p>
               <p className="text-gray-500">{userData?.email}</p>
               <p className="text-gray-500">adress here #45-98</p>

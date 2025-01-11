@@ -53,14 +53,61 @@ const solutionsDesktop = [
 
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState("");
+  const [isLoading, setIsLoading] = useState(true); 
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/logout`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+
+      if (response.ok) {
+        alert("Sesión cerrada con éxito");
+        setIsLoggedIn(false);
+        setUsername("");
+        window.location.href = "/login";
+      } else {
+        const data = await response.json();
+        console.log(data.message || "Error al cerrar sesión");
+      }
+    } catch (error) {
+      console.error(error);
+      console.log("Error de red. Inténtalo de nuevo.");
+    }
   };
 
   useEffect(() => {
-    console.log(isLoggedIn);
-  }, [isLoggedIn]);
+    const checkAuthStatus = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/me`, {
+          credentials: "include",
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          setIsLoggedIn(true);
+          setUsername(userData.name || "Usuario");
+        } else {
+          setIsLoggedIn(false);
+          setUsername("");
+        }
+      } catch (error) {
+        console.error("Error checking auth status:", error);
+        setIsLoggedIn(false);
+        setUsername("");
+      } finally {
+        setIsLoading(false); // Set loading to false regardless of outcome
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -80,6 +127,19 @@ export default function Navbar() {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  const WelcomeButton = ({ open }: { open: boolean }) => (
+    <div className="flex items-center border border-blue-500 py-1 px-4 rounded-full">
+      <p className={`text-base font-medium ${open ? 'text-blue-500' : 'text-gray-900 hover:text-blue-500'} transition duration-200 ease-in-out`}>
+        ¡Bienvenido {username}! 👋
+      </p>
+      {open ? (
+        <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+      ) : (
+        <ChevronDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+      )}
+    </div>
+  );
   return (
     <nav
       id="navbar"
@@ -128,43 +188,17 @@ export default function Navbar() {
               </Link>
             </div>
           </div>
+          {!isLoading && (
+            <>
           {isLoggedIn ? (
             <div className="ml-4 mt-4 flex-shrink-0">
-              {/* <button onClick={() => setOpen(!open)}>
-                            {open ? <CloseMenu/> : <Menu/>}
-                          </button> */}
-
               <Popover className="relative">
                 {({ open }) => (
                   <>
                     <Popover.Button
-                      className={`
-                                ${open ? "" : "text-opacity-90"}
-                                focus:ring-none focus:outline-none`}
+                      className={`${open ? "" : "text-opacity-90"} focus:ring-none focus:outline-none`}
                     >
-                      {open ? (
-                        <div className="flex items-center border border-blue-500 py-1 px-4 rounded-full">
-                          <p className="text-base font-medium text-blue-500  transition duration-200 ease-in-out ">
-                            Bienvenido ! 👋
-                          </p>
-                          <ChevronUpDownIcon
-                            className="h-5 w-5 text-gray-400"
-                            aria-hidden="true"
-                          />
-                        </div>
-                      ) : (
-                        // Si el usuario esta logueado, se muestra el nombre del usuario acompañado de un Bienvenido y un icono de flecha hacia abajo
-
-                        <div className="flex items-center border border-blue-500 py-1 px-4 rounded-full">
-                          <p className="text-base font-medium text-gray-900 hover:text-blue-500 transition duration-200 ease-in-out ">
-                            Bienvenido ! 👋
-                          </p>
-                          <ChevronDownIcon
-                            className="h-5 w-5 text-gray-400"
-                            aria-hidden="true"
-                          />
-                        </div>
-                      )}
+                      <WelcomeButton open={open} />
                     </Popover.Button>
 
                     <Transition
@@ -228,6 +262,8 @@ export default function Navbar() {
             >
               Iniciar Sesión
             </Link>
+          )}
+          </>
           )}
         </div>
 
