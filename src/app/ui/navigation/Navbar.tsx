@@ -131,7 +131,7 @@ export default function Navbar() {
   const WelcomeButton = ({ open }: { open: boolean }) => (
     <div className="flex items-center border border-blue-500 py-1 px-4 rounded-full">
       <p className={`text-base font-medium ${open ? 'text-blue-500' : 'text-gray-900 hover:text-blue-500'} transition duration-200 ease-in-out`}>
-        ¡Bienvenido {username}! 👋
+        ¡Bienvenid@ {username}! 👋
       </p>
       {open ? (
         <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
