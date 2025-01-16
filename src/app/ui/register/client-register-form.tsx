@@ -161,7 +161,7 @@ function Form() {
           <div className="w-full md:mt-0 sm:max-w-md xl:p-0">
             <div className="p-6 sm:p-2">
               <h1 className="text-xl text-center font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
-                Crea una cuenta 🙌
+              Registro de Paciente 🙋‍♂️
               </h1>
               <p className="text-gray-500 text-center mb-4">
                 Estamos aquí para ayudarte!

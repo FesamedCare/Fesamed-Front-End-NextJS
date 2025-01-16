@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { SearchIcon } from "lucide-react";
 import { useDebouncedCallback } from "use-debounce";
+import { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -11,6 +12,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+interface Category {
+  category_id: string;
+  name: string;
+  slug: string;
+  views: number;
+}
+
 interface BlogSearchProps {
   selectedCategory: string;
 }
@@ -18,6 +26,27 @@ interface BlogSearchProps {
 export default function BlogSearch({ selectedCategory }: BlogSearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`,);
+        if (!response.ok) {
+          throw new Error('Failed to fetch categories');
+        }
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleCategoryChange = (value: string) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
@@ -47,7 +76,7 @@ export default function BlogSearch({ selectedCategory }: BlogSearchProps) {
     const query = search ? `?${search}` : "";
 
     router.push(`/blog${query}`);
-  }, 300); // Ajusta el tiempo de debounce según lo necesario (300ms en este caso)
+  }, 300);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     handleSearchDebounced(event.target.value);
@@ -63,10 +92,11 @@ export default function BlogSearch({ selectedCategory }: BlogSearchProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">Todas</SelectItem>
-              <SelectItem value="Odontologia">Odontología</SelectItem>
-              <SelectItem value="Nutricion">Nutrición</SelectItem>
-              <SelectItem value="General">General</SelectItem>
-              <SelectItem value="Salud">Salud</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category.category_id} value={category.slug}>
+                  {category.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
