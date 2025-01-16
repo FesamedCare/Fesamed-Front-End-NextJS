@@ -1,10 +1,10 @@
 import Footer from "../ui/navigation/footer";
-import Form from "../ui/register/client-register-form";
+import RoleSelection from "../ui/register/select-role";
 
 export default function Register() {
     return (
         <div>
-            <Form />
+            <RoleSelection/>
             <Footer />
         </div>
     );
