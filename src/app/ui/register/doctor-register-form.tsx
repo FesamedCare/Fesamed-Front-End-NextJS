@@ -40,7 +40,7 @@ function Form() {
     email: "",
     password: "",
     phone_number: "",
-    specialty: "",
+    specialty_id: "",
     role: "doctor",
   });
 
@@ -77,11 +77,11 @@ function Form() {
   const handleSelectSpecialty = (specialty: Specialty) => {
     setSelectedSpecialty(specialty);
     setSearchTerm(specialty.name);
-    setFormData({ ...formData, specialty: specialty.specialty_id });
+    setFormData({ ...formData, specialty_id: specialty.specialty_id });
     setShowSpecialties(false);
   };
 
-  const { name, lastname, email, password, phone_number, specialty } =
+  const { name, lastname, email, password, phone_number, specialty_id } =
     formData;
 
   // Rest of the validation functions remain the same...
@@ -140,7 +140,7 @@ function Form() {
       return;
     }
 
-    if (!formData.specialty) {
+    if (!formData.specialty_id) {
       setErrorMessage("Por favor, selecciona una especialidad");
       return;
     }
@@ -157,14 +157,14 @@ function Form() {
         }
       );
 
-      if (res.status === 201) {
+      if (res.status === 200) {
         setFormData({
           name: "",
           lastname: "",
           email: "",
           password: "",
           phone_number: "",
-          specialty: "",
+          specialty_id: "",
           role: "doctor",
         });
         setPhone("");

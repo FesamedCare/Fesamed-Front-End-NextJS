@@ -14,7 +14,7 @@ function Header() {
         if (mutation.type === 'childList') {
           const firstChild = typewriterRef.current?.querySelector('span');
           if (firstChild && firstChild.textContent?.trim() == 'V') {
-            firstChild.classList.add('text-blue-500');;
+            firstChild.classList.add('text-blue-500');
           } else {
             firstChild?.classList.remove('text-blue-500');
           }
