@@ -145,7 +145,13 @@ export default function ClientDashboard() {
           </div>
           <div className="space-y-2 bg-white rounded-lg drop-shadow-lg p-2">
             {[
-              { icon: FiEdit2, text: "Editar Perfil", path: "/edit-profile" },
+              { icon: FiEdit2, 
+                text: "Editar Perfil", 
+                path: "/edit-profile",
+                onClick: () => {
+                  window.location.href = "/dashboard/edit-patient-profile";
+                } 
+              },
               { icon: FiSettings, text: "Configuración" },
               { icon: FiHelpCircle, text: "Ayuda y Soporte" },
               { icon: FiShield, text: "Terminos y Condiciones" },
