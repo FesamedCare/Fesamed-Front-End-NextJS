@@ -8,7 +8,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { MultiSelect } from "./multi-select"
-import { Specialty } from "@/app/types/types";
+import { Specialty, University, Language, Disease } from "@/app/types/types";
 import { useEffect, useState } from "react"
 
 const generalProfileSchema = z.object({
@@ -45,6 +45,22 @@ const generalProfileSchema = z.object({
 export function GeneralProfileForm() {
 
   const [specialties, setSpecialties] = useState<Specialty[]>([])
+  const [universities, setUniversities] = useState<University[]>([])
+  const [languages, setLanguages] = useState<Language[]>([])
+  const [diseases, setDiseases] = useState<Disease[]>([])
+
+  // type Option = {
+  //   value: string;
+  //   label: string;
+  // };
+
+  // interface MultiSelectProps {
+  //   placeholder: string;
+  //   options: Option[];
+  //   selected: Option[];
+  //   onChange: (selected: Option[]) => void;
+  // }
+
 
 
   const form = useForm<z.infer<typeof generalProfileSchema>>({
@@ -77,7 +93,68 @@ export function GeneralProfileForm() {
           // Optionally show an error toast or message to the user
         }
       }
-  
+
+      async function fetchUniversities() {
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/universities`, {
+              method: "GET",
+              credentials: "include",
+            }
+          );
+          if (!response.ok) {
+            throw new Error('Failed to fetch universities')
+          }
+          const data: University[] = await response.json()
+          setUniversities(data)
+        } catch (error) {
+          console.error('Error fetching universities:', error)
+          window.location.href = '/login'
+        }
+      }
+
+      async function fetchLanguages() {
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/languages`, {
+              method: "GET",
+              credentials: "include",
+            }
+          );
+          if (!response.ok) {
+            throw new Error('Failed to fetch languages')
+          }
+          const data = await response.json()
+          setLanguages(data)
+        } catch (error) {
+          console.error('Error fetching languages:', error)
+          window.location.href = '/login'
+        }
+      }
+
+      async function fetchDiseases() {
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/diseases`, {
+              method: "GET",
+              credentials: "include",
+            }
+          );
+          if (!response.ok) {
+            throw new Error('Failed to fetch diseases')
+          }
+          const data = await response.json()
+          setDiseases(data)
+        } catch (error) {
+          console.error('Error fetching diseases:', error)
+          window.location.href = '/login'
+      }
+    }
+      
+
+      fetchDiseases()
+      fetchLanguages()
+      fetchUniversities()
       fetchSpecialties()
     }, [])
 
@@ -111,13 +188,18 @@ export function GeneralProfileForm() {
               <FormLabel>Especialidades</FormLabel>
               <FormControl>
                 <MultiSelect
-                  placeholder="Seleccione sus especialidades"
-                  options={specialties.map(specialty => ({
-                    value: specialty.specialty_id, 
-                    label: specialty.name
-                  }))}
-                  selected={field.value}
-                  onChange={(selected) => field.onChange(selected)}
+                 placeholder="Seleccione sus especialidades"
+                 options={specialties.map(specialty => ({
+                   value: specialty.specialty_id, 
+                   label: specialty.name
+                 }))}
+                 selected={field.value.map(item => ({
+                   value: item.specialty_id,
+                   label: specialties.find(s => s.specialty_id === item.specialty_id)?.name || ''
+                 }))}
+                 onChange={(selected) => field.onChange(selected.map(item => ({
+                   specialty_id: item.value
+                 })))}
                 />
               </FormControl>
               <FormMessage />
@@ -148,13 +230,17 @@ export function GeneralProfileForm() {
               <FormControl>
                 <MultiSelect
                   placeholder="Seleccione sus universidades"
-                  options={[
-                    { value: "3fa85f64-5717-4562-b3fc-2c963f66afa8", label: "Universidad A" },
-                    { value: "3fa85f64-5717-4562-b3fc-2c963f66afa9", label: "Universidad B" },
-                    // Agrega más opciones según sea necesario
-                  ]}
-                  selected={field.value}
-                  onChange={(selected) => field.onChange(selected)}
+                  options={universities.map(university => ({
+                    value: university.university_id, 
+                    label: university.name
+                  }))}
+                  selected={field.value.map(item => ({
+                    value: item.university_id,
+                    label: universities.find(u => u.university_id === item.university_id)?.name || ''
+                  }))}
+                  onChange={(selected) => field.onChange(selected.map(item => ({
+                    university_id: item.value
+                  })))}
                 />
               </FormControl>
               <FormMessage />
@@ -171,14 +257,18 @@ export function GeneralProfileForm() {
               <FormLabel>Idiomas</FormLabel>
               <FormControl>
                 <MultiSelect
-                  placeholder="Seleccione los idiomas que habla"
-                  options={[
-                    { value: "3fa85f64-5717-4562-b3fc-2c963f66afb0", label: "Español" },
-                    { value: "3fa85f64-5717-4562-b3fc-2c963f66afb1", label: "Inglés" },
-                    // Agrega más opciones según sea necesario
-                  ]}
-                  selected={field.value}
-                  onChange={(selected) => field.onChange(selected)}
+                 placeholder="Seleccione los idiomas que habla"
+                 options={languages.map(language => ({
+                   value: language.language_id, 
+                   label: language.name
+                 }))}
+                 selected={field.value.map(item => ({
+                   value: item.language_id,
+                   label: languages.find(l => l.language_id === item.language_id)?.name || ''
+                 }))}
+                 onChange={(selected) => field.onChange(selected.map(item => ({
+                   language_id: item.value
+                 })))}
                 />
               </FormControl>
               <FormMessage />
@@ -195,13 +285,17 @@ export function GeneralProfileForm() {
               <FormControl>
                 <MultiSelect
                   placeholder="Seleccione las enfermedades que trata"
-                  options={[
-                    { value: "3fa85f64-5717-4562-b3fc-2c963f66afb2", label: "Diabetes" },
-                    { value: "3fa85f64-5717-4562-b3fc-2c963f66afb3", label: "Hipertensión" },
-                    // Agrega más opciones según sea necesario
-                  ]}
-                  selected={field.value}
-                  onChange={(selected) => field.onChange(selected)}
+                  options={diseases.map(disease => ({
+                    value: disease.disease_id, 
+                    label: disease.name
+                  }))}
+                  selected={field.value.map(item => ({
+                    value: item.disease_id,
+                    label: diseases.find(d => d.disease_id === item.disease_id)?.name || ''
+                  }))}
+                  onChange={(selected) => field.onChange(selected.map(item => ({
+                    disease_id: item.value,
+                  })))}
                 />
               </FormControl>
               <FormMessage />

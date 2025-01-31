@@ -48,3 +48,17 @@ export interface Specialty {
   specialty_id: string;
   name: string;
 }
+export interface University {
+  university_id: string;
+  name: string;
+}
+
+export interface Language {
+  language_id: string;
+  name: string;
+}
+
+export interface Disease{
+  disease_id: string;
+  name: string;
+}
