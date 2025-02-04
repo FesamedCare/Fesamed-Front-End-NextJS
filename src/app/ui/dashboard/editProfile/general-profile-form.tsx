@@ -49,19 +49,6 @@ export function GeneralProfileForm() {
   const [languages, setLanguages] = useState<Language[]>([])
   const [diseases, setDiseases] = useState<Disease[]>([])
 
-  // type Option = {
-  //   value: string;
-  //   label: string;
-  // };
-
-  // interface MultiSelectProps {
-  //   placeholder: string;
-  //   options: Option[];
-  //   selected: Option[];
-  //   onChange: (selected: Option[]) => void;
-  // }
-
-
 
   const form = useForm<z.infer<typeof generalProfileSchema>>({
     resolver: zodResolver(generalProfileSchema),
@@ -158,9 +145,30 @@ export function GeneralProfileForm() {
       fetchSpecialties()
     }, [])
 
-  function onSubmit(values: z.infer<typeof generalProfileSchema>) {
-    console.log(values)
-    // Aquí iría la lógica para enviar los datos al servidor
+  async function onSubmit(values: z.infer<typeof generalProfileSchema>) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctor/edit-profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Incluir credenciales si es necesario (cookies, tokens)
+        body: JSON.stringify(values), // Enviar los datos del formulario en formato JSON
+      })
+
+      if (!response.ok) {
+        throw new Error("Error al enviar los datos al servidor")
+        
+      }
+
+      const result = await response.json()
+      console.log("Datos enviados con éxito:", result)
+      alert("Perfil actualizado con éxito")
+    } catch (error) {
+      console.error("Error al enviar los datos:", error)
+      alert("Hubo un error al enviar los datos. Por favor, inténtalo de nuevo.")
+      console.log(values)
+    }
   }
 
   return (
