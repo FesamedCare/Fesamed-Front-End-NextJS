@@ -1,57 +1,58 @@
-"use client"
-
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { MultiSelect } from "./multi-select"
+import * as z from "zod";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { MultiSelect } from "./multi-select";
 import { Specialty, University, Language, Disease } from "@/app/types/types";
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 
+// Esquema sin validaciones
 const generalProfileSchema = z.object({
-  license_number: z.string().min(1, "El número de licencia es requerido"),
-  specialties: z.array(z.object({ specialty_id: z.string().uuid() })).min(1, "Seleccione al menos una especialidad"),
-  description: z.string().min(10, "La descripción debe tener al menos 10 caracteres"),
-  doctor_education: z
-    .array(z.object({ university_id: z.string().uuid() }))
-    .min(1, "Seleccione al menos una universidad"),
+  license_number: z.string(),
+  specialties: z.array(z.object({ specialty_id: z.string() })),
+  description: z.string(),
+  doctor_education: z.array(z.object({ university_id: z.string() })),
   doctor_experience: z.object({
     existing: z.array(
       z.object({
-        experience_id: z.string().uuid(),
-        description: z.string().min(1, "La descripción es requerida"),
-      }),
+        experience_id: z.string(),
+        description: z.string(),
+      })
     ),
     new: z.array(
       z.object({
-        description: z.string().min(1, "La descripción es requerida"),
-      }),
+        description: z.string(),
+      })
     ),
   }),
-  doctor_languages: z.array(z.object({ language_id: z.string().uuid() })).min(1, "Seleccione al menos un idioma"),
-  treated_diseases: z
-    .array(
-      z.object({
-        disease_id: z.string().uuid(),
-        comments: z.string().optional(),
-      }),
-    )
-    .min(1, "Seleccione al menos una enfermedad tratada"),
-})
+  doctor_languages: z.array(z.object({ language_id: z.string() })),
+  treated_diseases: z.array(
+    z.object({
+      disease_id: z.string(),
+      comments: z.string().optional(),
+    })
+  ),
+});
 
 export function GeneralProfileForm() {
+  const [specialties, setSpecialties] = useState<Specialty[]>([]);
+  const [universities, setUniversities] = useState<University[]>([]);
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [diseases, setDiseases] = useState<Disease[]>([]);
+  const [doctorData, setDoctorData] = useState<any>(null);
 
-  const [specialties, setSpecialties] = useState<Specialty[]>([])
-  const [universities, setUniversities] = useState<University[]>([])
-  const [languages, setLanguages] = useState<Language[]>([])
-  const [diseases, setDiseases] = useState<Disease[]>([])
-
-
-  const form = useForm<z.infer<typeof generalProfileSchema>>({
-    resolver: zodResolver(generalProfileSchema),
+  const form = useForm({
     defaultValues: {
       license_number: "",
       specialties: [],
@@ -61,115 +62,202 @@ export function GeneralProfileForm() {
       doctor_languages: [],
       treated_diseases: [],
     },
-  })
+  });
 
-    // Fetch specialties when component mounts
-    useEffect(() => {
-      async function fetchSpecialties() {
-        try {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/specialties`
-          );
-          if (!response.ok) {
-            throw new Error('Failed to fetch specialties')
+  // Fetch specialties and user data
+  useEffect(() => {
+    async function userData() {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/user/me`,
+          {
+            method: "GET",
+            credentials: "include",
           }
-          const data: Specialty[] = await response.json()
-          setSpecialties(data)
-        } catch (error) {
-          console.error('Error fetching specialties:', error)
-          // Optionally show an error toast or message to the user
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch user data");
         }
-      }
-
-      async function fetchUniversities() {
-        try {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/universities`, {
-              method: "GET",
-              credentials: "include",
-            }
-          );
-          if (!response.ok) {
-            throw new Error('Failed to fetch universities')
-          }
-          const data: University[] = await response.json()
-          setUniversities(data)
-        } catch (error) {
-          console.error('Error fetching universities:', error)
-          window.location.href = '/login'
-        }
-      }
-
-      async function fetchLanguages() {
-        try {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/languages`, {
-              method: "GET",
-              credentials: "include",
-            }
-          );
-          if (!response.ok) {
-            throw new Error('Failed to fetch languages')
-          }
-          const data = await response.json()
-          setLanguages(data)
-        } catch (error) {
-          console.error('Error fetching languages:', error)
-          window.location.href = '/login'
-        }
-      }
-
-      async function fetchDiseases() {
-        try {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/diseases`, {
-              method: "GET",
-              credentials: "include",
-            }
-          );
-          if (!response.ok) {
-            throw new Error('Failed to fetch diseases')
-          }
-          const data = await response.json()
-          setDiseases(data)
-        } catch (error) {
-          console.error('Error fetching diseases:', error)
-          window.location.href = '/login'
+        const data = await response.json();
+        setDoctorData(data);
+        form.reset({
+          license_number: data.license_number || "",
+          description: data.description || "",
+          specialties: data.specialties || [],
+          doctor_education: data.education || [],
+          doctor_languages: data.languages || [],
+          treated_diseases: data.treated_diseases || [],
+          doctor_experience: data.doctor_experience || {
+            existing: [],
+            new: [],
+          },
+        });
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
     }
-      
 
-      fetchDiseases()
-      fetchLanguages()
-      fetchUniversities()
-      fetchSpecialties()
-    }, [])
+    async function fetchSpecialties() {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/specialties`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch specialties");
+        }
+        const data: Specialty[] = await response.json();
+        setSpecialties(data);
+      } catch (error) {
+        console.error("Error fetching specialties:", error);
+      }
+    }
 
-  async function onSubmit(values: z.infer<typeof generalProfileSchema>) {
+    async function fetchUniversities() {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/universities`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch universities");
+        }
+        const data: University[] = await response.json();
+        setUniversities(data);
+      } catch (error) {
+        console.error("Error fetching universities:", error);
+        window.location.href = "/login";
+      }
+    }
+
+    async function fetchLanguages() {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/languages`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch languages");
+        }
+        const data = await response.json();
+        setLanguages(data);
+      } catch (error) {
+        console.error("Error fetching languages:", error);
+        window.location.href = "/login";
+      }
+    }
+
+    async function fetchDiseases() {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/diseases`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch diseases");
+        }
+        const data = await response.json();
+        setDiseases(data);
+      } catch (error) {
+        console.error("Error fetching diseases:", error);
+        window.location.href = "/login";
+      }
+    }
+
+    userData();
+    fetchDiseases();
+    fetchLanguages();
+    fetchUniversities();
+    fetchSpecialties();
+  }, [form]);
+
+  async function onSubmit(values: any) {
+    console.log("Valores del formulario:", values);
+
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctor/edit-profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
+      // Asegúrate de que doctor_experience esté definido
+      const doctorExperience = values.doctor_experience || {
+        existing: [],
+        new: [],
+      };
+
+      const dataToSend = {
+        license_number: values.license_number,
+        description: values.description,
+        specialties: values.specialties.map((specialty: any) => ({
+          specialty_id: specialty.specialty_id,
+        })),
+        doctor_education: values.doctor_education.map((education: any) => ({
+          university_id: education.university_id,
+        })),
+        doctor_languages: values.doctor_languages.map((language: any) => ({
+          language_id: language.language_id,
+        })),
+        treated_diseases: values.treated_diseases.map((disease: any) => ({
+          disease_id: disease.disease_id,
+          comments: disease.comments || null,
+        })),
+        doctor_experience: {
+          existing: doctorExperience.existing.map((experience: any) => ({
+            experience_id: experience.experience_id,
+            description: experience.description,
+          })),
+          new: doctorExperience.new.map((experience: any) => ({
+            description: experience.description,
+          })),
         },
-        credentials: "include", // Incluir credenciales si es necesario (cookies, tokens)
-        body: JSON.stringify(values), // Enviar los datos del formulario en formato JSON
-      })
+      };
+
+      console.log("Datos a enviar:", dataToSend);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/doctor/edit-profile`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(dataToSend),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error("Error al enviar los datos al servidor")
-        
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Error al enviar los datos al servidor"
+        );
       }
 
-      const result = await response.json()
-      console.log("Datos enviados con éxito:", result)
-      alert("Perfil actualizado con éxito")
-    } catch (error) {
-      console.error("Error al enviar los datos:", error)
-      alert("Hubo un error al enviar los datos. Por favor, inténtalo de nuevo.")
-      console.log(values)
+      const result = await response.json();
+      console.log("Datos enviados con éxito:", result);
+      alert("Perfil actualizado con éxito");
+    } catch (error: any) {
+      console.error("Error al enviar los datos:", error);
+      alert(`Hubo un error al enviar los datos: ${error.message}`);
     }
   }
+
+  // Función para eliminar una opción seleccionada
+  const handleRemoveOption = (
+    fieldName: "specialties" | "doctor_education" | "doctor_languages" | "treated_diseases",
+    id: string
+  ) => {
+    const currentValues = form.getValues(fieldName) as []; // Asegurar que es un array
+    const updatedValues = currentValues.filter(
+      (item: any) => item[`${fieldName.slice(0, -1)}_id`] !== id
+    );
+    // form.setValue(fieldName, updatedValues);
+    console.log("Valores actualizados:", updatedValues);
+  };
 
   return (
     <Form {...form}>
@@ -181,7 +269,13 @@ export function GeneralProfileForm() {
             <FormItem>
               <FormLabel>Número de Licencia</FormLabel>
               <FormControl>
-                <Input placeholder="Ingrese su número de licencia" {...field} />
+                <Input
+                  placeholder={
+                    doctorData?.license_number ||
+                    "Ingrese su número de licencia"
+                  }
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -194,20 +288,46 @@ export function GeneralProfileForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Especialidades</FormLabel>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {field.value.map((specialty: any) => (
+                  <Button
+                    key={specialty.specialty_id}
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      handleRemoveOption("specialties", specialty.specialty_id)
+                    }
+                  >
+                    {
+                      specialties.find(
+                        (s) => s.specialty_id === specialty.specialty_id
+                      )?.name
+                    }
+                    <X className="ml-2 h-4 w-4" />
+                  </Button>
+                ))}
+              </div>
               <FormControl>
                 <MultiSelect
-                 placeholder="Seleccione sus especialidades"
-                 options={specialties.map(specialty => ({
-                   value: specialty.specialty_id, 
-                   label: specialty.name
-                 }))}
-                 selected={field.value.map(item => ({
-                   value: item.specialty_id,
-                   label: specialties.find(s => s.specialty_id === item.specialty_id)?.name || ''
-                 }))}
-                 onChange={(selected) => field.onChange(selected.map(item => ({
-                   specialty_id: item.value
-                 })))}
+                  placeholder="Seleccione sus especialidades"
+                  options={specialties.map((specialty) => ({
+                    value: specialty.specialty_id,
+                    label: specialty.name,
+                  }))}
+                  selected={field.value.map((item : any) => ({
+                    value: item.specialty_id,
+                    label:
+                      specialties.find(
+                        (s) => s.specialty_id === item.specialty_id
+                      )?.name || "",
+                  }))}
+                  onChange={(selected) =>
+                    field.onChange(
+                      selected.map((item) => ({
+                        specialty_id: item.value,
+                      }))
+                    )
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -222,7 +342,13 @@ export function GeneralProfileForm() {
             <FormItem>
               <FormLabel>Descripción</FormLabel>
               <FormControl>
-                <Textarea placeholder="Escriba una breve descripción sobre usted" {...field} />
+                <Textarea
+                  placeholder={
+                    doctorData?.description ||
+                    "Escriba una breve descripción sobre usted"
+                  }
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -235,20 +361,46 @@ export function GeneralProfileForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Educación</FormLabel>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {field.value.map((education: any) => (
+                  <Button
+                    key={education.university_id}
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      handleRemoveOption("doctor_education", education.university_id)
+                    }
+                  >
+                    {
+                      universities.find(
+                        (u) => u.university_id === education.university_id
+                      )?.name
+                    }
+                    <X className="ml-2 h-4 w-4" />
+                  </Button>
+                ))}
+              </div>
               <FormControl>
                 <MultiSelect
                   placeholder="Seleccione sus universidades"
-                  options={universities.map(university => ({
-                    value: university.university_id, 
-                    label: university.name
+                  options={universities.map((university) => ({
+                    value: university.university_id,
+                    label: university.name,
                   }))}
-                  selected={field.value.map(item => ({
+                  selected={field.value.map((item:any) => ({
                     value: item.university_id,
-                    label: universities.find(u => u.university_id === item.university_id)?.name || ''
+                    label:
+                      universities.find(
+                        (u) => u.university_id === item.university_id
+                      )?.name || "",
                   }))}
-                  onChange={(selected) => field.onChange(selected.map(item => ({
-                    university_id: item.value
-                  })))}
+                  onChange={(selected) =>
+                    field.onChange(
+                      selected.map((item) => ({
+                        university_id: item.value,
+                      }))
+                    )
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -256,27 +408,51 @@ export function GeneralProfileForm() {
           )}
         />
 
-        {/* Agrega campos similares para doctor_experience, doctor_languages, y treated_diseases */}
         <FormField
           control={form.control}
           name="doctor_languages"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Idiomas</FormLabel>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {field.value.map((language: any) => (
+                  <Button
+                    key={language.language_id}
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      handleRemoveOption("doctor_languages", language.language_id)
+                    }
+                  >
+                    {
+                      languages.find(
+                        (l) => l.language_id === language.language_id
+                      )?.name
+                    }
+                    <X className="ml-2 h-4 w-4" />
+                  </Button>
+                ))}
+              </div>
               <FormControl>
                 <MultiSelect
-                 placeholder="Seleccione los idiomas que habla"
-                 options={languages.map(language => ({
-                   value: language.language_id, 
-                   label: language.name
-                 }))}
-                 selected={field.value.map(item => ({
-                   value: item.language_id,
-                   label: languages.find(l => l.language_id === item.language_id)?.name || ''
-                 }))}
-                 onChange={(selected) => field.onChange(selected.map(item => ({
-                   language_id: item.value
-                 })))}
+                  placeholder="Seleccione los idiomas que habla"
+                  options={languages.map((language) => ({
+                    value: language.language_id,
+                    label: language.name,
+                  }))}
+                  selected={field.value.map((item : any) => ({
+                    value: item.language_id,
+                    label:
+                      languages.find((l) => l.language_id === item.language_id)
+                        ?.name || "",
+                  }))}
+                  onChange={(selected) =>
+                    field.onChange(
+                      selected.map((item) => ({
+                        language_id: item.value,
+                      }))
+                    )
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -290,20 +466,45 @@ export function GeneralProfileForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Enfermedades tratadas</FormLabel>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {field.value.map((disease: any) => (
+                  <Button
+                    key={disease.disease_id}
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      handleRemoveOption("treated_diseases", disease.disease_id)
+                    }
+                  >
+                    {
+                      diseases.find(
+                        (d) => d.disease_id === disease.disease_id
+                      )?.name
+                    }
+                    <X className="ml-2 h-4 w-4" />
+                  </Button>
+                ))}
+              </div>
               <FormControl>
                 <MultiSelect
                   placeholder="Seleccione las enfermedades que trata"
-                  options={diseases.map(disease => ({
-                    value: disease.disease_id, 
-                    label: disease.name
+                  options={diseases.map((disease) => ({
+                    value: disease.disease_id,
+                    label: disease.name,
                   }))}
-                  selected={field.value.map(item => ({
+                  selected={field.value.map((item:any) => ({
                     value: item.disease_id,
-                    label: diseases.find(d => d.disease_id === item.disease_id)?.name || ''
+                    label:
+                      diseases.find((d) => d.disease_id === item.disease_id)
+                        ?.name || "",
                   }))}
-                  onChange={(selected) => field.onChange(selected.map(item => ({
-                    disease_id: item.value,
-                  })))}
+                  onChange={(selected) =>
+                    field.onChange(
+                      selected.map((item) => ({
+                        disease_id: item.value,
+                      }))
+                    )
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -314,6 +515,5 @@ export function GeneralProfileForm() {
         <Button type="submit">Guardar Cambios</Button>
       </form>
     </Form>
-  )
+  );
 }
-
