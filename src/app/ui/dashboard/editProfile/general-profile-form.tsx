@@ -248,15 +248,36 @@ export function GeneralProfileForm() {
 
   // Función para eliminar una opción seleccionada
   const handleRemoveOption = (
-    fieldName: "specialties" | "doctor_education" | "doctor_languages" | "treated_diseases",
+    fieldName:
+      | "specialties"
+      | "doctor_education"
+      | "doctor_languages"
+      | "treated_diseases",
     id: string
   ) => {
-    const currentValues = form.getValues(fieldName) as []; // Asegurar que es un array
-    const updatedValues = currentValues.filter(
-      (item: any) => item[`${fieldName.slice(0, -1)}_id`] !== id
-    );
-    // form.setValue(fieldName, updatedValues);
-    console.log("Valores actualizados:", updatedValues);
+    const currentValues = form.getValues(fieldName) as any[]; // Obtener los valores actuales
+    let idKey;
+  switch(fieldName) {
+    case "specialties":
+      idKey = "specialty_id";
+      break;
+    case "doctor_education":
+      idKey = "university_id";
+      break;
+    case "doctor_languages":
+      idKey = "language_id";
+      break;
+    case "treated_diseases":
+      idKey = "disease_id";
+      break;
+    default:
+      idKey = "";
+  }
+    // Filtrar el elemento a eliminar usando la clave correcta
+    const updatedValues = currentValues.filter(item => item[idKey] !== id);
+  
+    // Actualizar el campo en el formulario
+    form.setValue(fieldName, updatedValues as never[]);
   };
 
   return (
@@ -294,9 +315,11 @@ export function GeneralProfileForm() {
                     key={specialty.specialty_id}
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      handleRemoveOption("specialties", specialty.specialty_id)
-                    }
+                    onClick={(e) => {
+                      e.preventDefault(); // Prevenir comportamiento por defecto
+                      e.stopPropagation(); // Detener propagación
+                      handleRemoveOption("specialties", specialty.specialty_id); // Llamar a la función de eliminación
+                    }}
                   >
                     {
                       specialties.find(
@@ -314,10 +337,10 @@ export function GeneralProfileForm() {
                     value: specialty.specialty_id,
                     label: specialty.name,
                   }))}
-                  selected={field.value.map((item : any) => ({
+                  selected={field.value.map((item: any) => ({
                     value: item.specialty_id,
                     label:
-                      specialties.find(
+                      specialties.find( 
                         (s) => s.specialty_id === item.specialty_id
                       )?.name || "",
                   }))}
@@ -367,8 +390,14 @@ export function GeneralProfileForm() {
                     key={education.university_id}
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      handleRemoveOption("doctor_education", education.university_id)
+                    onClick={(e) => {
+                      e.preventDefault(); // Prevenir comportamiento por defecto
+                      e.stopPropagation(); // Detener propagación
+                      handleRemoveOption(
+                        "doctor_education",
+                        education.university_id
+                      )
+                    }
                     }
                   >
                     {
@@ -387,7 +416,7 @@ export function GeneralProfileForm() {
                     value: university.university_id,
                     label: university.name,
                   }))}
-                  selected={field.value.map((item:any) => ({
+                  selected={field.value.map((item: any) => ({
                     value: item.university_id,
                     label:
                       universities.find(
@@ -420,8 +449,14 @@ export function GeneralProfileForm() {
                     key={language.language_id}
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      handleRemoveOption("doctor_languages", language.language_id)
+                    onClick={(e) => {
+                      e.preventDefault(); // Prevenir comportamiento por defecto
+                      e.stopPropagation(); // Detener propagación
+                      handleRemoveOption(
+                        "doctor_languages",
+                        language.language_id
+                      )
+                    }
                     }
                   >
                     {
@@ -440,7 +475,7 @@ export function GeneralProfileForm() {
                     value: language.language_id,
                     label: language.name,
                   }))}
-                  selected={field.value.map((item : any) => ({
+                  selected={field.value.map((item: any) => ({
                     value: item.language_id,
                     label:
                       languages.find((l) => l.language_id === item.language_id)
@@ -472,14 +507,16 @@ export function GeneralProfileForm() {
                     key={disease.disease_id}
                     variant="outline"
                     size="sm"
-                    onClick={() =>
+                    onClick={(e) => {
+                      e.preventDefault(); // Prevenir comportamiento por defecto
+                      e.stopPropagation(); // Detener propagación
                       handleRemoveOption("treated_diseases", disease.disease_id)
+                    }
                     }
                   >
                     {
-                      diseases.find(
-                        (d) => d.disease_id === disease.disease_id
-                      )?.name
+                      diseases.find((d) => d.disease_id === disease.disease_id)
+                        ?.name
                     }
                     <X className="ml-2 h-4 w-4" />
                   </Button>
@@ -492,7 +529,7 @@ export function GeneralProfileForm() {
                     value: disease.disease_id,
                     label: disease.name,
                   }))}
-                  selected={field.value.map((item:any) => ({
+                  selected={field.value.map((item: any) => ({
                     value: item.disease_id,
                     label:
                       diseases.find((d) => d.disease_id === item.disease_id)
