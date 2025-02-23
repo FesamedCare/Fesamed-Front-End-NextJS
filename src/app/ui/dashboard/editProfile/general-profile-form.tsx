@@ -52,7 +52,7 @@ export function GeneralProfileForm() {
   const [diseases, setDiseases] = useState<Disease[]>([]);
   const [doctorData, setDoctorData] = useState<any>(null);
 
-  const form = useForm({
+  const form = useForm<z.infer<typeof generalProfileSchema>>({
     defaultValues: {
       license_number: "",
       specialties: [],
@@ -79,7 +79,7 @@ export function GeneralProfileForm() {
           throw new Error("Failed to fetch user data");
         }
         const data = await response.json();
-        setDoctorData(data);
+        console.log("User data:", data);
         form.reset({
           license_number: data.license_number || "",
           description: data.description || "",
@@ -87,8 +87,8 @@ export function GeneralProfileForm() {
           doctor_education: data.education || [],
           doctor_languages: data.languages || [],
           treated_diseases: data.treated_diseases || [],
-          doctor_experience: data.doctor_experience || {
-            existing: [],
+          doctor_experience: {
+            existing: data.experience || [],
             new: [],
           },
         });
@@ -189,6 +189,11 @@ export function GeneralProfileForm() {
         new: [],
       };
 
+      // Verifica que doctorExperience.new sea un array
+      if (!Array.isArray(doctorExperience.new)) {
+        doctorExperience.new = [];
+      }
+
       const dataToSend = {
         license_number: values.license_number,
         description: values.description,
@@ -257,25 +262,25 @@ export function GeneralProfileForm() {
   ) => {
     const currentValues = form.getValues(fieldName) as any[]; // Obtener los valores actuales
     let idKey;
-  switch(fieldName) {
-    case "specialties":
-      idKey = "specialty_id";
-      break;
-    case "doctor_education":
-      idKey = "university_id";
-      break;
-    case "doctor_languages":
-      idKey = "language_id";
-      break;
-    case "treated_diseases":
-      idKey = "disease_id";
-      break;
-    default:
-      idKey = "";
-  }
+    switch (fieldName) {
+      case "specialties":
+        idKey = "specialty_id";
+        break;
+      case "doctor_education":
+        idKey = "university_id";
+        break;
+      case "doctor_languages":
+        idKey = "language_id";
+        break;
+      case "treated_diseases":
+        idKey = "disease_id";
+        break;
+      default:
+        idKey = "";
+    }
     // Filtrar el elemento a eliminar usando la clave correcta
-    const updatedValues = currentValues.filter(item => item[idKey] !== id);
-  
+    const updatedValues = currentValues.filter((item) => item[idKey] !== id);
+
     // Actualizar el campo en el formulario
     form.setValue(fieldName, updatedValues as never[]);
   };
@@ -340,13 +345,13 @@ export function GeneralProfileForm() {
                   selected={field.value.map((item: any) => ({
                     value: item.specialty_id,
                     label:
-                      specialties.find( 
+                      specialties.find(
                         (s) => s.specialty_id === item.specialty_id
                       )?.name || "",
                   }))}
                   onChange={(selected) =>
                     field.onChange(
-                      selected.map((item) => ({
+                      selected.map((item: any) => ({
                         specialty_id: item.value,
                       }))
                     )
@@ -396,9 +401,8 @@ export function GeneralProfileForm() {
                       handleRemoveOption(
                         "doctor_education",
                         education.university_id
-                      )
-                    }
-                    }
+                      );
+                    }}
                   >
                     {
                       universities.find(
@@ -437,6 +441,56 @@ export function GeneralProfileForm() {
           )}
         />
 
+        {/* Campo de experiencia */}
+        <FormField
+          control={form.control}
+          name="doctor_experience"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Experiencia</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Describa su experiencia profesional"
+                  value={
+                    // Mostrar la experiencia existente o nueva
+                    field.value.existing?.[0]?.description ||
+                    field.value.new?.[0]?.description ||
+                    ""
+                  }
+                  onChange={(e) => {
+                    const existingExperience = field.value.existing?.[0];
+                    if (existingExperience) {
+                      // Si hay experiencia existente, actualizar manteniendo el experience_id
+                      form.setValue("doctor_experience", {
+                        ...field.value,
+                        existing: [
+                          {
+                            experience_id: existingExperience.experience_id,
+                            description: e.target.value,
+                          },
+                        ],
+                        new: [],
+                      });
+                    } else {
+                      // Si no hay experiencia existente, actualizar la nueva
+                      form.setValue("doctor_experience", {
+                        ...field.value,
+                        existing: [],
+                        new: [
+                          {
+                            description: e.target.value,
+                          },
+                        ],
+                      });
+                    }
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="doctor_languages"
@@ -455,9 +509,8 @@ export function GeneralProfileForm() {
                       handleRemoveOption(
                         "doctor_languages",
                         language.language_id
-                      )
-                    }
-                    }
+                      );
+                    }}
                   >
                     {
                       languages.find(
@@ -502,24 +555,46 @@ export function GeneralProfileForm() {
             <FormItem>
               <FormLabel>Enfermedades tratadas</FormLabel>
               <div className="flex flex-wrap gap-2 mb-2">
-                {field.value.map((disease: any) => (
-                  <Button
-                    key={disease.disease_id}
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.preventDefault(); // Prevenir comportamiento por defecto
-                      e.stopPropagation(); // Detener propagación
-                      handleRemoveOption("treated_diseases", disease.disease_id)
-                    }
-                    }
-                  >
-                    {
-                      diseases.find((d) => d.disease_id === disease.disease_id)
-                        ?.name
-                    }
-                    <X className="ml-2 h-4 w-4" />
-                  </Button>
+                {field.value.map((disease: any, index: number) => (
+                  <div key={disease.disease_id} className="flex flex-col gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault(); // Prevenir comportamiento por defecto
+                        e.stopPropagation(); // Detener propagación
+                        handleRemoveOption(
+                          "treated_diseases",
+                          disease.disease_id
+                        );
+                      }}
+                    >
+                      {
+                        diseases.find(
+                          (d) => d.disease_id === disease.disease_id
+                        )?.name
+                      }
+                      <X className="ml-2 h-4 w-4" />
+                    </Button>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Agregue comentarios sobre esta enfermedad"
+                        value={disease.comments || ""} // Usar el valor actual de los comentarios
+                        onChange={(e) => {
+                          // Actualizar los comentarios en el formulario
+                          const updatedDiseases: {
+                            disease_id: string;
+                            comments?: string;
+                          }[] = [...field.value];
+                          updatedDiseases[index].comments = e.target.value;
+                          form.setValue(
+                            "treated_diseases",
+                            updatedDiseases as never[]
+                          );
+                        }}
+                      />
+                    </FormControl>
+                  </div>
                 ))}
               </div>
               <FormControl>
@@ -539,6 +614,7 @@ export function GeneralProfileForm() {
                     field.onChange(
                       selected.map((item) => ({
                         disease_id: item.value,
+                        comments: "", // Inicializar comentarios vacíos
                       }))
                     )
                   }
