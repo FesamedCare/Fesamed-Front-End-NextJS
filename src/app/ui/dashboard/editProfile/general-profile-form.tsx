@@ -1,6 +1,7 @@
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
@@ -17,8 +18,10 @@ import { Specialty, University, Language, Disease } from "@/app/types/types";
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
-// Esquema sin validaciones
+
 const generalProfileSchema = z.object({
+  doctor_name: z.string().min(1, { message: "El nombre es obligatorio" }),
+  doctor_lastname: z.string().min(1, { message: "El apellido es obligatorio" }),
   license_number: z.string(),
   specialties: z.array(z.object({ specialty_id: z.string() })),
   description: z.string(),
@@ -53,7 +56,10 @@ export function GeneralProfileForm() {
   const [doctorData, setDoctorData] = useState<any>(null);
 
   const form = useForm<z.infer<typeof generalProfileSchema>>({
+    resolver: zodResolver(generalProfileSchema),
     defaultValues: {
+      doctor_name: "",
+      doctor_lastname: "",
       license_number: "",
       specialties: [],
       description: "",
@@ -81,6 +87,8 @@ export function GeneralProfileForm() {
         const data = await response.json();
         console.log("User data:", data);
         form.reset({
+          doctor_name: data.name || "",
+          doctor_lastname: data.lastname || "",
           license_number: data.license_number || "",
           description: data.description || "",
           specialties: data.specialties || [],
@@ -183,18 +191,19 @@ export function GeneralProfileForm() {
     console.log("Valores del formulario:", values);
 
     try {
-      // Asegúrate de que doctor_experience esté definido
       const doctorExperience = values.doctor_experience || {
         existing: [],
         new: [],
       };
 
-      // Verifica que doctorExperience.new sea un array
+
       if (!Array.isArray(doctorExperience.new)) {
         doctorExperience.new = [];
       }
 
       const dataToSend = {
+        name: values.doctor_name,
+        lastname: values.doctor_lastname,
         license_number: values.license_number,
         description: values.description,
         specialties: values.specialties.map((specialty: any) => ({
@@ -288,6 +297,46 @@ export function GeneralProfileForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <div className="flex gap-4 mt-4">
+      <FormField
+          control={form.control}
+          name="doctor_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nombre</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder={
+                    doctorData?.name ||
+                    "Ingrese su primer nombre"
+                  }
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+           <FormField
+          control={form.control}
+          name="doctor_lastname"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Apellido</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder={
+                    doctorData?.name ||
+                    "Ingrese su apellido"
+                  }
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        </div>
         <FormField
           control={form.control}
           name="license_number"
