@@ -2,7 +2,6 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { GeneralProfileForm } from "./general-profile-form"
-import { ProfilePhotosForm } from "./profile-photos"
 import { CertificatesForm } from "./certificates-form"
 
 import {
@@ -13,10 +12,11 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
   } from "@/components/ui/breadcrumb";
+import UploadForm from "./profile-photos";
 
   export default function DoctorProfileEdit() {
     return (
-      <div className="container mx-auto px-4 md:px-8 lg:px-28 xl:px-16 pb-12 max-w-7xl">
+      <div className="max-w-5xl mx-auto px-4 md:px-8 lg:px-28 xl:px-16 pb-12">
         <Breadcrumb className="pb-5 pt-2 font-medium">
                 <BreadcrumbList>
                     <BreadcrumbItem>
@@ -32,9 +32,8 @@ import {
                     </BreadcrumbItem>
                 </BreadcrumbList>
             </Breadcrumb>
-            <h1 className="text-3xl font-bold mb-6 text-wrap-balance">Editar Perfil de Doctor</h1>
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 h-auto">
+        <TabsList className="grid w-full grid-cols-4 h-auto">
           <TabsTrigger value="general" className="text-xs sm:text-sm md:text-sm py-2 h-auto">
             <span className="hidden sm:inline">Información General</span>
             <span className="sm:hidden">General</span>
@@ -45,14 +44,20 @@ import {
           <TabsTrigger value="certificates" className="text-xs sm:text-sm md:text-sm py-2 h-auto">
             Certificados
           </TabsTrigger>
+          <TabsTrigger value="consultorios" className="text-xs sm:text-sm md:text-sm py-2 h-auto">
+            Consultorios
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="general">
           <GeneralProfileForm />
         </TabsContent>
         <TabsContent value="photos">
-          <ProfilePhotosForm />
+          <UploadForm />
         </TabsContent>
         <TabsContent value="certificates">
+          <CertificatesForm />
+        </TabsContent>
+        <TabsContent value="Consultorios">
           <CertificatesForm />
         </TabsContent>
       </Tabs>

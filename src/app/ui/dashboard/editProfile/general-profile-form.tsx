@@ -297,12 +297,19 @@ export function GeneralProfileForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="flex gap-4 mt-4">
+
+        {/* Sobre ti */}
+        <div className="flex flex-col gap-4 mt-4 border border-blue-100 rounded-lg p-8">
+
+          <h4 className="font-semibold">Sobre ti</h4>
+
+        <div className="flex justify-between">
+              {/* Nombre */}
       <FormField
           control={form.control}
           name="doctor_name"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="w-[48%]">
               <FormLabel>Nombre</FormLabel>
               <FormControl>
                 <Input
@@ -317,11 +324,13 @@ export function GeneralProfileForm() {
             </FormItem>
           )}
         />
+
+        {/* Apellido */}
            <FormField
           control={form.control}
           name="doctor_lastname"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="w-[48%]">
               <FormLabel>Apellido</FormLabel>
               <FormControl>
                 <Input
@@ -337,81 +346,8 @@ export function GeneralProfileForm() {
           )}
         />
         </div>
-        <FormField
-          control={form.control}
-          name="license_number"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Número de Licencia</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder={
-                    doctorData?.license_number ||
-                    "Ingrese su número de licencia"
-                  }
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
-        <FormField
-          control={form.control}
-          name="specialties"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Especialidades</FormLabel>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {field.value.map((specialty: any) => (
-                  <Button
-                    key={specialty.specialty_id}
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.preventDefault(); // Prevenir comportamiento por defecto
-                      e.stopPropagation(); // Detener propagación
-                      handleRemoveOption("specialties", specialty.specialty_id); // Llamar a la función de eliminación
-                    }}
-                  >
-                    {
-                      specialties.find(
-                        (s) => s.specialty_id === specialty.specialty_id
-                      )?.name
-                    }
-                    <X className="ml-2 h-4 w-4" />
-                  </Button>
-                ))}
-              </div>
-              <FormControl>
-                <MultiSelect
-                  placeholder="Seleccione sus especialidades"
-                  options={specialties.map((specialty) => ({
-                    value: specialty.specialty_id,
-                    label: specialty.name,
-                  }))}
-                  selected={field.value.map((item: any) => ({
-                    value: item.specialty_id,
-                    label:
-                      specialties.find(
-                        (s) => s.specialty_id === item.specialty_id
-                      )?.name || "",
-                  }))}
-                  onChange={(selected) =>
-                    field.onChange(
-                      selected.map((item: any) => ({
-                        specialty_id: item.value,
-                      }))
-                    )
-                  }
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
+        {/* Descripción */}
         <FormField
           control={form.control}
           name="description"
@@ -431,7 +367,33 @@ export function GeneralProfileForm() {
             </FormItem>
           )}
         />
+        </div>
 
+          {/* Información Profesional */}
+        <div className="flex flex-col gap-4 mt-4 border border-blue-100 rounded-lg p-8">
+        <h4 className="font-semibold">Información Profesional</h4>
+
+        {/* Número de Licencia */}
+        <FormField
+          control={form.control}
+          name="license_number"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Número de Licencia</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder={
+                    doctorData?.license_number ||
+                    "Ingrese su número de licencia"
+                  }
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {/* Educación */}
         <FormField
           control={form.control}
           name="doctor_education"
@@ -442,7 +404,7 @@ export function GeneralProfileForm() {
                 {field.value.map((education: any) => (
                   <Button
                     key={education.university_id}
-                    variant="outline"
+                    variant="fetched"
                     size="sm"
                     onClick={(e) => {
                       e.preventDefault(); // Prevenir comportamiento por defecto
@@ -490,8 +452,8 @@ export function GeneralProfileForm() {
           )}
         />
 
-        {/* Campo de experiencia */}
-        <FormField
+          {/* Campo de experiencia */}
+          <FormField
           control={form.control}
           name="doctor_experience"
           render={({ field }) => (
@@ -540,7 +502,8 @@ export function GeneralProfileForm() {
           )}
         />
 
-        <FormField
+           {/* Idiomas */}
+           <FormField
           control={form.control}
           name="doctor_languages"
           render={({ field }) => (
@@ -550,7 +513,7 @@ export function GeneralProfileForm() {
                 {field.value.map((language: any) => (
                   <Button
                     key={language.language_id}
-                    variant="outline"
+                    variant="fetched"
                     size="sm"
                     onClick={(e) => {
                       e.preventDefault(); // Prevenir comportamiento por defecto
@@ -597,6 +560,68 @@ export function GeneralProfileForm() {
           )}
         />
 
+        </div>
+
+          {/* Especialización y tratamientos */}
+        <div className="flex flex-col gap-4 mt-4 border border-blue-100 rounded-lg p-8">
+        <h4 className="font-semibold">Especialización y tratamientos</h4>
+           {/* Especialidades */}
+        <FormField
+          control={form.control}
+          name="specialties"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Especialidades</FormLabel>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {field.value.map((specialty: any) => (
+                  <Button
+                    key={specialty.specialty_id}
+                    variant="fetched"
+                    size="sm"
+                    onClick={(e) => {
+                      e.preventDefault(); // Prevenir comportamiento por defecto
+                      e.stopPropagation(); // Detener propagación
+                      handleRemoveOption("specialties", specialty.specialty_id); // Llamar a la función de eliminación
+                    }}
+                  >
+                    {
+                      specialties.find(
+                        (s) => s.specialty_id === specialty.specialty_id
+                      )?.name
+                    }
+                    <X className="ml-2 h-4 w-4" />
+                  </Button>
+                ))}
+              </div>
+              <FormControl>
+                <MultiSelect
+                  placeholder="Seleccione sus especialidades"
+                  options={specialties.map((specialty) => ({
+                    value: specialty.specialty_id,
+                    label: specialty.name,
+                  }))}
+                  selected={field.value.map((item: any) => ({
+                    value: item.specialty_id,
+                    label:
+                      specialties.find(
+                        (s) => s.specialty_id === item.specialty_id
+                      )?.name || "",
+                  }))}
+                  onChange={(selected) =>
+                    field.onChange(
+                      selected.map((item: any) => ({
+                        specialty_id: item.value,
+                      }))
+                    )
+                  }
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Enfermedades tratadas */}
         <FormField
           control={form.control}
           name="treated_diseases"
@@ -607,7 +632,7 @@ export function GeneralProfileForm() {
                 {field.value.map((disease: any, index: number) => (
                   <div key={disease.disease_id} className="flex flex-col gap-2">
                     <Button
-                      variant="outline"
+                      variant="fetched"
                       size="sm"
                       onClick={(e) => {
                         e.preventDefault(); // Prevenir comportamiento por defecto
@@ -674,7 +699,12 @@ export function GeneralProfileForm() {
           )}
         />
 
-        <Button type="submit">Guardar Cambios</Button>
+        </div>
+
+
+       
+
+        <Button className="bg-blue-700" type="submit">Guardar Cambios</Button>
       </form>
     </Form>
   );

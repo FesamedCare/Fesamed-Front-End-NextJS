@@ -23,7 +23,7 @@ export function MultiSelect({ options, selected = [], onChange, placeholder }: M
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
+        <Button variant="grayblue" role="combobox" aria-expanded={open} className="w-full bg-gray-blue justify-between">
           {selected.length > 0
             ? `${selected.length} seleccionado${selected.length !== 1 ? "s" : ""}`
             : placeholder || "Seleccionar..."}
