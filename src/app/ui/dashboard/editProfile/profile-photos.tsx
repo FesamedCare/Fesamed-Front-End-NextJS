@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Folder } from "lucide-react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -10,13 +10,72 @@ import { Card } from "@/components/ui/card"
 import ImagePreviewModal from "./image-preview-modal"
 
 interface FileWithPreview extends File {
-  preview?: string
+  preview?: string;
+  id?: string; 
+  isExisting?: boolean; 
+}
+
+interface Photo {
+  photo_id: string;
+  photo_url: string;
+}
+
+interface UserData {
+  photos: Photo[];
+  [key: string]: any;
 }
 
 export default function UploadForm() {
   const [files, setFiles] = useState<FileWithPreview[]>([])
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewIndex, setPreviewIndex] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/me`, {
+          credentials: 'include' 
+        })
+        
+        if (!response.ok) {
+          throw new Error(`Error fetching user data: ${response.status}`)
+        }
+        
+        const userData: UserData = await response.json()
+        
+        if (userData.photos && userData.photos.length > 0) {
+          const existingPhotos = userData.photos.map(photo => {
+            const fileName = photo.photo_url.split('/').pop() || 'photo.jpg'
+            
+
+            const fileObj = {
+              name: fileName,
+              preview: photo.photo_url,
+              id: photo.photo_id,
+              isExisting: true,
+              type: 'image/jpeg',
+              size: 0, 
+            } as FileWithPreview
+            
+            return fileObj
+          })
+          
+          setFiles(existingPhotos)
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchUserData()
+  }, [])
 
   const onDrop = useCallback((acceptedFiles: FileWithPreview[]) => {
     setFiles((prevFiles) => {
@@ -47,25 +106,127 @@ export default function UploadForm() {
     }
   }
 
-  const removeFile = (fileToRemove: FileWithPreview) => {
-    setFiles(files.filter((file) => file !== fileToRemove))
-    if (fileToRemove.preview) {
-      URL.revokeObjectURL(fileToRemove.preview)
+  const removeFile = async (fileToRemove: FileWithPreview) => {
+    try {
+    
+      const updatedFiles = files.filter((file) => file !== fileToRemove);
+      setFiles(updatedFiles);
+      
+
+      if (!fileToRemove.isExisting && fileToRemove.preview) {
+        URL.revokeObjectURL(fileToRemove.preview);
+        return; 
+      }
+      
+
+      if (fileToRemove.isExisting && fileToRemove.id) {
+        setIsDeleting(true);
+        
+
+        const formData = new FormData();
+        
+
+        updatedFiles
+          .filter((file) => !file.isExisting)
+          .forEach((file) => {
+            formData.append("new_photos", file);
+          });
+        
+
+        const remainingPhotoIds = updatedFiles
+          .filter((file) => file.isExisting)
+          .map((file) => file.id);
+        
+        remainingPhotoIds.forEach((id) => {
+          formData.append("remaining_photo_ids", id as string);
+        });
+        
+      
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/doctor/edit-profile/media/photos`,
+          {
+            method: "PUT",
+            body: formData,
+            credentials: "include",
+          }
+        );
+        
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        
+        
+        alert("Foto eliminada correctamente");
+      }
+    } catch (error) {
+      console.error("Error al eliminar la foto:", error);
+      alert("Error al eliminar la foto. Por favor, inténtelo de nuevo.");
+      
+
+      setFiles((prevFiles) => [...prevFiles, fileToRemove]);
+    } finally {
+      setIsDeleting(false);
     }
-  }
+  };
 
   const openPreview = (index: number) => {
     setPreviewIndex(index)
     setPreviewOpen(true)
   }
 
-  // Filtrar solo las imágenes para el carrusel
   const imageFiles = files
-    .filter((file) => file.type.startsWith("image/") && file.preview)
+    .filter((file) => 
+      (file.type?.startsWith("image/") && file.preview) || file.isExisting
+    )
     .map((file) => ({
       src: file.preview as string,
       name: file.name,
     }))
+
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+
+      const formData = new FormData();
+  
+
+      files
+        .filter((file) => !file.isExisting)
+        .forEach((file) => {
+          formData.append("new_photos", file);
+        });
+  
+
+      const remainingPhotoIds = files
+        .filter((file) => file.isExisting)
+        .map((file) => file.id);
+  
+      remainingPhotoIds.forEach((id) => {
+        formData.append("remaining_photo_ids", id as string);
+      });
+  
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/doctor/edit-profile/media/photos`,
+        {
+          method: "PUT",
+          body: formData,
+          credentials: "include", 
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+  
+      alert("Fotos guardadas correctamente");
+      window.location.reload();
+    } catch (error) {
+      console.error("Error al guardar las fotos:", error);
+      alert("Error al guardar las fotos. Por favor, inténtelo de nuevo.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="flex justify-center items-center w-full">
@@ -103,47 +264,69 @@ export default function UploadForm() {
       </div>
       </div>
 
-      {files.length > 0 && (
-        <div className="space-y-4">
-          {files.map((file, index) => (
-            <Card key={index} className="p-4 flex items-center gap-4">
-              {file.type.startsWith("image/") && file.preview && (
-                <Image
-                  src={file.preview || "/placeholder.svg"}
-                  alt={file.name}
-                  width={80}
-                  height={80}
-                  className="rounded object-cover"
-                />
-              )}
-              <div className="flex-1">
-                <p className="font-medium">{file.name}</p>
-                <p className="text-sm text-gray-500">{(file.size / (1024 * 1024)).toFixed(1)}MB</p>
-              </div>
-              <div className="flex gap-2">
-                {file.type.startsWith("image/") && (
-                  <Button
-                    variant="preview"
-                    onClick={() => {
-                      // Encontrar el índice correcto en el array de imágenes
-                      const imageIndex = imageFiles.findIndex((img) => img.src === file.preview)
-                      if (imageIndex !== -1) {
-                        openPreview(imageIndex)
-                      }
-                    }}
-                  >
-                    Vista previa
-                  </Button>
-                )}
-                <Button variant="delete" onClick={() => removeFile(file)}>
-                  Eliminar
-                </Button>
-              </div>
-            </Card>
-          ))}
-
-          <Button className="w-full bg-blue-700 hover:bg-blue-800">Guardar</Button>
+      {isLoading ? (
+        <div className="flex justify-center p-8">
+          <p>Cargando imágenes...</p>
         </div>
+      ) : (
+        <>
+          {files.length > 0 && (
+            <div className="space-y-4">
+              {files.map((file, index) => (
+                <Card key={index} className="p-4 flex items-center gap-4">
+                  {((file.type?.startsWith("image/") && file.preview) || file.isExisting) && (
+                    <Image
+                      src={file.preview || "/placeholder.svg"}
+                      alt={file.name}
+                      width={80}
+                      height={80}
+                      className="rounded object-cover"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <p className="font-medium">{file.name}</p>
+                    {!file.isExisting && (
+                      <p className="text-sm text-gray-500">{(file.size / (1024 * 1024)).toFixed(1)}MB</p>
+                    )}
+                    {file.isExisting && (
+                      <p className="text-sm text-gray-500">Imagen existente</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {((file.type?.startsWith("image/") && file.preview) || file.isExisting) && (
+                      <Button
+                        variant="preview"
+                        onClick={() => {
+                          const imageIndex = imageFiles.findIndex((img) => img.src === file.preview)
+                          if (imageIndex !== -1) {
+                            openPreview(imageIndex)
+                          }
+                        }}
+                      >
+                        Vista previa
+                      </Button>
+                    )}
+                    <Button 
+                      variant="delete" 
+                      onClick={() => removeFile(file)}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting && file.isExisting ? 'Eliminando...' : 'Eliminar'}
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+
+              <Button 
+                className="w-full bg-blue-700 hover:bg-blue-800" 
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Guardando...' : 'Guardar'}
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Modal de vista previa */}
@@ -157,4 +340,3 @@ export default function UploadForm() {
     </div>
   )
 }
-
