@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 's3.amazonaws.com', // Añadir este dominio
+        hostname: 's3.amazonaws.com', 
       },
       {
         protocol: 'https',

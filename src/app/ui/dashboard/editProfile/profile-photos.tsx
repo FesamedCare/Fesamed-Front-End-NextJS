@@ -25,6 +25,9 @@ interface UserData {
   [key: string]: any;
 }
 
+// Tamaño máximo en bytes (10 MB)
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
 export default function UploadForm() {
   const [files, setFiles] = useState<FileWithPreview[]>([])
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -32,7 +35,6 @@ export default function UploadForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -52,7 +54,6 @@ export default function UploadForm() {
           const existingPhotos = userData.photos.map(photo => {
             const fileName = photo.photo_url.split('/').pop() || 'photo.jpg'
             
-
             const fileObj = {
               name: fileName,
               preview: photo.photo_url,
@@ -77,9 +78,21 @@ export default function UploadForm() {
     fetchUserData()
   }, [])
 
+  // Función para validar el tamaño del archivo
+  const validateFileSize = (file: File): boolean => {
+    if (file.size > MAX_FILE_SIZE) {
+      alert(`El archivo "${file.name}" excede el límite de 10 MB.`);
+      return false;
+    }
+    return true;
+  }
+
   const onDrop = useCallback((acceptedFiles: FileWithPreview[]) => {
+    // Filtra los archivos que exceden el tamaño máximo
+    const validFiles = acceptedFiles.filter(validateFileSize);
+    
     setFiles((prevFiles) => {
-      const newFiles = acceptedFiles.map((file) =>
+      const newFiles = validFiles.map((file) =>
         Object.assign(file, {
           preview: URL.createObjectURL(file),
         }),
@@ -97,56 +110,45 @@ export default function UploadForm() {
     e.preventDefault()
     e.stopPropagation()
     const droppedFiles = Array.from(e.dataTransfer.files)
-    onDrop(droppedFiles as FileWithPreview[])
+    
+    // Filtra los archivos que exceden el tamaño máximo
+    const validFiles = droppedFiles.filter(file => validateFileSize(file))
+    
+    onDrop(validFiles as FileWithPreview[])
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      onDrop(Array.from(e.target.files) as FileWithPreview[])
+      const inputFiles = Array.from(e.target.files);
+      
+      // Filtra los archivos que exceden el tamaño máximo
+      const validFiles = inputFiles.filter(file => validateFileSize(file));
+      
+      onDrop(validFiles as FileWithPreview[])
     }
   }
 
   const removeFile = async (fileToRemove: FileWithPreview) => {
     try {
-    
+      // Primero, eliminar el archivo de la lista local
       const updatedFiles = files.filter((file) => file !== fileToRemove);
       setFiles(updatedFiles);
       
-
+      // Si es un archivo nuevo (no existente), solo revocar la URL
       if (!fileToRemove.isExisting && fileToRemove.preview) {
         URL.revokeObjectURL(fileToRemove.preview);
         return; 
       }
       
-
+      // Si es un archivo existente, hacer la petición para eliminarlo
       if (fileToRemove.isExisting && fileToRemove.id) {
         setIsDeleting(true);
         
-
-        const formData = new FormData();
-        
-
-        updatedFiles
-          .filter((file) => !file.isExisting)
-          .forEach((file) => {
-            formData.append("new_photos", file);
-          });
-        
-
-        const remainingPhotoIds = updatedFiles
-          .filter((file) => file.isExisting)
-          .map((file) => file.id);
-        
-        remainingPhotoIds.forEach((id) => {
-          formData.append("remaining_photo_ids", id as string);
-        });
-        
-      
+        // Endpoint para eliminar una foto específica
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/doctor/edit-profile/media/photos`,
+          `${process.env.NEXT_PUBLIC_API_URL}/office_photos/${fileToRemove.id}`,
           {
-            method: "PUT",
-            body: formData,
+            method: "DELETE",
             credentials: "include",
           }
         );
@@ -155,14 +157,13 @@ export default function UploadForm() {
           throw new Error(`Error: ${response.status}`);
         }
         
-        
         alert("Foto eliminada correctamente");
       }
     } catch (error) {
       console.error("Error al eliminar la foto:", error);
       alert("Error al eliminar la foto. Por favor, inténtelo de nuevo.");
       
-
+      // Si hay error, restaurar el archivo en la lista
       setFiles((prevFiles) => [...prevFiles, fileToRemove]);
     } finally {
       setIsDeleting(false);
@@ -189,37 +190,33 @@ export default function UploadForm() {
 
       const formData = new FormData();
   
-
+      // Agregar solo archivos nuevos al FormData
       files
         .filter((file) => !file.isExisting)
         .forEach((file) => {
-          formData.append("new_photos", file);
+          formData.append("photos", file);
         });
   
-
-      const remainingPhotoIds = files
-        .filter((file) => file.isExisting)
-        .map((file) => file.id);
-  
-      remainingPhotoIds.forEach((id) => {
-        formData.append("remaining_photo_ids", id as string);
-      });
-  
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/doctor/edit-profile/media/photos`,
-        {
-          method: "PUT",
-          body: formData,
-          credentials: "include", 
+      // Solo si hay archivos nuevos para subir
+      if (formData.has("photos")) {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/office_photos/`,
+          {
+            method: "POST",
+            body: formData,
+            credentials: "include", 
+          }
+        );
+    
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
         }
-      );
-  
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+    
+        alert("Fotos guardadas correctamente");
+        window.location.reload();
+      } else {
+        alert("No hay nuevas fotos para guardar");
       }
-  
-      alert("Fotos guardadas correctamente");
-      window.location.reload();
     } catch (error) {
       console.error("Error al guardar las fotos:", error);
       alert("Error al guardar las fotos. Por favor, inténtelo de nuevo.");
@@ -243,7 +240,7 @@ export default function UploadForm() {
           <Folder className="w-12 h-12 text-blue-500" />
           <div>
             <p className="text-lg mb-2">Haga clic o arrastre para cargar su archivo</p>
-            <p className="text-sm text-gray-500">PNG, JPG, PDF, SVG (Máximo 15 MB)</p>
+            <p className="text-sm text-gray-500">PNG, JPG, PDF, SVG (Máximo 10 MB)</p>
           </div>
           <input
             type="file"
@@ -309,7 +306,7 @@ export default function UploadForm() {
                     <Button 
                       variant="delete" 
                       onClick={() => removeFile(file)}
-                      disabled={isDeleting}
+                      disabled={isDeleting && file.isExisting}
                     >
                       {isDeleting && file.isExisting ? 'Eliminando...' : 'Eliminar'}
                     </Button>
@@ -320,7 +317,7 @@ export default function UploadForm() {
               <Button 
                 className="w-full bg-blue-700 hover:bg-blue-800" 
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !files.some(file => !file.isExisting)}
               >
                 {isSubmitting ? 'Guardando...' : 'Guardar'}
               </Button>
