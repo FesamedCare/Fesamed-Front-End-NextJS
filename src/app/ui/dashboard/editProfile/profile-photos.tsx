@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useCallback, useEffect } from "react"
-import { Folder } from "lucide-react"
+import { ImageIcon } from "lucide-react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -22,7 +22,7 @@ interface Photo {
 
 interface UserData {
   photos: Photo[];
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Tamaño máximo en bytes (10 MB)
@@ -237,10 +237,10 @@ export default function UploadForm() {
         className="border-2 w-[70%] border-dashed border-blue-500 rounded-lg p-8 mb-4 text-center hover:bg-blue-50/50 transition-colors"
       >
         <div className="flex flex-col items-center gap-4">
-          <Folder className="w-12 h-12 text-blue-500" />
+          <ImageIcon className="w-12 h-12 text-blue-500" />
           <div>
             <p className="text-lg mb-2">Haga clic o arrastre para cargar su archivo</p>
-            <p className="text-sm text-gray-500">PNG, JPG, PDF, SVG (Máximo 10 MB)</p>
+            <p className="text-sm text-gray-500">PNG, JPG, SVG (Máximo 10 MB)</p>
           </div>
           <input
             type="file"
