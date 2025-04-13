@@ -2,17 +2,17 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { GeneralProfileForm } from "./general-profile-form"
-import { CertificatesForm } from "./certificates-form"
 
 import {
     Breadcrumb,
     BreadcrumbItem,
     BreadcrumbLink,
     BreadcrumbList,
-    BreadcrumbPage,
     BreadcrumbSeparator,
   } from "@/components/ui/breadcrumb";
 import UploadForm from "./profile-photos";
+import CertificatesForm from "./certificates-form";
+import ConsultoriesForm from "./consultories-form";
 
   export default function DoctorProfileEdit() {
     return (
@@ -57,8 +57,8 @@ import UploadForm from "./profile-photos";
         <TabsContent value="certificates">
           <CertificatesForm />
         </TabsContent>
-        <TabsContent value="Consultorios">
-          <CertificatesForm />
+        <TabsContent value="consultorios">
+          <ConsultoriesForm />
         </TabsContent>
       </Tabs>
       </div>

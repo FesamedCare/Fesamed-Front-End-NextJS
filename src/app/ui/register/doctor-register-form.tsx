@@ -147,7 +147,7 @@ function Form() {
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/doctor-registry`,
+        `${process.env.NEXT_PUBLIC_API_URL}/doctors/`,
         {
           method: "POST",
           headers: {

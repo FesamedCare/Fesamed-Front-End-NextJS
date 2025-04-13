@@ -19,7 +19,7 @@ const buttonVariants = cva(
           "bg-zinc-100 text-zinc-900 shadow-sm hover:bg-zinc-100/80 dark:bg-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-800/80",
         ghost: "hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
         link: "text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-50",
-        fetched: "bg-blue-100 text-blue-600 shadow-sm hover:bg-blue-200", 
+        fetched: "bg-blue-50 text-blue-600 shadow-sm hover:bg-blue-200", 
         grayblue: "bg-gray-blue border border-custom-border-gray shadow-sm ",
         preview: "bg-blue-50 shadow-sm text-blue-800 font-semibold hover:bg-blue-100",
         delete: "bg-blue-700 hover:bg-blue-800 text-white font-semibold",

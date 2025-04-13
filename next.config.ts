@@ -9,7 +9,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 's3.amazonaws.com', // Añadir este dominio
+        hostname: 'mymodelsbcuker.s3.amazonaws.com', 
+      },
+      {
+        protocol: 'https',
+        hostname: 's3.amazonaws.com', 
       },
       {
         protocol: 'https',

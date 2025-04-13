@@ -1,58 +1,349 @@
 "use client"
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
+import type React from "react"
+import { useState, useCallback, useEffect } from "react"
+import { Folder, FileText, Image as ImageIcon, FileType } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import { Card } from "@/components/ui/card"
+import ImagePreviewModal from "./image-preview-modal"
 
-const certificatesSchema = z.object({
-  certificates: z.array(z.string().url()).min(1, "Debe subir al menos un certificado"),
-})
-
-export function CertificatesForm() {
-  const form = useForm<z.infer<typeof certificatesSchema>>({
-    resolver: zodResolver(certificatesSchema),
-    defaultValues: {
-      certificates: [],
-    },
-  })
-
-  function onSubmit(values: z.infer<typeof certificatesSchema>) {
-    console.log(values)
-    // Aquí iría la lógica para enviar los datos al servidor
-  }
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="certificates"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Certificados de Estudio</FormLabel>
-              <FormControl>
-                <Input
-                  type="file"
-                  accept="image/*,.pdf"
-                  multiple
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || [])
-                    const urls = files.map((file) => URL.createObjectURL(file))
-                    field.onChange(urls)
-                  }}
-                />
-              </FormControl>
-              <FormDescription>Sube tus certificados de estudio aquí</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit">Guardar Certificados</Button>
-      </form>
-    </Form>
-  )
+interface FileWithPreview extends File {
+  preview?: string;
+  id?: string;
+  isExisting?: boolean;
+  fileType?: string;
+  name: string;
 }
 
+interface Certificate {
+  certificate_id: string;
+  certificate_url: string;
+}
+
+// Tamaño máximo en bytes (10 MB)
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+export default function CertificatesForm() {
+  const [files, setFiles] = useState<FileWithPreview[]>([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Determinar el tipo de archivo basado en la extensión de la URL
+  const getFileType = (url: string): string => {
+    const extension = url.split('.').pop()?.toLowerCase() || '';
+    if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(extension)) {
+      return 'image';
+    } else if (extension === 'pdf') {
+      return 'pdf';
+    }
+    return 'other';
+  };
+
+  // Renderizar el ícono correspondiente al tipo de archivo
+  const renderFileIcon = (fileType: string) => {
+    if (fileType === 'image') {
+      return <ImageIcon className="w-6 h-6 text-blue-500" />;
+    } else if (fileType === 'pdf') {
+      return <FileText className="w-6 h-6 text-red-500" />;
+    } else {
+      return <FileType className="w-6 h-6 text-gray-500" />;
+    }
+  };
+
+  // Obtener los certificados existentes del servidor
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/certificates/`, {
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error fetching certificates: ${response.status}`);
+        }
+
+        const certificates: Certificate[] = await response.json();
+        console.log('Certificates:', certificates);
+
+        // Mapear los certificados existentes a FileWithPreview
+        const existingCertificates = certificates.map((certificate) => {
+          const fileType = getFileType(certificate.certificate_url);
+
+          return {
+            name: certificate.certificate_id, // Usar el ID como nombre
+            preview: certificate.certificate_url,
+            id: certificate.certificate_id,
+            isExisting: true,
+            fileType: fileType,
+            size: 0,
+            type: fileType === 'image' ? 'image/jpeg' : fileType === 'pdf' ? 'application/pdf' : 'application/octet-stream',
+          } as FileWithPreview;
+        });
+
+        setFiles(existingCertificates);
+      } catch (error) {
+        console.error('Error loading certificates:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCertificates();
+  }, []);
+
+  // Función para validar el tamaño del archivo
+  const validateFileSize = (file: File): boolean => {
+    if (file.size > MAX_FILE_SIZE) {
+      alert(`El archivo "${file.name}" excede el límite de 10 MB.`);
+      return false;
+    }
+    return true;
+  };
+
+  // Manejar la subida de archivos
+  const onDrop = useCallback((acceptedFiles: FileWithPreview[]) => {
+    const validFiles = acceptedFiles.filter(validateFileSize);
+
+    setFiles((prevFiles) => {
+      const newFiles = validFiles.map((file) => {
+        const fileType = file.type.startsWith('image/') ? 'image' : file.type === 'application/pdf' ? 'pdf' : 'other';
+
+        return Object.assign(file, {
+          preview: URL.createObjectURL(file),
+          fileType: fileType,
+        });
+      });
+      return [...prevFiles, ...newFiles];
+    });
+  }, []);
+
+  // Manejar el evento de arrastrar y soltar
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    const validFiles = droppedFiles.filter(validateFileSize);
+    onDrop(validFiles as FileWithPreview[]);
+  };
+
+  // Manejar la selección de archivos
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const inputFiles = Array.from(e.target.files);
+      const validFiles = inputFiles.filter(validateFileSize);
+      onDrop(validFiles as FileWithPreview[]);
+    }
+  };
+
+  // Eliminar un archivo
+  const removeFile = async (fileToRemove: FileWithPreview) => {
+    try {
+      const updatedFiles = files.filter((file) => file !== fileToRemove);
+      setFiles(updatedFiles);
+
+      if (!fileToRemove.isExisting && fileToRemove.preview) {
+        URL.revokeObjectURL(fileToRemove.preview);
+        return;
+      }
+
+      if (fileToRemove.isExisting && fileToRemove.id) {
+        setIsDeleting(true);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/certificates/${fileToRemove.id}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+
+        alert("Certificado eliminado correctamente");
+      }
+    } catch (error) {
+      console.error("Error al eliminar el certificado:", error);
+      alert("Error al eliminar el certificado. Por favor, inténtelo de nuevo.");
+      setFiles((prevFiles) => [...prevFiles, fileToRemove]);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Abrir vista previa de imágenes
+  const openPreview = (index: number) => {
+    setPreviewIndex(index);
+    setPreviewOpen(true);
+  };
+
+  // Filtrar archivos de imagen para la vista previa
+  const imageFiles = files
+    .filter((file) => file.fileType === 'image' && file.preview)
+    .map((file) => ({
+      src: file.preview as string,
+      name: file.name,
+    }));
+
+  // Guardar los archivos nuevos
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+      const formData = new FormData();
+
+      files
+        .filter((file) => !file.isExisting)
+        .forEach((file) => {
+          formData.append("certificates", file);
+        });
+
+      if (formData.has("certificates")) {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/certificates/`,
+          {
+            method: "POST",
+            body: formData,
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+
+        alert("Certificados guardados correctamente");
+        window.location.reload();
+      } else {
+        alert("No hay nuevos certificados para guardar");
+      }
+    } catch (error) {
+      console.error("Error al guardar los certificados:", error);
+      alert("Error al guardar los certificados. Por favor, inténtelo de nuevo.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="flex justify-center items-center w-full">
+      <div className="w-full min-h-[70vh] space-y-4">
+        <div className="border px-4 pt-4 pb-8 mt-8 border-blue-200 rounded-lg">
+          <h1 className="text-lg font-bold pt-4 pl-6 pb-8">Sube tus certificados</h1>
+          <div className="flex items-center justify-center">
+            <div
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              className="border-2 w-[70%] border-dashed border-blue-500 rounded-lg p-8 mb-4 text-center hover:bg-blue-50/50 transition-colors"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <Folder className="w-12 h-12 text-blue-500" />
+                <div>
+                  <p className="text-lg mb-2">Haga clic o arrastre para cargar su archivo</p>
+                  <p className="text-sm text-gray-500">PNG, JPG, PDF, SVG (Máximo 10 MB)</p>
+                </div>
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="file-upload"
+                  multiple
+                  accept=".png,.jpg,.jpeg,.pdf,.svg"
+                />
+                <Button
+                  onClick={() => document.getElementById("file-upload")?.click()}
+                  className="bg-blue-500 hover:bg-blue-600"
+                >
+                  Seleccionar Archivos
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center p-8">
+            <p>Cargando certificados...</p>
+          </div>
+        ) : (
+          <>
+            {files.length > 0 ? (
+              <div className="space-y-4">
+                {files.map((file, index) => (
+                  <Card key={index} className="p-4 flex items-center gap-4">
+                    <div className="flex items-center justify-center w-8 h-8">
+                      {renderFileIcon(file.fileType || 'other')}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{file.name}</p>
+                      {!file.isExisting && (
+                        <p className="text-sm text-gray-500">{(file.size / (1024 * 1024)).toFixed(1)}MB</p>
+                      )}
+                      {file.isExisting && (
+                        <p className="text-sm text-gray-500">
+                          {file.fileType === 'pdf' ? 'PDF' :
+                           file.fileType === 'image' ? 'Imagen' :
+                           'Archivo'} existente
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      {file.fileType === 'image' && (
+                        <Button
+                          variant="preview"
+                          onClick={() => {
+                            const imageIndex = imageFiles.findIndex((img) => img.src === file.preview);
+                            if (imageIndex !== -1) {
+                              openPreview(imageIndex);
+                            }
+                          }}
+                        >
+                          Vista previa
+                        </Button>
+                      )}
+                      <Button
+                        variant="delete"
+                        onClick={() => removeFile(file)}
+                        disabled={isDeleting && file.isExisting}
+                      >
+                        {isDeleting && file.isExisting ? 'Eliminando...' : 'Eliminar'}
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+
+                <Button
+                  className="w-full bg-blue-700 hover:bg-blue-800"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting || !files.some((file) => !file.isExisting)}
+                >
+                  {isSubmitting ? 'Guardando...' : 'Guardar'}
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center p-8 text-gray-500">
+                No hay certificados cargados. Sube algunos usando el formulario anterior.
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Modal de vista previa solo para imágenes */}
+        <ImagePreviewModal
+          images={imageFiles}
+          initialIndex={previewIndex}
+          open={previewOpen}
+          onOpenChange={setPreviewOpen}
+        />
+      </div>
+    </div>
+  );
+}
