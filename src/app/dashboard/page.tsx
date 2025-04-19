@@ -8,7 +8,6 @@ export default function Page() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPatient, setIsPatient] = useState(false);
   const [isDoctor, setIsDoctor] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -33,7 +32,6 @@ export default function Page() {
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
-        setErrorMessage("Error al cargar los datos del usuario");
       } finally {
         setIsLoading(false);
       }
@@ -50,6 +48,7 @@ export default function Page() {
     <div>
       {isPatient && <ClientDashboard/>}
       {isDoctor && <DoctorDashboard/>}
+      {!isPatient && !isDoctor && !isLoading && <p className="text-center text-red-500 p-4">No se pudo cargar el dashboard. Por favor, inicie sesión nuevamente.</p>}
       <Footer/>
     </div>
   );
