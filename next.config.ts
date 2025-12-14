@@ -9,11 +9,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'mymodelsbcuker.s3.amazonaws.com', 
+        hostname: 'mymodelsbcuker.s3.amazonaws.com',
       },
       {
         protocol: 'https',
-        hostname: 's3.amazonaws.com', 
+        hostname: 's3.amazonaws.com',
       },
       {
         protocol: 'https',
@@ -24,6 +24,7 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  transpilePackages: ['isomorphic-dompurify'],
 };
 
 export default nextConfig;

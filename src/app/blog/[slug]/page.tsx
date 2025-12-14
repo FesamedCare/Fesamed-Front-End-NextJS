@@ -31,8 +31,9 @@ async function fetchPost(slug: string): Promise<Post | null> {
 }
 
 // Genera metadatos dinámicos para SEO
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const post = await fetchPost(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await fetchPost(slug);
 
   return {
     title: post ? post.title : "Post no encontrado",
@@ -41,8 +42,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 // Página principal del Post
-export default async function PostPage({ params }: { params: { slug: string } }) {
-  const post = await fetchPost(params.slug);
+export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await fetchPost(slug);
 
   if (!post) {
     notFound();
