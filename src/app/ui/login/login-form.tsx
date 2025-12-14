@@ -1,52 +1,54 @@
 'use client';
 
-import { form } from "framer-motion/client";
 import Link from "next/link";
 import { useState } from "react";
-import { on } from "stream";
-
+import { useRouter, useSearchParams } from "next/navigation";
+import { login } from "@/lib/api";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 function Form() {
   const [errorMessage, setErrorMessage] = useState(''); 
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get('redirect') || '/dashboard';
+  const { refreshUser } = useAuthContext();
 
   const [formData, setFormData] = useState({
     email: '',
     password: ''
-});
+  });
 
-const { email, password } = formData;
+  const { email, password } = formData;
 
-const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
-const onChange = (e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-
-      e.preventDefault();
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ username: email, password }),
-          credentials: "include", // Importante para incluir cookies
-        });
-
-        console.log(response);
-
-        if (response.ok) {
-          alert("Inicio de sesión exitoso");
-          window.location.href = "/dashboard";
-        } else {
-          const data = await response.json();
-          setErrorMessage(data.detail || "Error al iniciar sesión");
-        }
-      } catch (err) {
-        console.error(err);
-        setErrorMessage("Error de red. Inténtalo de nuevo.");
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setIsLoading(true);
+    
+    try {
+      await login(email, password);
+      await refreshUser();
+      localStorage.setItem('auth_event', Date.now().toString());
+      console.log("Login exitoso, redirigiendo a:", redirectPath);
+      router.push(redirectPath);
+    } catch (err) {
+      console.error("Error de login:", err);
+      if (err instanceof Error) {
+        setErrorMessage(err.message);
+      } else {
+        setErrorMessage("Error al iniciar sesión");
       }
+    } finally {
+      setIsLoading(false);
+    }
+  }
   
-}
   return (
     <div className="pt-16">
       <section className="bg-white">
@@ -71,6 +73,7 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 "
                       placeholder="Correo"
                       required
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="relative">
@@ -82,6 +85,7 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                       placeholder="Contraseña"
                       className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10"
                       required
+                      disabled={isLoading}
                     />
                     <button
                       type="button"
@@ -103,9 +107,10 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                   {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
                   <button
                     type="submit"
-                    className="w-full text-white bg-blue-950 hover:bg-primary-700 focus:ring-2 focus:outline-none focus:ring-blue-300 focus:text-blue-500 focus:bg-white font-medium rounded-full text-lg px-5 py-1.5 text-center"
+                    className="w-full text-white bg-blue-950 hover:bg-primary-700 focus:ring-2 focus:outline-none focus:ring-blue-300 focus:text-blue-500 focus:bg-white font-medium rounded-full text-lg px-5 py-1.5 text-center disabled:opacity-70"
+                    disabled={isLoading}
                   >
-                    Ingresar
+                    {isLoading ? 'Cargando...' : 'Ingresar'}
                   </button>
                   <div className="">
                     <p className="text-sm font-light text-gray-500 dark:text-gray-400">
@@ -135,7 +140,11 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                     </p>
                   </div>
                   <div className="flex justify-center gap-4">
-                    <button className="gsi-material-button">
+                    <button 
+                      className="gsi-material-button"
+                      onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
+                      disabled={isLoading}
+                    >
                       <div className=""></div>
                       <div className="flex items-center justify-center h-4 gap-1">
                         <div className="gsi-material-button-icon">
@@ -168,7 +177,11 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                       </div>
                     </button>
                     {/* boton para ingresar por medio de Facebook */}
-                    <button className="gsi-material-button">
+                    <button 
+                      className="gsi-material-button"
+                      onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/facebook`}
+                      disabled={isLoading}
+                    >
                       <div className="flex items-center justify-center h-4 gap-2">
                         <div>
                           <svg

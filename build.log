@@ -1,0 +1,29 @@
+
+> fesamed-front-end-nextjs@0.1.0 build
+> next build
+
+   ▲ Next.js 15.0.3
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+(node:15771) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+   Generating static pages (0/22) ...
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/login". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+    at i (/Users/davidgarciamunozz/Desktop/FesaMed/fesamed-front-end-nextjs/.next/server/chunks/388.js:1:4261)
+    at d (/Users/davidgarciamunozz/Desktop/FesaMed/fesamed-front-end-nextjs/.next/server/chunks/388.js:1:17421)
+    at c (/Users/davidgarciamunozz/Desktop/FesaMed/fesamed-front-end-nextjs/.next/server/app/login/page.js:1:2150)
+    at n$ (/Users/davidgarciamunozz/Desktop/FesaMed/fesamed-front-end-nextjs/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:20:45906)
+    at nI (/Users/davidgarciamunozz/Desktop/FesaMed/fesamed-front-end-nextjs/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:20:47681)
+    at nI (/Users/davidgarciamunozz/Desktop/FesaMed/fesamed-front-end-nextjs/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:20:62462)
+    at nL (/Users/davidgarciamunozz/Desktop/FesaMed/fesamed-front-end-nextjs/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:20:65480)
+    at nN (/Users/davidgarciamunozz/Desktop/FesaMed/fesamed-front-end-nextjs/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:20:63111)
+    at nB (/Users/davidgarciamunozz/Desktop/FesaMed/fesamed-front-end-nextjs/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:20:68893)
+    at nD (/Users/davidgarciamunozz/Desktop/FesaMed/fesamed-front-end-nextjs/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:20:67594)
+Error occurred prerendering page "/login". Read more: https://nextjs.org/docs/messages/prerender-error
+Export encountered an error on /login/page: /login, exiting the build.
+ ⨯ Static worker exited with code: 1 and signal: null

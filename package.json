@@ -17,14 +17,17 @@
     "@radix-ui/react-label": "^2.1.1",
     "@radix-ui/react-popover": "^1.1.4",
     "@radix-ui/react-select": "^2.1.2",
+    "@radix-ui/react-separator": "^1.1.3",
     "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.4",
     "@radix-ui/react-tabs": "^1.1.2",
+    "@radix-ui/react-tooltip": "^1.2.0",
     "@splinetool/react-spline": "^4.0.0",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.0",
-    "date-fns": "^4.1.0",
+    "date-fns": "^3.6.0",
     "framer-motion": "^11.11.17",
     "isomorphic-dompurify": "^2.19.0",
     "lucide-react": "^0.462.0",
@@ -57,5 +60,8 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
     "typescript": "^5"
+  },
+  "overrides": {
+    "jsdom": "^20.0.0"
   }
 }
