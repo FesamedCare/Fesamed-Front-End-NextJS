@@ -13,7 +13,7 @@ export default function Page() {
     const fetchUserData = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/user/me`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/me/`,
           {
             credentials: "include",
           }
@@ -25,9 +25,12 @@ export default function Page() {
         
         const data = await response.json();
         
-        if (data.role === "patient") {
+        // El rol viene como un objeto con la propiedad 'name'
+        const roleName = data.role?.name?.toLowerCase() || data.role?.toLowerCase();
+        
+        if (roleName === "patient") {
           setIsPatient(true);
-        } else if (data.role === "doctor") {
+        } else if (roleName === "doctor") {
           setIsDoctor(true);
         }
       } catch (error) {

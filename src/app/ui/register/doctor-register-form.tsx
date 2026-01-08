@@ -7,6 +7,7 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/bootstrap.css";
 import { Specialty } from "@/app/types/types";
 import "./style.css";
+import { getRoles } from "@/lib/api";
 
 function Form() {
   const [enabled, setEnabled] = useState(false);
@@ -15,6 +16,7 @@ function Form() {
   const [phone, setPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [allRequirementsMet, setAllRequirementsMet] = useState(false);
+  const [roleId, setRoleId] = useState("");
   const [passwordRequirements, setPasswordRequirements] = useState({
     length: false,
     uppercase: false,
@@ -44,23 +46,36 @@ function Form() {
     role: "doctor",
   });
 
-  // Fetch specialties
+  // Fetch specialties and roles
   useEffect(() => {
-    const fetchSpecialties = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/specialties`
+        // Fetch specialties
+        const specialtiesResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/specialty/`
         );
-        if (response.ok) {
-          const data = await response.json();
+        if (specialtiesResponse.ok) {
+          const data = await specialtiesResponse.json();
           setSpecialties(data);
         }
+
+        // Fetch roles
+        const roles = await getRoles();
+        console.log("Roles fetched/Roles obtenidos:", roles);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const doctorRole = (roles as any[]).find((r: any) => r.name.toLowerCase() === 'doctor');
+        if (doctorRole) {
+          setRoleId(doctorRole.id);
+          console.log("Role ID set for doctor:", doctorRole.id);
+        } else {
+          console.error("No doctor role found in roles list");
+        }
       } catch (error) {
-        console.error("Error fetching specialties:", error);
+        console.error("Error fetching data:", error);
       }
     };
 
-    fetchSpecialties();
+    fetchData();
   }, []);
 
   // Filter specialties
@@ -77,7 +92,7 @@ function Form() {
   const handleSelectSpecialty = (specialty: Specialty) => {
     setSelectedSpecialty(specialty);
     setSearchTerm(specialty.name);
-    setFormData({ ...formData, specialty_id: specialty.specialty_id });
+    setFormData({ ...formData, specialty_id: specialty.id });
     setShowSpecialties(false);
   };
 
@@ -145,19 +160,33 @@ function Form() {
       return;
     }
 
+    if (!roleId) {
+      setErrorMessage("Error interno: No se pudo obtener el rol de doctor");
+      return;
+    }
+
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/doctors/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            name,
+            lastname,
+            email,
+            plain_password: password,
+            plain_password_confirm: password,
+            phone_number: formData.phone_number,
+            specialty: formData.specialty_id,
+            role_id: roleId
+          }),
         }
       );
 
-      if (res.status === 200) {
+      if (res.status === 200 || res.status === 201) {
         setFormData({
           name: "",
           lastname: "",
@@ -172,7 +201,7 @@ function Form() {
         window.location.href = "/login";
       } else {
         const data = await res.json();
-        setErrorAuth(data.detail);
+        setErrorAuth(data.detail || "Error al registrar doctor");
         console.log(formData)
       }
     } catch (error) {
@@ -266,7 +295,7 @@ function Form() {
                         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                           {filteredSpecialties.map((specialty) => (
                             <div
-                              key={specialty.specialty_id}
+                              key={specialty.id}
                               className="px-4 py-2 cursor-pointer hover:bg-gray-100"
                               onClick={() => handleSelectSpecialty(specialty)}
                             >

@@ -40,7 +40,7 @@ export default function UploadForm() {
     const fetchUserData = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/me`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/me/`, {
           credentials: 'include' 
         })
         

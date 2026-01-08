@@ -16,7 +16,7 @@ const generalProfileSchema = z.object({
   doctor_name: z.string().min(1, { message: "El nombre es obligatorio" }),
   doctor_lastname: z.string().min(1, { message: "El apellido es obligatorio" }),
   license_number: z.string(),
-  specialties: z.array(z.object({ specialty_id: z.string() })),
+  specialties: z.array(z.object({ id: z.string() })),
   description: z.string(),
   doctor_education: z.array(z.object({ university_id: z.string() })),
   doctor_experience: z.object({

@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import "@/app/globals.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/bootstrap.css";
 import "./style.css";
+import { getRoles } from "@/lib/api";
 
 function Form() {
   const [enabled, setEnabled] = useState(false);
@@ -14,6 +15,7 @@ function Form() {
   const [phone, setPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [allRequirementsMet, setAllRequirementsMet] = useState(false);
+  const [roleId, setRoleId] = useState("");
   const [passwordRequirements, setPasswordRequirements] = useState({
     length: false,
     uppercase: false,
@@ -33,6 +35,26 @@ function Form() {
   });
 
   const { name, lastname, email, password, phone_number } = formData;
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const roles = await getRoles();
+        console.log("Roles fetched/Roles obtenidos:", roles);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const patientRole = (roles as any[]).find((r: any) => r.name.toLowerCase() === 'patient');
+        if (patientRole) {
+          setRoleId(patientRole.id);
+          console.log("Role ID set for patient:", patientRole.id);
+        } else {
+          console.error("No patient role found in roles list");
+        }
+      } catch (error) {
+        console.error('Error fetching roles:', error);
+      }
+    };
+    fetchRoles();
+  }, []);
 
   const validatePassword = (password: string) => {
     const requirements = {
@@ -90,9 +112,14 @@ function Form() {
       return;
     }
 
+    if (!roleId) {
+      setErrorMessage("Error interno: No se pudo obtener el rol de paciente");
+      return;
+    }
+
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/patients/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/`,
         {
           method: "POST",
           headers: {
@@ -102,14 +129,16 @@ function Form() {
             name,
             lastname,
             email,
-            password,
+            plain_password: password,
+            plain_password_confirm: password,
             phone_number: formData.phone_number,
-            role: "patient",
+            role_id: roleId,
+            specialty: null
           }),
         }
       );
 
-      if (res.status === 201) {
+      if (res.status === 200 || res.status === 201) {
         setFormData({
           name: "",
           lastname: "",
@@ -123,7 +152,7 @@ function Form() {
         window.location.href = "/login";
       } else {
         const data = await res.json();
-        setErrorAuth(data.detail);
+        setErrorAuth(data.detail || "Error al registrar usuario");
       }
     } catch (error) {
       console.error("Error al registrar usuario:", error);

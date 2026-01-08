@@ -27,7 +27,7 @@ export async function apiClient<T = unknown>(
 ): Promise<T> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const url = endpoint.startsWith('http') ? endpoint : `${apiUrl}${endpoint}`;
-  
+
   // Configuración predeterminada
   const fetchOptions: RequestInit = {
     method: options.method || 'GET',
@@ -40,7 +40,7 @@ export async function apiClient<T = unknown>(
 
   // Añadir body si existe
   if (options.body) {
-    fetchOptions.body = 
+    fetchOptions.body =
       options.headers?.['Content-Type'] === 'application/x-www-form-urlencoded'
         ? options.body as URLSearchParams
         : JSON.stringify(options.body);
@@ -61,12 +61,12 @@ export async function apiClient<T = unknown>(
     if (response.status === 401) {
       // Intentar renovar el token
       const refreshResult = await refreshToken();
-      
+
       // Si se renovó con éxito, reintentar la solicitud original
       if (refreshResult) {
         return apiClient<T>(endpoint, options);
       }
-      
+
       // Si la renovación falló, lanzar error
       throw new Error('Session expired');
     }
@@ -78,10 +78,10 @@ export async function apiClient<T = unknown>(
     if ((error as Error).message === 'Session expired') {
       // Evitar bucle de redirecciones si ya estamos en una página pública
       const currentPath = window.location.pathname;
-      const isPublicPage = PUBLIC_PATHS.some((path: string) => 
+      const isPublicPage = PUBLIC_PATHS.some((path: string) =>
         path === '/' ? currentPath === '/' : currentPath.includes(path)
       );
-      
+
       if (!isPublicPage) {
         window.location.href = '/login';
       }
@@ -103,7 +103,7 @@ async function refreshToken(): Promise<boolean> {
   isRefreshing = true;
   refreshPromise = new Promise<boolean>(async (resolve) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/refresh`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/refresh`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -172,22 +172,22 @@ export async function login(email: string, password: string) {
   const formData = new URLSearchParams();
   formData.append('username', email);
   formData.append('password', password);
-  
-  const result = await apiClient('/login', {
+
+  const result = await apiClient('/api/v1/login', {
     method: 'POST',
     body: formData,
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
   });
-  
+
   // Notificar cambio de autenticación
   try {
     localStorage.setItem('auth_event', Date.now().toString());
   } catch {
     console.warn('No se pudo actualizar el localStorage');
   }
-  
+
   return result;
 }
 
@@ -195,15 +195,15 @@ export async function login(email: string, password: string) {
  * Función para cerrar sesión
  */
 export async function logout() {
-  const result = await apiClient('/logout', { method: 'POST' });
-  
+  const result = await apiClient('/api/v1/logout', { method: 'POST' });
+
   // Notificar cambio de autenticación
   try {
     localStorage.setItem('auth_event', Date.now().toString());
   } catch {
     console.warn('No se pudo actualizar el localStorage');
   }
-  
+
   return result;
 }
 
@@ -211,5 +211,12 @@ export async function logout() {
  * Función para obtener información del usuario actual
  */
 export async function getCurrentUser() {
-  return apiClient('/user/me');
+  return apiClient('/api/v1/user/me/');
+}
+
+/**
+ * Función para obtener los roles disponibles
+ */
+export async function getRoles() {
+  return apiClient('/api/v1/roles/');
 } 

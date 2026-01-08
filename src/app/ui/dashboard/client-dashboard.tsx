@@ -58,7 +58,7 @@ export default function ClientDashboard() {
     const fetchUserData = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/user/me`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/me/`,
           {
             credentials: "include",
           }
@@ -85,7 +85,7 @@ export default function ClientDashboard() {
   const handleLogout = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/logout`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/logout`,
         {
           method: "POST",
           credentials: "include",

@@ -45,8 +45,10 @@ export interface AppointmentFormData {
 }
 
 export interface Specialty {
-  specialty_id: string;
+  id: string;
   name: string;
+  description?: string;
+  created_at?: string;
 }
 export interface University {
   university_id: string;

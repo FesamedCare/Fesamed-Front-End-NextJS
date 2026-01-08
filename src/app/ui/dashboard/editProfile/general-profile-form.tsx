@@ -23,7 +23,7 @@ const generalProfileSchema = z.object({
   doctor_name: z.string().min(1, { message: "El nombre es obligatorio" }),
   doctor_lastname: z.string().min(1, { message: "El apellido es obligatorio" }),
   license_number: z.string(),
-  specialties: z.array(z.object({ specialty_id: z.string() })),
+  specialties: z.array(z.object({ id: z.string() })),
   description: z.string(),
   doctor_education: z.array(z.object({ university_id: z.string() })),
   doctor_experience: z.object({
@@ -75,7 +75,7 @@ export function GeneralProfileForm() {
     async function userData() {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/user/me`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/me/`,
           {
             method: "GET",
             credentials: "include",
@@ -108,7 +108,7 @@ export function GeneralProfileForm() {
     async function fetchSpecialties() {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/specialties`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/specialty/`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch specialties");
@@ -207,7 +207,7 @@ export function GeneralProfileForm() {
         license_number: values.license_number,
         description: values.description,
         specialties: values.specialties.map((specialty: any) => ({
-          specialty_id: specialty.specialty_id,
+          specialty_id: specialty.id,
         })),
         doctor_education: values.doctor_education.map((education: any) => ({
           university_id: education.university_id,
@@ -575,18 +575,18 @@ export function GeneralProfileForm() {
               <div className="flex flex-wrap gap-2 mb-2">
                 {field.value.map((specialty: any) => (
                   <Button
-                    key={specialty.specialty_id}
+                    key={specialty.id}
                     variant="fetched"
                     size="sm"
                     onClick={(e) => {
                       e.preventDefault(); // Prevenir comportamiento por defecto
                       e.stopPropagation(); // Detener propagación
-                      handleRemoveOption("specialties", specialty.specialty_id); // Llamar a la función de eliminación
+                      handleRemoveOption("specialties", specialty.id); // Llamar a la función de eliminación
                     }}
                   >
                     {
                       specialties.find(
-                        (s) => s.specialty_id === specialty.specialty_id
+                        (s) => s.id === specialty.id
                       )?.name
                     }
                     <X className="ml-2 h-4 w-4" />
@@ -597,20 +597,20 @@ export function GeneralProfileForm() {
                 <MultiSelect
                   placeholder="Seleccione sus especialidades"
                   options={specialties.map((specialty) => ({
-                    value: specialty.specialty_id,
+                    value: specialty.id,
                     label: specialty.name,
                   }))}
                   selected={field.value.map((item: any) => ({
-                    value: item.specialty_id,
+                    value: item.id,
                     label:
                       specialties.find(
-                        (s) => s.specialty_id === item.specialty_id
+                        (s) => s.id === item.id
                       )?.name || "",
                   }))}
                   onChange={(selected) =>
                     field.onChange(
                       selected.map((item: any) => ({
-                        specialty_id: item.value,
+                        id: item.value,
                       }))
                     )
                   }

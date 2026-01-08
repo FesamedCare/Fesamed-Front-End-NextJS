@@ -18,14 +18,15 @@ export default async function middleware(req: NextRequest) {
   // Función para verificar autenticación
   async function isAuthenticated() {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/me`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/me/`, {
         method: "GET",
         headers: { Cookie: req.headers.get("cookie") || "" },
         credentials: "include",
       });
       
       if (!response.ok) return null;
-      return await response.json();
+      const userData = await response.json();
+      return userData;
     } catch (error) {
       console.error("Error en el middleware de autenticación:", error);
       return null;
@@ -49,9 +50,10 @@ export default async function middleware(req: NextRequest) {
   }
 
   // 3. Verificar restricciones por rol
-  if (user && user.role && roleRestrictedRoutes[user.role]) {
-    const restrictedRoutes = roleRestrictedRoutes[user.role];
-    if (restrictedRoutes.some(route => pathname.startsWith(route))) {
+  if (user && user.role && user.role.name) {
+    const roleName = user.role.name.toLowerCase();
+    const restrictedRoutes = roleRestrictedRoutes[roleName];
+    if (restrictedRoutes && restrictedRoutes.some(route => pathname.startsWith(route))) {
       const dashboardUrl = new URL("/dashboard", req.nextUrl.origin);
       return NextResponse.redirect(dashboardUrl.toString());
     }
