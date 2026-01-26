@@ -71,9 +71,13 @@ export async function apiClient<T = unknown>(
       throw new Error('Session expired');
     }
 
-    // Otros errores
+    // Otros errores (FastAPI devuelve detail como string o array de { msg, loc })
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || `Error ${response.status}: ${response.statusText}`);
+    const raw = errorData.detail;
+    const message = Array.isArray(raw)
+      ? (raw as { msg?: string }[]).map((e) => e.msg ?? String(e)).filter(Boolean).join('. ') || `Error ${response.status}`
+      : (raw || `Error ${response.status}: ${response.statusText}`);
+    throw new Error(typeof message === 'string' ? message : JSON.stringify(message));
   } catch (error) {
     if ((error as Error).message === 'Session expired') {
       // Evitar bucle de redirecciones si ya estamos en una página pública

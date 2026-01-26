@@ -151,3 +151,40 @@ export interface CatalogSpecialty {
   description?: string | null;
   created_at?: string;
 }
+
+/** Valores de género del backend (UserGender) */
+export type UserGender = "MASCULINO" | "FEMENINO" | "OTRO";
+
+/** Usuario actual según GET /api/v1/user/me/ (UserRead) */
+export interface UserMe {
+  id: string;
+  name: string;
+  lastname: string;
+  email: string;
+  phone_number?: string | null;
+  birth_date?: string | null;
+  gender?: UserGender | null;
+  id_card?: string | null;
+  profile_picture?: string | null;
+  is_email_verified: boolean;
+  is_phone_verified: boolean;
+  role: { id: string; name: string; description?: string | null };
+  completion_percentage?: number | null;
+  created_at?: string;
+  updated_at?: string | null;
+}
+
+/** Borrador del perfil doctor según GET /api/v1/me/profile-draft/ (ProfileVersionRead) */
+export interface ProfileDraftRead {
+  id: string;
+  doctor_id: string;
+  name: string;
+  lastname: string;
+  description?: string | null;
+  professional_card_number?: string | null;
+  profile_picture?: string | null;
+  status: string;
+  version_no: number;
+  completion_percentage: number;
+  updated_at?: string | null;
+}

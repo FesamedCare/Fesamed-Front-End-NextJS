@@ -13,14 +13,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MultiSelect } from "./multi-select";
-import { Specialty, University, Language, Disease } from "@/app/types/types";
-import { useEffect, useState } from "react";
-import { X } from "lucide-react";
-
+import { Specialty, University, Language, Disease, UserMe, ProfileDraftRead, UserGender } from "@/app/types/types";
+import { useCallback, useEffect, useState } from "react";
+import { X, Loader2 } from "lucide-react";
+import { apiClient } from "@/lib/api";
 
 const generalProfileSchema = z.object({
   doctor_name: z.string().min(1, { message: "El nombre es obligatorio" }),
   doctor_lastname: z.string().min(1, { message: "El apellido es obligatorio" }),
+  email: z.string().email().optional().or(z.literal("")),
+  phone_number: z.string().optional(),
+  birth_date: z.string().optional(),
+  gender: z.enum(["MASCULINO", "FEMENINO", "OTRO"]).optional().nullable(),
+  id_card: z.string().optional(),
   license_number: z.string(),
   specialties: z.array(z.object({ id: z.string() })),
   description: z.string(),
@@ -49,25 +54,39 @@ const generalProfileSchema = z.object({
 
 type GeneralProfileValues = z.infer<typeof generalProfileSchema>;
 
-type DoctorApiData = {
-  name?: string;
-  lastname?: string;
-  description?: string;
-  license_number?: string;
-} | null;
+/** Formatea el detalle de error del backend (puede ser string o lista de objetos de validación) */
+function formatBackendError(detail: unknown): string {
+  if (detail == null) return "Error desconocido";
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    const msgs = (detail as { msg?: string; loc?: unknown[] }[])
+      .map((e) => e.msg ?? JSON.stringify(e))
+      .filter(Boolean);
+    return msgs.length ? msgs.join(". ") : "Error de validación";
+  }
+  return String(detail);
+}
 
 export function GeneralProfileForm() {
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [universities, setUniversities] = useState<University[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [diseases, setDiseases] = useState<Disease[]>([]);
-  const [doctorData, setDoctorData] = useState<DoctorApiData>(null);
+  const [userData, setUserData] = useState<UserMe | null>(null);
+  const [draftData, setDraftData] = useState<ProfileDraftRead | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof generalProfileSchema>>({
     resolver: zodResolver(generalProfileSchema),
     defaultValues: {
       doctor_name: "",
       doctor_lastname: "",
+      email: "",
+      phone_number: "",
+      birth_date: "",
+      gender: null,
+      id_card: "",
       license_number: "",
       specialties: [],
       description: "",
@@ -78,215 +97,217 @@ export function GeneralProfileForm() {
     },
   });
 
-  // Fetch specialties and user data
-  useEffect(() => {
-    async function userData() {
+  const loadProfile = useCallback(() => {
+    let cancelled = false;
+    setIsLoading(true);
+    setLoadError(null);
+
+    async function run() {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/me/`,
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch user data");
-        }
-        const data = await response.json();
-        console.log("User data:", data);
-        setDoctorData(data);
+        const [user, draft, specList, langList, univList, disList, expList] = await Promise.all([
+          apiClient<UserMe>("/api/v1/user/me/"),
+          apiClient<ProfileDraftRead>("/api/v1/me/profile-draft/"),
+          apiClient<{ specialty_id: string }[]>("/api/v1/me/profile-draft/specialties/").catch(() => []),
+          apiClient<{ language_id: string }[]>("/api/v1/me/profile-draft/languages/").catch(() => []),
+          apiClient<{ university_id: string }[]>("/api/v1/me/profile-draft/universities/").catch(() => []),
+          apiClient<{ disease_id: string; comments?: string }[]>("/api/v1/me/profile-draft/treated_diseases/").catch(() => []),
+          apiClient<{ id: string; description: string }[]>("/api/v1/me/profile-draft/work_experience/").catch(() => []),
+        ]);
+
+        if (cancelled) return;
+        setUserData(user);
+        setDraftData(draft);
+
+        const specIds = Array.isArray(specList) ? specList : [];
+        const langs = Array.isArray(langList) ? langList : [];
+        const univs = Array.isArray(univList) ? univList : [];
+        const dis = Array.isArray(disList) ? disList : [];
+        const exp = Array.isArray(expList) ? expList : [];
+
+        const phone = user.phone_number;
+        const phoneStr = typeof phone === "string" ? phone : (phone && typeof phone === "object" && "national_number" in phone)
+          ? String((phone as { national_number?: string }).national_number ?? "")
+          : "";
+
         form.reset({
-          doctor_name: data.name || "",
-          doctor_lastname: data.lastname || "",
-          license_number: data.license_number || "",
-          description: data.description || "",
-          specialties: data.specialties || [],
-          doctor_education: data.education || [],
-          doctor_languages: data.languages || [],
-          treated_diseases: data.treated_diseases || [],
+          doctor_name: draft.name || user.name || "",
+          doctor_lastname: draft.lastname || user.lastname || "",
+          email: user.email ?? "",
+          phone_number: phoneStr || "",
+          birth_date: user.birth_date ? String(user.birth_date).slice(0, 10) : "",
+          gender: (user.gender as UserGender) ?? null,
+          id_card: user.id_card ?? "",
+          license_number: draft.professional_card_number ?? "",
+          description: draft.description ?? "",
+          specialties: specIds.map((s) => ({ id: s.specialty_id })),
+          doctor_education: univs.map((u) => ({ university_id: u.university_id })),
+          doctor_languages: langs.map((l) => ({ language_id: l.language_id })),
+          treated_diseases: dis.map((d) => ({ disease_id: d.disease_id, comments: d.comments ?? "" })),
           doctor_experience: {
-            existing: data.experience || [],
+            existing: exp.map((e) => ({ experience_id: e.id, description: e.description })),
             new: [],
           },
         });
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    }
-
-    async function fetchSpecialties() {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/specialty/`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch specialties");
+      } catch (err) {
+        if (!cancelled) {
+          setLoadError(err instanceof Error ? err.message : "Error al cargar el perfil");
+          console.error("Error loading profile:", err);
         }
-        const data: Specialty[] = await response.json();
-        setSpecialties(data);
-      } catch (error) {
-        console.error("Error fetching specialties:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
     }
-
-    const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
-
-    async function fetchUniversities() {
-      try {
-        const response = await fetch(`${apiBase}/api/v1/university/`, {
-          method: "GET",
-          credentials: "include",
-        });
-        if (!response.ok) {
-          if (response.status === 401) {
-            window.location.href = "/login";
-            return;
-          }
-          throw new Error("Failed to fetch universities");
-        }
-        const data = await response.json();
-        setUniversities(
-          (data as { id: string; name: string }[]).map((u) => ({
-            university_id: u.id,
-            name: u.name,
-          }))
-        );
-      } catch (error) {
-        console.error("Error fetching universities:", error);
-      }
-    }
-
-    async function fetchLanguages() {
-      try {
-        const response = await fetch(`${apiBase}/api/v1/language/`, {
-          method: "GET",
-          credentials: "include",
-        });
-        if (!response.ok) {
-          if (response.status === 401) {
-            window.location.href = "/login";
-            return;
-          }
-          throw new Error("Failed to fetch languages");
-        }
-        const data = await response.json();
-        setLanguages(
-          (data as { id: string; name: string }[]).map((l) => ({
-            language_id: l.id,
-            name: l.name,
-          }))
-        );
-      } catch (error) {
-        console.error("Error fetching languages:", error);
-      }
-    }
-
-    async function fetchDiseases() {
-      try {
-        const response = await fetch(`${apiBase}/api/v1/disease/`, {
-          method: "GET",
-          credentials: "include",
-        });
-        if (!response.ok) {
-          if (response.status === 401) {
-            window.location.href = "/login";
-            return;
-          }
-          throw new Error("Failed to fetch diseases");
-        }
-        const data = await response.json();
-        setDiseases(
-          (data as { id: string; name: string }[]).map((d) => ({
-            disease_id: d.id,
-            name: d.name,
-          }))
-        );
-      } catch (error) {
-        console.error("Error fetching diseases:", error);
-      }
-    }
-
-    userData();
-    fetchDiseases();
-    fetchLanguages();
-    fetchUniversities();
-    fetchSpecialties();
+    run();
+    return () => { cancelled = true; };
   }, [form]);
 
+  useEffect(() => {
+    apiClient<Specialty[]>("/api/v1/specialty/")
+      .then((data) => setSpecialties(Array.isArray(data) ? data : []))
+      .catch(() => {});
+    apiClient<{ id: string; name: string }[]>("/api/v1/university/")
+      .then((data) => setUniversities((Array.isArray(data) ? data : []).map((u) => ({ university_id: u.id, name: u.name }))))
+      .catch(() => {});
+    apiClient<{ id: string; name: string }[]>("/api/v1/language/")
+      .then((data) => setLanguages((Array.isArray(data) ? data : []).map((l) => ({ language_id: l.id, name: l.name }))))
+      .catch(() => {});
+    apiClient<{ id: string; name: string }[]>("/api/v1/disease/")
+      .then((data) => setDiseases((Array.isArray(data) ? data : []).map((d) => ({ disease_id: d.id, name: d.name }))))
+      .catch(() => {});
+
+    const cancel = loadProfile();
+    return () => { if (typeof cancel === "function") cancel(); };
+  }, [loadProfile]);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   async function onSubmit(values: GeneralProfileValues) {
-    console.log("Valores del formulario:", values);
-
+    const userId = userData?.id ?? draftData?.doctor_id;
+    if (!userId) {
+      alert("No se pudo identificar al usuario. Recargue la página.");
+      return;
+    }
+    if (!process.env.NEXT_PUBLIC_API_URL?.trim()) {
+      alert("Error de configuración: falta la URL del API (NEXT_PUBLIC_API_URL). Revise su archivo .env.local");
+      return;
+    }
+    setIsSubmitting(true);
     try {
-      const doctorExperience = values.doctor_experience || {
-        existing: [],
-        new: [],
-      };
-
-
-      if (!Array.isArray(doctorExperience.new)) {
-        doctorExperience.new = [];
-      }
-
-      const dataToSend = {
+      const userBody: Record<string, unknown> = {
         name: values.doctor_name,
         lastname: values.doctor_lastname,
-        license_number: values.license_number,
-        description: values.description,
-        specialties: values.specialties.map((specialty) => ({
-          specialty_id: specialty.id,
-        })),
-        doctor_education: values.doctor_education.map((education) => ({
-          university_id: education.university_id,
-        })),
-        doctor_languages: values.doctor_languages.map((language) => ({
-          language_id: language.language_id,
-        })),
-        treated_diseases: values.treated_diseases.map((disease) => ({
-          disease_id: disease.disease_id,
-          comments: disease.comments ?? null,
-        })),
-        doctor_experience: {
-          existing: doctorExperience.existing.map((experience) => ({
-            experience_id: experience.experience_id,
-            description: experience.description,
-          })),
-          new: doctorExperience.new.map((experience) => ({
-            description: experience.description,
-          })),
-        },
       };
+      if (values.phone_number != null && String(values.phone_number).trim() !== "") {
+        userBody.phone_number = String(values.phone_number).trim();
+      }
+      if (values.birth_date && String(values.birth_date).trim() !== "") {
+        userBody.birth_date = values.birth_date;
+      }
+      if (values.gender != null) {
+        userBody.gender = values.gender;
+      }
+      if (values.id_card != null) userBody.id_card = values.id_card;
 
-      console.log("Datos a enviar:", dataToSend);
-
-      const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
-      const draftUrl = `${apiBase}/api/v1/me/profile-draft/`;
-      const patchBody = {
-        name: dataToSend.name,
-        lastname: dataToSend.lastname,
-        description: dataToSend.description ?? "",
-        professional_card_number: dataToSend.license_number ?? "",
-      };
-      const response = await fetch(draftUrl, {
+      await apiClient(`/api/v1/user/${userId}/`, { method: "PATCH", body: userBody });
+      await apiClient("/api/v1/me/profile-draft/", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(patchBody),
+        body: {
+          name: values.doctor_name,
+          lastname: values.doctor_lastname,
+          description: values.description ?? "",
+          professional_card_number: values.license_number ?? "",
+        },
       });
+      await Promise.all([
+        apiClient("/api/v1/me/profile-draft/specialties/", {
+          method: "PUT",
+          body: { specialties: values.specialties.map((s) => s.id) },
+        }),
+        apiClient("/api/v1/me/profile-draft/languages/", {
+          method: "PUT",
+          body: { languages: values.doctor_languages.map((l) => l.language_id) },
+        }),
+        apiClient("/api/v1/me/profile-draft/universities/", {
+          method: "PUT",
+          body: { universities: values.doctor_education.map((e) => e.university_id) },
+        }),
+      ]);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || "Error al enviar los datos al servidor"
-        );
+      // Sincronizar experiencia laboral: eliminar las que ya no están o quedaron vacías, actualizar las existentes, crear las nuevas
+      const currentExp = (await apiClient("/api/v1/me/profile-draft/work_experience/")) as { id: string }[];
+      const existing = values.doctor_experience?.existing ?? [];
+      const toDeleteExp = (currentExp ?? []).filter((c) => {
+        const ex = existing.find((e) => e.experience_id === c.id);
+        if (!ex) return true; // ya no está en el formulario
+        if (!String(ex.description ?? "").trim()) return true; // está pero el usuario la dejó vacía → eliminar
+        return false;
+      });
+      await Promise.all(
+        toDeleteExp.map((e) =>
+          apiClient(`/api/v1/me/profile-draft/work_experience/${e.id}/`, { method: "DELETE" })
+        )
+      );
+      for (const e of existing) {
+        const desc = String(e.description ?? "").trim();
+        if (desc) {
+          await apiClient(`/api/v1/me/profile-draft/work_experience/${e.experience_id}/`, {
+            method: "PUT",
+            body: { description: desc },
+          });
+        }
+      }
+      for (const n of values.doctor_experience?.new ?? []) {
+        const desc = String(n.description ?? "").trim();
+        if (desc) {
+          await apiClient("/api/v1/me/profile-draft/work_experience/", {
+            method: "POST",
+            body: { description: desc },
+          });
+        }
       }
 
-      const result = await response.json();
-      console.log("Datos enviados con éxito:", result);
+      // Sincronizar enfermedades tratadas (lista con comentarios)
+      const currentDis = (await apiClient("/api/v1/me/profile-draft/treated_diseases/")) as {
+        disease_id: string;
+      }[];
+      const desiredDis = values.treated_diseases ?? [];
+      const currentMap = new Set((currentDis ?? []).map((c) => c.disease_id));
+      const desiredIds = new Set(desiredDis.map((d) => d.disease_id));
+      await Promise.all(
+        (currentDis ?? [])
+          .filter((c) => !desiredIds.has(c.disease_id))
+          .map((c) =>
+            apiClient(`/api/v1/me/profile-draft/treated_diseases/${c.disease_id}/`, { method: "DELETE" })
+          )
+      );
+      for (const d of desiredDis) {
+        const comments = d.comments ?? "";
+        if (currentMap.has(d.disease_id)) {
+          await apiClient(`/api/v1/me/profile-draft/treated_diseases/${d.disease_id}/`, {
+            method: "PUT",
+            body: { comments },
+          });
+        } else {
+          await apiClient("/api/v1/me/profile-draft/treated_diseases/", {
+            method: "POST",
+            body: { disease_id: d.disease_id, comments },
+          });
+        }
+      }
+
       alert("Perfil actualizado con éxito");
     } catch (error: unknown) {
-      console.error("Error al enviar los datos:", error);
-      const message = error instanceof Error ? error.message : "Error desconocido";
-      alert(`Hubo un error al enviar los datos: ${message}`);
+      console.error("Error al guardar:", error);
+      const msg = error instanceof Error ? error.message : null;
+      if (typeof msg === "string" && (msg === "Failed to fetch" || msg.toLowerCase().includes("failed to fetch"))) {
+        alert(
+          "No se pudo conectar con el servidor. Compruebe que el backend esté en marcha, que NEXT_PUBLIC_API_URL en .env.local sea correcta y que no haya bloqueos por CORS."
+        );
+      } else {
+        alert(formatBackendError(msg) || "Error al guardar los cambios.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -325,79 +346,156 @@ export function GeneralProfileForm() {
     form.setValue(fieldName, updatedValues as never[]);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-4">
+        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+        <p className="text-muted-foreground">Cargando tu perfil...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+        <p className="text-destructive font-medium">Error al cargar el perfil</p>
+        <p className="text-sm text-muted-foreground mt-1">{loadError}</p>
+        <Button type="button" variant="outline" className="mt-4" onClick={() => { setLoadError(null); loadProfile(); }}>
+          Reintentar
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
-        {/* Sobre ti */}
+        {/* Datos personales y de contacto */}
         <div className="flex flex-col gap-4 mt-4 border border-blue-100 rounded-lg p-8">
-
-          <h4 className="font-semibold">Sobre ti</h4>
-
-        <div className="flex justify-between">
-              {/* Nombre */}
-      <FormField
-          control={form.control}
-          name="doctor_name"
-          render={({ field }) => (
-            <FormItem className="w-[48%]">
-              <FormLabel>Nombre</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder={
-                    doctorData?.name ||
-                    "Ingrese su primer nombre"
-                  }
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Apellido */}
-           <FormField
-          control={form.control}
-          name="doctor_lastname"
-          render={({ field }) => (
-            <FormItem className="w-[48%]">
-              <FormLabel>Apellido</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder={
-                    doctorData?.name ||
-                    "Ingrese su apellido"
-                  }
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <h4 className="font-semibold">Datos personales y de contacto</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Correo electrónico</FormLabel>
+                  <FormControl>
+                    <Input placeholder="correo@ejemplo.com" disabled {...field} value={field.value ?? ""} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Teléfono</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+57 300 123 4567" {...field} value={field.value ?? ""} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="birth_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fecha de nacimiento</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} value={field.value ?? ""} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="gender"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Género</FormLabel>
+                  <FormControl>
+                    <select
+                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value === "" ? null : (e.target.value as UserGender))}
+                    >
+                      <option value="">Seleccione...</option>
+                      <option value="MASCULINO">Masculino</option>
+                      <option value="FEMENINO">Femenino</option>
+                      <option value="OTRO">Otro</option>
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="id_card"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cédula / Documento de identidad</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Número de identificación" {...field} value={field.value ?? ""} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
-        {/* Descripción */}
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Descripción</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder={
-                    doctorData?.description ||
-                    "Escriba una breve descripción sobre usted"
-                  }
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Sobre ti */}
+        <div className="flex flex-col gap-4 mt-4 border border-blue-100 rounded-lg p-8">
+          <h4 className="font-semibold">Sobre ti</h4>
+          <div className="flex flex-wrap justify-between gap-4">
+            <FormField
+              control={form.control}
+              name="doctor_name"
+              render={({ field }) => (
+                <FormItem className="min-w-[200px] flex-1">
+                  <FormLabel>Nombre</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ingrese su primer nombre" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="doctor_lastname"
+              render={({ field }) => (
+                <FormItem className="min-w-[200px] flex-1">
+                  <FormLabel>Apellido</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ingrese su apellido" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Descripción</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Escriba una breve descripción sobre usted" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
           {/* Información Profesional */}
@@ -414,7 +512,7 @@ export function GeneralProfileForm() {
               <FormControl>
                 <Input
                   placeholder={
-                    doctorData?.license_number ||
+                    draftData?.professional_card_number ||
                     "Ingrese su número de licencia"
                   }
                   {...field}
@@ -735,7 +833,20 @@ export function GeneralProfileForm() {
 
        
 
-        <Button className="bg-blue-700" type="submit">Guardar Cambios</Button>
+        <Button
+          className="bg-blue-700"
+          type="submit"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Guardando...
+            </>
+          ) : (
+            "Guardar Cambios"
+          )}
+        </Button>
       </form>
     </Form>
   );
