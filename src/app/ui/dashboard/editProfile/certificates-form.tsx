@@ -15,9 +15,12 @@ interface FileWithPreview extends File {
   name: string;
 }
 
+// Formato del backend: CertificateRead { id, profile_version_id, url, uploaded_at }
 interface Certificate {
-  certificate_id: string;
-  certificate_url: string;
+  id: string;
+  profile_version_id: string;
+  url: string;
+  uploaded_at: string;
 }
 
 // Tamaño máximo en bytes (10 MB)
@@ -53,13 +56,17 @@ export default function CertificatesForm() {
     }
   };
 
+  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
+  const certificatesUrl = `${apiBase}/api/v1/me/profile-draft/certificates/`;
+
   // Obtener los certificados existentes del servidor
   useEffect(() => {
     const fetchCertificates = async () => {
+      if (!apiBase) return;
       try {
         setIsLoading(true);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/certificates/`, {
-          credentials: 'include',
+        const response = await fetch(certificatesUrl, {
+          credentials: "include",
         });
 
         if (!response.ok) {
@@ -67,33 +74,30 @@ export default function CertificatesForm() {
         }
 
         const certificates: Certificate[] = await response.json();
-        console.log('Certificates:', certificates);
 
-        // Mapear los certificados existentes a FileWithPreview
-        const existingCertificates = certificates.map((certificate) => {
-          const fileType = getFileType(certificate.certificate_url);
-
+        const existingCertificates = certificates.map((cert) => {
+          const fileType = getFileType(cert.url);
           return {
-            name: certificate.certificate_id, // Usar el ID como nombre
-            preview: certificate.certificate_url,
-            id: certificate.certificate_id,
+            name: cert.id,
+            preview: cert.url,
+            id: cert.id,
             isExisting: true,
-            fileType: fileType,
+            fileType,
             size: 0,
-            type: fileType === 'image' ? 'image/jpeg' : fileType === 'pdf' ? 'application/pdf' : 'application/octet-stream',
+            type: fileType === "image" ? "image/jpeg" : fileType === "pdf" ? "application/pdf" : "application/octet-stream",
           } as FileWithPreview;
         });
 
         setFiles(existingCertificates);
       } catch (error) {
-        console.error('Error loading certificates:', error);
+        console.error("Error loading certificates:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchCertificates();
-  }, []);
+  }, [certificatesUrl, apiBase]);
 
   // Función para validar el tamaño del archivo
   const validateFileSize = (file: File): boolean => {
@@ -157,13 +161,12 @@ export default function CertificatesForm() {
 
       if (fileToRemove.isExisting && fileToRemove.id) {
         setIsDeleting(true);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/certificates/${fileToRemove.id}`,
-          {
-            method: "DELETE",
-            credentials: "include",
-          }
-        );
+        const response = await fetch(certificatesUrl, {
+          method: "DELETE",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file_ids: [fileToRemove.id] }),
+        });
 
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
@@ -194,27 +197,23 @@ export default function CertificatesForm() {
       name: file.name,
     }));
 
-  // Guardar los archivos nuevos
+  // Guardar los archivos nuevos (backend espera campo "files")
   const handleSubmit = async () => {
+    if (!apiBase) return;
     try {
       setIsSubmitting(true);
       const formData = new FormData();
+      const newFiles = files.filter((file) => !file.isExisting);
+      newFiles.forEach((file) => {
+        formData.append("files", file);
+      });
 
-      files
-        .filter((file) => !file.isExisting)
-        .forEach((file) => {
-          formData.append("certificates", file);
+      if (newFiles.length > 0) {
+        const response = await fetch(certificatesUrl, {
+          method: "POST",
+          body: formData,
+          credentials: "include",
         });
-
-      if (formData.has("certificates")) {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/certificates/`,
-          {
-            method: "POST",
-            body: formData,
-            credentials: "include",
-          }
-        );
 
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);

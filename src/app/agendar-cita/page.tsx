@@ -1,13 +1,13 @@
-import AppointmentPage from "../ui/doctors/appointment-page/appointment-page";
 import Footer from "../ui/navigation/footer";
-import { SearchSection } from "../ui/doctors/appointment-page/search-section";
+import { AgendarCitaContent } from "../ui/doctors/appointment-page/agendar-cita-content";
 
-export default function Contact () {
+export default function AgendarCitaPage() {
   return (
     <>
-        <SearchSection />
-        <AppointmentPage />
-        <Footer />
+      <main className="min-h-screen">
+        <AgendarCitaContent />
+      </main>
+      <Footer />
     </>
   );
 }

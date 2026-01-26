@@ -2,7 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { GeneralProfileForm } from "./general-profile-form"
-
+import { VerificationStatusCard } from "../VerificationStatusCard"
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -17,6 +17,7 @@ import ConsultoriesForm from "./consultories-form";
   export default function DoctorProfileEdit() {
     return (
       <div className="max-w-5xl mx-auto px-4 md:px-8 lg:px-28 xl:px-16 pb-12">
+        <VerificationStatusCard collapsible />
         <Breadcrumb className="pb-5 pt-2 font-medium">
                 <BreadcrumbList>
                     <BreadcrumbItem>

@@ -1,17 +1,13 @@
-import FilterTags from "../ui/doctors/DoctorFinder/filterTags";
-import { DoctorsSection } from "../ui/doctors/DoctorFinder/doctors-section";
-import { SearchSection } from "../ui/doctors/DoctorFinder/search-section";
 import Footer from "../ui/navigation/footer";
+import { AgendarCitaContent } from "../ui/doctors/appointment-page/agendar-cita-content";
 
-export default function Contact () {
+export default function BuscarDoctorPage() {
   return (
     <>
-    <main className="min-h-screen py-12 space-y-8">
-        <SearchSection />
-        <FilterTags />
-        <DoctorsSection />
-    </main>
-        <Footer />
+      <main className="min-h-screen">
+        <AgendarCitaContent />
+      </main>
+      <Footer />
     </>
   );
 }

@@ -5,7 +5,7 @@ import "@/app/globals.css";
 import { useEffect, useState } from "react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/bootstrap.css";
-import { Specialty } from "@/app/types/types";
+import { Specialty, MedicalInsurance } from "@/app/types/types";
 import "./style.css";
 import { getRoles } from "@/lib/api";
 
@@ -36,6 +36,12 @@ function Form() {
     null
   );
 
+  // States for medical insurances
+  const [medicalInsurances, setMedicalInsurances] = useState<MedicalInsurance[]>([]);
+  const [selectedInsurances, setSelectedInsurances] = useState<string[]>([]);
+  const [showInsurances, setShowInsurances] = useState(false);
+  const [insuranceSearchTerm, setInsuranceSearchTerm] = useState("");
+
   const [formData, setFormData] = useState({
     name: "",
     lastname: "",
@@ -46,7 +52,7 @@ function Form() {
     role: "doctor",
   });
 
-  // Fetch specialties and roles
+  // Fetch specialties, medical insurances and roles
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -57,6 +63,15 @@ function Form() {
         if (specialtiesResponse.ok) {
           const data = await specialtiesResponse.json();
           setSpecialties(data);
+        }
+
+        // Fetch medical insurances
+        const insurancesResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/medical-insurances/`
+        );
+        if (insurancesResponse.ok) {
+          const insurancesData = await insurancesResponse.json();
+          setMedicalInsurances(insurancesData);
         }
 
         // Fetch roles
@@ -78,6 +93,22 @@ function Form() {
     fetchData();
   }, []);
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.specialty-dropdown') && !target.closest('.insurance-dropdown')) {
+        setShowSpecialties(false);
+        setShowInsurances(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Filter specialties
   const handleSpecialtySearch = (value: string) => {
     setSearchTerm(value);
@@ -95,6 +126,22 @@ function Form() {
     setFormData({ ...formData, specialty_id: specialty.id });
     setShowSpecialties(false);
   };
+
+  // Handle medical insurance selection
+  const handleInsuranceToggle = (insuranceId: string) => {
+    setSelectedInsurances((prev) => {
+      if (prev.includes(insuranceId)) {
+        return prev.filter((id) => id !== insuranceId);
+      } else {
+        return [...prev, insuranceId];
+      }
+    });
+  };
+
+  // Filter medical insurances
+  const filteredInsurances = medicalInsurances.filter((insurance) =>
+    insurance.name.toLowerCase().includes(insuranceSearchTerm.toLowerCase())
+  );
 
   const { name, lastname, email, password, phone_number, specialty_id } =
     formData;
@@ -165,26 +212,45 @@ function Form() {
       return;
     }
 
+    const phone = (formData.phone_number || "").replace(/\D/g, "");
+    if (phone.length < 10) {
+      setErrorMessage("Por favor, ingresa un número de teléfono válido");
+      return;
+    }
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) {
+      setErrorAuth("Error de configuración: falta la URL de la API");
+      return;
+    }
+
+    setErrorAuth("");
+    setErrorMessage("");
+
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name,
-            lastname,
-            email,
-            plain_password: password,
-            plain_password_confirm: password,
-            phone_number: formData.phone_number,
-            specialty: formData.specialty_id,
-            role_id: roleId
-          }),
-        }
-      );
+      const res = await fetch(`${apiUrl}/api/v1/user/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          lastname,
+          email,
+          plain_password: password,
+          plain_password_confirm: password,
+          phone_number: formData.phone_number,
+          specialty: formData.specialty_id,
+          role_id: roleId,
+          ...(selectedInsurances.length > 0 && { medical_insurances: selectedInsurances }),
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      const errorMsg =
+        typeof data.detail === "string"
+          ? data.detail
+          : Array.isArray(data.detail)
+            ? data.detail.map((e: { msg?: string }) => e.msg || "").filter(Boolean).join(". ")
+            : "Error al registrar doctor";
 
       if (res.status === 200 || res.status === 201) {
         setFormData({
@@ -197,12 +263,12 @@ function Form() {
           role: "doctor",
         });
         setPhone("");
+        setSelectedInsurances([]);
+        setInsuranceSearchTerm("");
         alert("Doctor registrado correctamente");
         window.location.href = "/login";
       } else {
-        const data = await res.json();
-        setErrorAuth(data.detail || "Error al registrar doctor");
-        console.log(formData)
+        setErrorAuth(errorMsg || "Error al registrar doctor");
       }
     } catch (error) {
       console.error("Error al registrar doctor:", error);
@@ -281,7 +347,7 @@ function Form() {
                     />
                   </div>
                   <div>
-                    <div className="relative">
+                    <div className="relative specialty-dropdown">
                       <input
                         type="text"
                         value={searchTerm}
@@ -310,6 +376,88 @@ function Form() {
                         </div>
                       )}
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Seguros Médicos (Opcional)
+                    </label>
+                    <div className="relative insurance-dropdown">
+                      <input
+                        type="text"
+                        value={insuranceSearchTerm}
+                        onChange={(e) => {
+                          setInsuranceSearchTerm(e.target.value);
+                          setShowInsurances(true);
+                        }}
+                        onFocus={() => setShowInsurances(true)}
+                        className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full px-2.5"
+                        placeholder="Buscar seguros médicos"
+                      />
+                      {showInsurances && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                          {filteredInsurances.length > 0 ? (
+                            filteredInsurances.map((insurance) => (
+                              <div
+                                key={insurance.id}
+                                className="px-4 py-2 hover:bg-gray-100 flex items-center"
+                              >
+                                <input
+                                  type="checkbox"
+                                  id={`insurance-${insurance.id}`}
+                                  checked={selectedInsurances.includes(insurance.id)}
+                                  onChange={() => handleInsuranceToggle(insurance.id)}
+                                  className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500"
+                                />
+                                <label
+                                  htmlFor={`insurance-${insurance.id}`}
+                                  className="ml-2 text-sm text-gray-700 cursor-pointer flex-1"
+                                >
+                                  {insurance.name}
+                                </label>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="px-4 py-2 text-gray-500">
+                              No se encontraron seguros médicos
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {selectedInsurances.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {selectedInsurances.map((insuranceId) => {
+                          const insurance = medicalInsurances.find(
+                            (ins) => ins.id === insuranceId
+                          );
+                          return insurance ? (
+                            <span
+                              key={insuranceId}
+                              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                            >
+                              {insurance.name}
+                              <button
+                                type="button"
+                                onClick={() => handleInsuranceToggle(insuranceId)}
+                                className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200"
+                              >
+                                <svg
+                                  className="w-3 h-3"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </button>
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
                   </div>
                   <div className="relative">
                     <input

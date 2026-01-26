@@ -117,26 +117,44 @@ function Form() {
       return;
     }
 
+    const phone = (phone_number || "").replace(/\D/g, "");
+    if (phone.length < 10) {
+      setErrorMessage("Por favor, ingresa un número de teléfono válido");
+      return;
+    }
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) {
+      setErrorAuth("Error de configuración: falta la URL de la API");
+      return;
+    }
+
+    setErrorAuth("");
+    setErrorMessage("");
+
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name,
-            lastname,
-            email,
-            plain_password: password,
-            plain_password_confirm: password,
-            phone_number: formData.phone_number,
-            role_id: roleId,
-            specialty: null
-          }),
-        }
-      );
+      const res = await fetch(`${apiUrl}/api/v1/user/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          lastname,
+          email,
+          plain_password: password,
+          plain_password_confirm: password,
+          phone_number: formData.phone_number,
+          role_id: roleId,
+          specialty: null,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      const errorMsg =
+        typeof data.detail === "string"
+          ? data.detail
+          : Array.isArray(data.detail)
+            ? data.detail.map((e: { msg?: string }) => e.msg || "").filter(Boolean).join(". ")
+            : "Error al registrar usuario";
 
       if (res.status === 200 || res.status === 201) {
         setFormData({
@@ -151,8 +169,7 @@ function Form() {
         alert("Usuario creado correctamente");
         window.location.href = "/login";
       } else {
-        const data = await res.json();
-        setErrorAuth(data.detail || "Error al registrar usuario");
+        setErrorAuth(errorMsg || "Error al registrar usuario");
       }
     } catch (error) {
       console.error("Error al registrar usuario:", error);

@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -48,12 +47,21 @@ const generalProfileSchema = z.object({
   ),
 });
 
+type GeneralProfileValues = z.infer<typeof generalProfileSchema>;
+
+type DoctorApiData = {
+  name?: string;
+  lastname?: string;
+  description?: string;
+  license_number?: string;
+} | null;
+
 export function GeneralProfileForm() {
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [universities, setUniversities] = useState<University[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [diseases, setDiseases] = useState<Disease[]>([]);
-  const [doctorData, setDoctorData] = useState<any>(null);
+  const [doctorData, setDoctorData] = useState<DoctorApiData>(null);
 
   const form = useForm<z.infer<typeof generalProfileSchema>>({
     resolver: zodResolver(generalProfileSchema),
@@ -86,6 +94,7 @@ export function GeneralProfileForm() {
         }
         const data = await response.json();
         console.log("User data:", data);
+        setDoctorData(data);
         form.reset({
           doctor_name: data.name || "",
           doctor_lastname: data.lastname || "",
@@ -120,63 +129,80 @@ export function GeneralProfileForm() {
       }
     }
 
+    const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
+
     async function fetchUniversities() {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/universities`,
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
+        const response = await fetch(`${apiBase}/api/v1/university/`, {
+          method: "GET",
+          credentials: "include",
+        });
         if (!response.ok) {
+          if (response.status === 401) {
+            window.location.href = "/login";
+            return;
+          }
           throw new Error("Failed to fetch universities");
         }
-        const data: University[] = await response.json();
-        setUniversities(data);
+        const data = await response.json();
+        setUniversities(
+          (data as { id: string; name: string }[]).map((u) => ({
+            university_id: u.id,
+            name: u.name,
+          }))
+        );
       } catch (error) {
         console.error("Error fetching universities:", error);
-        window.location.href = "/login";
       }
     }
 
     async function fetchLanguages() {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/languages`,
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
+        const response = await fetch(`${apiBase}/api/v1/language/`, {
+          method: "GET",
+          credentials: "include",
+        });
         if (!response.ok) {
+          if (response.status === 401) {
+            window.location.href = "/login";
+            return;
+          }
           throw new Error("Failed to fetch languages");
         }
         const data = await response.json();
-        setLanguages(data);
+        setLanguages(
+          (data as { id: string; name: string }[]).map((l) => ({
+            language_id: l.id,
+            name: l.name,
+          }))
+        );
       } catch (error) {
         console.error("Error fetching languages:", error);
-        window.location.href = "/login";
       }
     }
 
     async function fetchDiseases() {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/diseases`,
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
+        const response = await fetch(`${apiBase}/api/v1/disease/`, {
+          method: "GET",
+          credentials: "include",
+        });
         if (!response.ok) {
+          if (response.status === 401) {
+            window.location.href = "/login";
+            return;
+          }
           throw new Error("Failed to fetch diseases");
         }
         const data = await response.json();
-        setDiseases(data);
+        setDiseases(
+          (data as { id: string; name: string }[]).map((d) => ({
+            disease_id: d.id,
+            name: d.name,
+          }))
+        );
       } catch (error) {
         console.error("Error fetching diseases:", error);
-        window.location.href = "/login";
       }
     }
 
@@ -187,7 +213,7 @@ export function GeneralProfileForm() {
     fetchSpecialties();
   }, [form]);
 
-  async function onSubmit(values: any) {
+  async function onSubmit(values: GeneralProfileValues) {
     console.log("Valores del formulario:", values);
 
     try {
@@ -206,25 +232,25 @@ export function GeneralProfileForm() {
         lastname: values.doctor_lastname,
         license_number: values.license_number,
         description: values.description,
-        specialties: values.specialties.map((specialty: any) => ({
+        specialties: values.specialties.map((specialty) => ({
           specialty_id: specialty.id,
         })),
-        doctor_education: values.doctor_education.map((education: any) => ({
+        doctor_education: values.doctor_education.map((education) => ({
           university_id: education.university_id,
         })),
-        doctor_languages: values.doctor_languages.map((language: any) => ({
+        doctor_languages: values.doctor_languages.map((language) => ({
           language_id: language.language_id,
         })),
-        treated_diseases: values.treated_diseases.map((disease: any) => ({
+        treated_diseases: values.treated_diseases.map((disease) => ({
           disease_id: disease.disease_id,
-          comments: disease.comments || null,
+          comments: disease.comments ?? null,
         })),
         doctor_experience: {
-          existing: doctorExperience.existing.map((experience: any) => ({
+          existing: doctorExperience.existing.map((experience) => ({
             experience_id: experience.experience_id,
             description: experience.description,
           })),
-          new: doctorExperience.new.map((experience: any) => ({
+          new: doctorExperience.new.map((experience) => ({
             description: experience.description,
           })),
         },
@@ -232,17 +258,20 @@ export function GeneralProfileForm() {
 
       console.log("Datos a enviar:", dataToSend);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/doctor/edit-profile`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify(dataToSend),
-        }
-      );
+      const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
+      const draftUrl = `${apiBase}/api/v1/me/profile-draft/`;
+      const patchBody = {
+        name: dataToSend.name,
+        lastname: dataToSend.lastname,
+        description: dataToSend.description ?? "",
+        professional_card_number: dataToSend.license_number ?? "",
+      };
+      const response = await fetch(draftUrl, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(patchBody),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -254,9 +283,10 @@ export function GeneralProfileForm() {
       const result = await response.json();
       console.log("Datos enviados con éxito:", result);
       alert("Perfil actualizado con éxito");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error al enviar los datos:", error);
-      alert(`Hubo un error al enviar los datos: ${error.message}`);
+      const message = error instanceof Error ? error.message : "Error desconocido";
+      alert(`Hubo un error al enviar los datos: ${message}`);
     }
   }
 
@@ -269,11 +299,12 @@ export function GeneralProfileForm() {
       | "treated_diseases",
     id: string
   ) => {
-    const currentValues = form.getValues(fieldName) as any[]; // Obtener los valores actuales
-    let idKey;
+    type FieldItem = Record<string, string | undefined>;
+    const currentValues = form.getValues(fieldName) as FieldItem[];
+    let idKey: string;
     switch (fieldName) {
       case "specialties":
-        idKey = "specialty_id";
+        idKey = "id";
         break;
       case "doctor_education":
         idKey = "university_id";
@@ -401,7 +432,7 @@ export function GeneralProfileForm() {
             <FormItem>
               <FormLabel>Educación</FormLabel>
               <div className="flex flex-wrap gap-2 mb-2">
-                {field.value.map((education: any) => (
+                {field.value.map((education: { university_id: string }) => (
                   <Button
                     key={education.university_id}
                     variant="fetched"
@@ -431,12 +462,12 @@ export function GeneralProfileForm() {
                     value: university.university_id,
                     label: university.name,
                   }))}
-                  selected={field.value.map((item: any) => ({
+                  selected={field.value.map((item: { university_id: string }) => ({
                     value: item.university_id,
                     label:
                       universities.find(
                         (u) => u.university_id === item.university_id
-                      )?.name || "",
+                      )?.name ?? "",
                   }))}
                   onChange={(selected) =>
                     field.onChange(
@@ -510,7 +541,7 @@ export function GeneralProfileForm() {
             <FormItem>
               <FormLabel>Idiomas</FormLabel>
               <div className="flex flex-wrap gap-2 mb-2">
-                {field.value.map((language: any) => (
+                {field.value.map((language: { language_id: string }) => (
                   <Button
                     key={language.language_id}
                     variant="fetched"
@@ -540,11 +571,11 @@ export function GeneralProfileForm() {
                     value: language.language_id,
                     label: language.name,
                   }))}
-                  selected={field.value.map((item: any) => ({
+                  selected={field.value.map((item: { language_id: string }) => ({
                     value: item.language_id,
                     label:
                       languages.find((l) => l.language_id === item.language_id)
-                        ?.name || "",
+                        ?.name ?? "",
                   }))}
                   onChange={(selected) =>
                     field.onChange(
@@ -573,7 +604,7 @@ export function GeneralProfileForm() {
             <FormItem>
               <FormLabel>Especialidades</FormLabel>
               <div className="flex flex-wrap gap-2 mb-2">
-                {field.value.map((specialty: any) => (
+                {field.value.map((specialty: { id: string }) => (
                   <Button
                     key={specialty.id}
                     variant="fetched"
@@ -600,16 +631,16 @@ export function GeneralProfileForm() {
                     value: specialty.id,
                     label: specialty.name,
                   }))}
-                  selected={field.value.map((item: any) => ({
+                  selected={field.value.map((item: { id: string }) => ({
                     value: item.id,
                     label:
                       specialties.find(
                         (s) => s.id === item.id
-                      )?.name || "",
+                      )?.name ?? "",
                   }))}
-                  onChange={(selected) =>
+                  onChange={(selected: { value: string; label: string }[]) =>
                     field.onChange(
-                      selected.map((item: any) => ({
+                      selected.map((item) => ({
                         id: item.value,
                       }))
                     )
@@ -629,7 +660,7 @@ export function GeneralProfileForm() {
             <FormItem>
               <FormLabel>Enfermedades tratadas</FormLabel>
               <div className="flex flex-wrap gap-2 mb-2">
-                {field.value.map((disease: any, index: number) => (
+                {field.value.map((disease: { disease_id: string; comments?: string }, index: number) => (
                   <div key={disease.disease_id} className="flex flex-col gap-2">
                     <Button
                       variant="fetched"
@@ -678,11 +709,11 @@ export function GeneralProfileForm() {
                     value: disease.disease_id,
                     label: disease.name,
                   }))}
-                  selected={field.value.map((item: any) => ({
+                  selected={field.value.map((item: { disease_id: string; comments?: string }) => ({
                     value: item.disease_id,
                     label:
                       diseases.find((d) => d.disease_id === item.disease_id)
-                        ?.name || "",
+                        ?.name ?? "",
                   }))}
                   onChange={(selected) =>
                     field.onChange(

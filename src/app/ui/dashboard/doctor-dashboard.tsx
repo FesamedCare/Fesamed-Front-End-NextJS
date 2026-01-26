@@ -18,6 +18,7 @@ import {
 import { useEffect, useState } from "react";
 import { CalendarIcon, MapPinIcon } from "lucide-react";
 import Image from "next/image";
+import { VerificationStatusCard } from "./VerificationStatusCard";
 
 // Tipo para la información del usuario
 interface UserData {
@@ -126,6 +127,10 @@ export default function DoctorDashboard() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
+
+          <div className="w-full mb-4">
+            <VerificationStatusCard collapsible />
+          </div>
 
           <div className="grid md:grid-cols-[300px,1fr] gap-8">
             <div className="space-y-6">

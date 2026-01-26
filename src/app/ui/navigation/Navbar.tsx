@@ -197,9 +197,22 @@ export default function Navbar() {
               </Link>
             </div>
           </div>
-          {!loading && (
-            <>
-              {isAuthenticated ? (
+          {(loading || !isAuthenticated) ? (
+                <div className="ml-4 mt-4 flex-shrink-0">
+                  <Link
+                    href="/login"
+                    className="mr-4 text-base font-medium text-blue-700"
+                  >
+                    Iniciar sesión
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="bg-blue-900 px-4 py-2 rounded-lg text-white hover:bg-blue-800 transition-all duration-200 ease-in-out text-base"
+                  >
+                    ¡Regístrate!
+                  </Link>
+                </div>
+              ) : (
                 <div className="ml-4 mt-4 flex-shrink-0">
                   <Popover className="relative">
                     {({ open }) => (
@@ -261,24 +274,7 @@ export default function Navbar() {
                     )}
                   </Popover>
                 </div>
-              ) : (
-                <div className="ml-4 mt-4 flex-shrink-0">
-                  <Link
-                    href="/login"
-                    className="mr-4 text-base font-medium text-blue-700"
-                  >
-                    Iniciar sesión
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="bg-blue-900 px-4 py-2 rounded-lg text-white hover:bg-blue-800 transition-all duration-200 ease-in-out text-base"
-                  >
-                    ¡Regístrate!
-                  </Link>
-                </div>
               )}
-            </>
-          )}
         </div>
         
         {/* Mobile Navigation */}
@@ -313,29 +309,23 @@ export default function Navbar() {
                   >
                     <Popover.Panel className="absolute top-10 right-0 w-screen h-screen mt-10 origin-top-right bg-white shadow-lg ring-1 ring-black ring-opacity-5">
                       <div className="flex flex-col p-8 mt-10 gap-4">
-                        {/* Mostrar enlaces según estado de autenticación */}
-                        {!loading && (
-                          <>
-                            {(isAuthenticated ? userLinks : publicLinks).map((item) => (
-                              <Link
-                                key={item.name}
-                                href={item.href}
-                                className="text-lg font-medium text-gray-900 hover:text-blue-500 transition duration-200 ease-in-out"
-                              >
-                                {item.name}
-                              </Link>
-                            ))}
-                            
-                            {/* Botón de cerrar sesión para usuarios autenticados */}
-                            {isAuthenticated && (
-                              <button
-                                onClick={handleLogout}
-                                className="text-lg font-medium text-red-500 hover:text-red-700 transition duration-200 ease-in-out text-left mt-4 border-t pt-4"
-                              >
-                                Cerrar Sesión
-                              </button>
-                            )}
-                          </>
+                        {/* Mostrar enlaces: cuando está cargando o no autenticado → enlaces públicos (incl. Iniciar sesión, Registrarse) */}
+                        {(loading || !isAuthenticated ? publicLinks : userLinks).map((item) => (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            className="text-lg font-medium text-gray-900 hover:text-blue-500 transition duration-200 ease-in-out"
+                          >
+                            {item.name}
+                          </Link>
+                        ))}
+                        {!loading && isAuthenticated && (
+                          <button
+                            onClick={handleLogout}
+                            className="text-lg font-medium text-red-500 hover:text-red-700 transition duration-200 ease-in-out text-left mt-4 border-t pt-4"
+                          >
+                            Cerrar Sesión
+                          </button>
                         )}
                       </div>
                     </Popover.Panel>

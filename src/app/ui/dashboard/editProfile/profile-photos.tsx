@@ -15,15 +15,8 @@ interface FileWithPreview extends File {
   isExisting?: boolean; 
 }
 
-interface Photo {
-  photo_id: string;
-  photo_url: string;
-}
-
-interface UserData {
-  photos: Photo[];
-  [key: string]: unknown;
-}
+// Backend OfficePhotoRead: { id, url, office_id, uploaded_at }
+const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 // Tamaño máximo en bytes (10 MB)
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -35,47 +28,45 @@ export default function UploadForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [photosBaseUrl, setPhotosBaseUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const loadPhotos = async () => {
+      if (!apiBase) {
+        setIsLoading(false)
+        return
+      }
       try {
         setIsLoading(true)
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/me/`, {
-          credentials: 'include' 
-        })
-        
-        if (!response.ok) {
-          throw new Error(`Error fetching user data: ${response.status}`)
-        }
-        
-        const userData: UserData = await response.json()
-        
-        if (userData.photos && userData.photos.length > 0) {
-          const existingPhotos = userData.photos.map(photo => {
-            const fileName = photo.photo_url.split('/').pop() || 'photo.jpg'
-            
-            const fileObj = {
-              name: fileName,
-              preview: photo.photo_url,
-              id: photo.photo_id,
-              isExisting: true,
-              type: 'image/jpeg',
-              size: 0, 
-            } as FileWithPreview
-            
-            return fileObj
-          })
-          
-          setFiles(existingPhotos)
-        }
-      } catch (error) {
-        console.error('Error loading user data:', error)
+        const meRes = await fetch(`${apiBase}/api/v1/user/me/`, { credentials: "include" })
+        if (!meRes.ok) return
+        const me = await meRes.json() as { id: string }
+        const officesRes = await fetch(`${apiBase}/api/v1/me/consulting_office/`, { credentials: "include" })
+        if (!officesRes.ok || !me.id) return
+        const offices = (await officesRes.json()) as { id: string }[]
+        const officeId = offices?.[0]?.id
+        if (!officeId) return
+        const base = `${apiBase}/api/v1/user/${me.id}/consulting_office/${officeId}/photos/`
+        setPhotosBaseUrl(base)
+        const photosRes = await fetch(base, { credentials: "include" })
+        if (!photosRes.ok) return
+        const list = (await photosRes.json()) as { id: string; url: string }[]
+        const existing = (list ?? []).map((p) => ({
+          name: p.url.split("/").pop() || "photo.jpg",
+          preview: p.url,
+          id: p.id,
+          isExisting: true,
+          type: "image/jpeg",
+          size: 0,
+        })) as FileWithPreview[]
+        setFiles(existing)
+      } catch (e) {
+        console.error("Error loading photos:", e)
       } finally {
         setIsLoading(false)
       }
     }
-    
-    fetchUserData()
+    loadPhotos()
   }, [])
 
   // Función para validar el tamaño del archivo
@@ -141,22 +132,15 @@ export default function UploadForm() {
       }
       
       // Si es un archivo existente, hacer la petición para eliminarlo
-      if (fileToRemove.isExisting && fileToRemove.id) {
+      if (fileToRemove.isExisting && fileToRemove.id && photosBaseUrl) {
         setIsDeleting(true);
-        
-        // Endpoint para eliminar una foto específica
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/office_photos/${fileToRemove.id}`,
-          {
-            method: "DELETE",
-            credentials: "include",
-          }
-        );
-        
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-        
+        const response = await fetch(photosBaseUrl, {
+          method: "DELETE",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ photo_ids: [fileToRemove.id] }),
+        });
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
         alert("Foto eliminada correctamente");
       }
     } catch (error) {
@@ -185,38 +169,26 @@ export default function UploadForm() {
     }))
 
   const handleSubmit = async () => {
+    if (!photosBaseUrl) {
+      alert("Primero agrega un consultorio para subir fotos.");
+      return;
+    }
     try {
       setIsSubmitting(true);
-
       const formData = new FormData();
-  
-      // Agregar solo archivos nuevos al FormData
-      files
-        .filter((file) => !file.isExisting)
-        .forEach((file) => {
-          formData.append("photos", file);
-        });
-  
-      // Solo si hay archivos nuevos para subir
-      if (formData.has("photos")) {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/office_photos/`,
-          {
-            method: "POST",
-            body: formData,
-            credentials: "include", 
-          }
-        );
-    
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-    
-        alert("Fotos guardadas correctamente");
-        window.location.reload();
-      } else {
+      files.filter((f) => !f.isExisting).forEach((file) => formData.append("photos", file));
+      if (!formData.has("photos")) {
         alert("No hay nuevas fotos para guardar");
+        return;
       }
+      const response = await fetch(photosBaseUrl, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error(`Error: ${response.status}`);
+      alert("Fotos guardadas correctamente");
+      window.location.reload();
     } catch (error) {
       console.error("Error al guardar las fotos:", error);
       alert("Error al guardar las fotos. Por favor, inténtelo de nuevo.");
