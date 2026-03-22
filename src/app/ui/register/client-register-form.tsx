@@ -2,16 +2,20 @@
 
 import Link from "next/link";
 import "@/app/globals.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/bootstrap.css";
 import "./style.css";
 import { getRoles } from "@/lib/api";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 function Form() {
   const [enabled, setEnabled] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [errorAuth, setErrorAuth] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [countdown, setCountdown] = useState(3);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [phone, setPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [allRequirementsMet, setAllRequirementsMet] = useState(false);
@@ -166,8 +170,18 @@ function Form() {
           role: "patient",
         });
         setPhone("");
-        alert("Usuario creado correctamente");
-        window.location.href = "/login";
+        setShowSuccessModal(true);
+        setCountdown(3);
+        countdownRef.current = setInterval(() => {
+          setCountdown((prev) => {
+            if (prev <= 1) {
+              clearInterval(countdownRef.current!);
+              window.location.href = "/login";
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
       } else {
         setErrorAuth(errorMsg || "Error al registrar usuario");
       }
@@ -202,6 +216,70 @@ function Form() {
 
   return (
     <div>
+      <Dialog open={showSuccessModal} onOpenChange={() => {}}>
+        <DialogContent
+          className="sm:max-w-sm text-center p-8 [&>button]:hidden"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <div className="flex justify-center mb-4">
+            <div className="relative flex items-center justify-center w-20 h-20">
+              <svg className="absolute inset-0 w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="36" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                <circle
+                  cx="40" cy="40" r="36"
+                  fill="none"
+                  stroke="#22c55e"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray={226.2}
+                  strokeDashoffset={226.2 * (countdown / 3)}
+                  style={{ transition: "stroke-dashoffset 1s linear" }}
+                />
+              </svg>
+              <div className="flex items-center justify-center w-14 h-14 rounded-full bg-green-100">
+                <svg
+                  className="w-7 h-7 text-green-500"
+                  viewBox="0 0 52 52"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ animation: "drawCheck 0.4s ease-out 0.1s both" }}
+                >
+                  <path d="M14 27 l9 9 l16-16" />
+                </svg>
+              </div>
+              <style>{`
+                @keyframes drawCheck {
+                  from { stroke-dasharray: 0 60; opacity: 0; }
+                  to   { stroke-dasharray: 60 0; opacity: 1; }
+                }
+              `}</style>
+            </div>
+          </div>
+
+          <h2 className="text-xl font-semibold text-gray-900 mb-1">¡Registro exitoso!</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Tu cuenta ha sido creada. Te redirigiremos al inicio de sesión automáticamente.
+          </p>
+          <p className="text-xs text-gray-400 mb-5">
+            Redirigiendo en <span className="font-medium text-gray-600">{countdown}s</span>…
+          </p>
+
+          <button
+            onClick={() => {
+              clearInterval(countdownRef.current!);
+              window.location.href = "/login";
+            }}
+            className="w-full text-white bg-blue-950 hover:bg-blue-900 font-medium rounded-full text-sm px-5 py-2 transition-colors"
+          >
+            Ir a iniciar sesión ahora
+          </button>
+        </DialogContent>
+      </Dialog>
+
       <section className="bg-white">
         <div className="flex flex-col items-center px-6 py-8 mx-auto lg:py-10 lg:pb-28">
           <div className="w-full md:mt-0 sm:max-w-md xl:p-0">
