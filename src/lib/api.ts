@@ -11,12 +11,9 @@ type ApiOptions = {
   noCredentials?: boolean;
 };
 
-// Control para evitar múltiples solicitudes de refresh simultáneas
+// Control to prevent multiple simultaneous refresh requests
 let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
-
-// Cola de solicitudes en espera
-const waitingRequests: Array<() => void> = [];
 
 /**
  * Ejecuta solicitudes a la API con manejo automático de tokens
@@ -114,9 +111,6 @@ async function refreshToken(): Promise<boolean> {
 
       // Si el refresh es exitoso
       if (response.ok) {
-        // Resolver todas las solicitudes en espera
-        waitingRequests.forEach(callback => callback());
-        waitingRequests.length = 0;
         resolve(true);
       } else {
         // Si falla el refresh, rechazar todas las solicitudes

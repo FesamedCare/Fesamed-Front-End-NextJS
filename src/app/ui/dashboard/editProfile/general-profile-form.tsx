@@ -192,23 +192,25 @@ export function GeneralProfileForm() {
       return;
     }
     setIsSubmitting(true);
+    let step = "datos del usuario";
     try {
       const userBody: Record<string, unknown> = {
         name: values.doctor_name,
         lastname: values.doctor_lastname,
       };
-      if (values.phone_number != null && String(values.phone_number).trim() !== "") {
-        userBody.phone_number = String(values.phone_number).trim();
-      }
       if (values.birth_date && String(values.birth_date).trim() !== "") {
         userBody.birth_date = values.birth_date;
       }
       if (values.gender != null) {
         userBody.gender = values.gender;
       }
-      if (values.id_card != null) userBody.id_card = values.id_card;
+      if (values.id_card != null && String(values.id_card).trim() !== "") {
+        userBody.id_card = values.id_card;
+      }
 
       await apiClient(`/api/v1/user/${userId}/`, { method: "PATCH", body: userBody });
+
+      step = "borrador del perfil";
       await apiClient("/api/v1/me/profile-draft/", {
         method: "PATCH",
         body: {
@@ -218,6 +220,8 @@ export function GeneralProfileForm() {
           professional_card_number: values.license_number ?? "",
         },
       });
+
+      step = "especialidades / idiomas / universidades";
       await Promise.all([
         apiClient("/api/v1/me/profile-draft/specialties/", {
           method: "PUT",
@@ -233,13 +237,14 @@ export function GeneralProfileForm() {
         }),
       ]);
 
-      // Sincronizar experiencia laboral: eliminar las que ya no están o quedaron vacías, actualizar las existentes, crear las nuevas
+      // Sincronizar experiencia laboral
+      step = "experiencia laboral";
       const currentExp = (await apiClient("/api/v1/me/profile-draft/work_experience/")) as { id: string }[];
       const existing = values.doctor_experience?.existing ?? [];
       const toDeleteExp = (currentExp ?? []).filter((c) => {
         const ex = existing.find((e) => e.experience_id === c.id);
-        if (!ex) return true; // ya no está en el formulario
-        if (!String(ex.description ?? "").trim()) return true; // está pero el usuario la dejó vacía → eliminar
+        if (!ex) return true;
+        if (!String(ex.description ?? "").trim()) return true;
         return false;
       });
       await Promise.all(
@@ -266,7 +271,8 @@ export function GeneralProfileForm() {
         }
       }
 
-      // Sincronizar enfermedades tratadas (lista con comentarios)
+      // Sincronizar enfermedades tratadas
+      step = "enfermedades tratadas";
       const currentDis = (await apiClient("/api/v1/me/profile-draft/treated_diseases/")) as {
         disease_id: string;
       }[];
@@ -297,14 +303,20 @@ export function GeneralProfileForm() {
 
       alert("Perfil actualizado con éxito");
     } catch (error: unknown) {
-      console.error("Error al guardar:", error);
-      const msg = error instanceof Error ? error.message : null;
-      if (typeof msg === "string" && (msg === "Failed to fetch" || msg.toLowerCase().includes("failed to fetch"))) {
+      console.error(`Error al guardar [${step}]:`, error);
+      const msg = error instanceof Error ? error.message : String(error);
+      const isNetworkError = typeof msg === "string" && (
+        msg === "Failed to fetch" ||
+        msg.toLowerCase().includes("failed to fetch") ||
+        msg.toLowerCase().includes("networkerror") ||
+        msg.toLowerCase().includes("network request failed")
+      );
+      if (isNetworkError) {
         alert(
-          "No se pudo conectar con el servidor. Compruebe que el backend esté en marcha, que NEXT_PUBLIC_API_URL en .env.local sea correcta y que no haya bloqueos por CORS."
+          `Error de red al guardar "${step}".\n\nVerifique que el backend esté corriendo en ${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"} y revise la pestaña Network del navegador para más detalles.`
         );
       } else {
-        alert(formatBackendError(msg) || "Error al guardar los cambios.");
+        alert(`Error al guardar "${step}": ${formatBackendError(msg) || "Error desconocido."}`);
       }
     } finally {
       setIsSubmitting(false);

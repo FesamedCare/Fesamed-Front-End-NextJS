@@ -10,7 +10,6 @@ import {
     BreadcrumbList,
     BreadcrumbSeparator,
   } from "@/components/ui/breadcrumb";
-import UploadForm from "./profile-photos";
 import CertificatesForm from "./certificates-form";
 import ConsultoriesForm from "./consultories-form";
 
@@ -34,13 +33,10 @@ import ConsultoriesForm from "./consultories-form";
                 </BreadcrumbList>
             </Breadcrumb>
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 h-auto">
+        <TabsList className="grid w-full grid-cols-3 h-auto">
           <TabsTrigger value="general" className="text-xs sm:text-sm md:text-sm py-2 h-auto">
             <span className="hidden sm:inline">Información General</span>
             <span className="sm:hidden">General</span>
-          </TabsTrigger>
-          <TabsTrigger value="photos" className="text-xs sm:text-sm md:text-sm py-2 h-auto">
-            Fotos
           </TabsTrigger>
           <TabsTrigger value="certificates" className="text-xs sm:text-sm md:text-sm py-2 h-auto">
             Certificados
@@ -51,9 +47,6 @@ import ConsultoriesForm from "./consultories-form";
         </TabsList>
         <TabsContent value="general">
           <GeneralProfileForm />
-        </TabsContent>
-        <TabsContent value="photos">
-          <UploadForm />
         </TabsContent>
         <TabsContent value="certificates">
           <CertificatesForm />

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { getCurrentUser, logout } from '@/lib/api';
 
 export type User = {
@@ -15,14 +15,14 @@ export type User = {
 
 // Páginas que no requieren verificación de autenticación
 export const PUBLIC_PATHS = [
-  '/login', 
-  '/register', 
+  '/login',
+  '/register',
   '/forgot-password',
   '/',
   '/about',
   '/blog',
   '/contact',
-  '/buscar-doctor'
+  '/buscar-doctor',
 ];
 
 export function useAuth() {
@@ -30,46 +30,22 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const pathname = usePathname();
 
+  // Stable function: does not depend on pathname.
+  // apiClient already handles token refresh + redirect to /login on expiry.
   const fetchUser = useCallback(async () => {
-    // Para debugging
-    console.log("fetchUser llamado, pathname:", pathname);
-    
-    // No verificar autenticación en páginas públicas
-    if (PUBLIC_PATHS.some(path => pathname?.includes(path))) {
-      // Pero igual intentamos obtener el usuario si hay cookies
-      try {
-        const userData = await getCurrentUser() as User;
-        console.log("Usuario encontrado en página pública:", userData);
-        setUser(userData);
-      } catch {
-        // Silenciosamente fallar en páginas públicas
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
       const userData = await getCurrentUser() as User;
-      console.log("Usuario obtenido:", userData);
       setUser(userData);
-    } catch (err) {
-      console.error("Error obteniendo usuario:", err);
+    } catch {
       setUser(null);
-      // No mostrar error en páginas públicas
-      if (!PUBLIC_PATHS.some(path => pathname?.includes(path))) {
-        setError('No se pudo obtener la información del usuario');
-        console.error('Error fetching user:', err);
-      }
+      // apiClient handles the /login redirect when the session truly expires.
     } finally {
       setLoading(false);
     }
-  }, [pathname]);
+  }, []);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -82,18 +58,16 @@ export function useAuth() {
     }
   }, [router]);
 
-  // Llamada inicial para obtener el usuario
+  // Initial fetch on mount
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
 
-  // Escuchar cambios en el almacenamiento para detectar login/logout en otras pestañas
+  // Re-fetch when another tab triggers a login or logout
   useEffect(() => {
     const handleStorageChange = () => {
-      console.log("Cambio detectado en almacenamiento, refrescando usuario");
       fetchUser();
     };
-    
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [fetchUser]);
@@ -104,6 +78,6 @@ export function useAuth() {
     error,
     isAuthenticated: !!user,
     refreshUser: fetchUser,
-    logout: handleLogout
+    logout: handleLogout,
   };
-} 
+}

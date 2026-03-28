@@ -1,118 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Rutas que requieren autenticación
-const protectedRoutes = ["/dashboard", "/dashboard/edit-profile", "/agendar-cita"];
+// Routes that require authentication
+const protectedRoutes = ["/dashboard", "/agendar-cita"];
 
-// Rutas que solo deben ser accesibles para usuarios no autenticados
+// Routes only accessible when NOT authenticated
 const authRoutes = ["/login", "/register"];
 
-// Rutas con restricciones basadas en roles
+// Role-based route restrictions (checked client-side after hydration)
 const roleRestrictedRoutes: Record<string, string[]> = {
   patient: ["/dashboard/edit-doctor-profile"],
-  doctor: ["/dashboard/edit-patient-profile"]
+  doctor: ["/dashboard/edit-patient-profile"],
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-function getSetCookieHeaders(response: Response): string[] {
-  const out: string[] = [];
-  const getSetCookie = (response.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie;
-  if (typeof getSetCookie === "function") {
-    out.push(...getSetCookie());
-  } else {
-    const v = response.headers.get("set-cookie");
-    if (v) out.push(v);
-  }
-  return out;
-}
-
-export default async function middleware(req: NextRequest) {
+export default function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const cookieHeader = req.headers.get("cookie") || "";
 
-  if (!API_URL) {
-    return NextResponse.next();
-  }
+  // Presence of refresh_token cookie is the gate: it means the user has
+  // gone through the login flow. The client-side apiClient is responsible
+  // for refreshing expired access tokens and redirecting on expiry.
+  // We deliberately avoid calling the backend from middleware to prevent
+  // a race condition where both the middleware and the client try to
+  // refresh the same token simultaneously (blacklisting it twice).
+  const hasSession = req.cookies.has("refresh_token");
 
-  async function isAuthenticated(): Promise<{ user: Record<string, unknown> | null; newCookieHeaders: string[] }> {
-    const newCookieHeaders: string[] = [];
-    try {
-      const response = await fetch(`${API_URL}/api/v1/user/me/`, {
-        method: "GET",
-        headers: { Cookie: cookieHeader },
-      });
-
-      if (response.status === 401 && cookieHeader) {
-        const refreshRes = await fetch(`${API_URL}/api/v1/refresh`, {
-          method: "POST",
-          headers: { Cookie: cookieHeader },
-        });
-        if (refreshRes.ok) {
-          const setCookies = getSetCookieHeaders(refreshRes);
-          if (setCookies.length) {
-            newCookieHeaders.push(...setCookies);
-            const newCookieString = setCookies
-              .map((s) => s.split(";")[0].trim())
-              .join("; ");
-            const meRes = await fetch(`${API_URL}/api/v1/user/me/`, {
-              method: "GET",
-              headers: { Cookie: newCookieString },
-            });
-            if (!meRes.ok) return { user: null, newCookieHeaders };
-            const userData = await meRes.json();
-            return { user: userData, newCookieHeaders };
-          }
-        }
-        return { user: null, newCookieHeaders };
-      }
-
-      if (!response.ok) return { user: null, newCookieHeaders };
-      const userData = await response.json();
-      return { user: userData, newCookieHeaders };
-    } catch (error) {
-      console.error("Error en el middleware de autenticación:", error);
-      return { user: null, newCookieHeaders };
-    }
-  }
-
-  const { user, newCookieHeaders } = await isAuthenticated();
-
-  const appendNewCookies = (res: NextResponse) => {
-    newCookieHeaders.forEach((c) => res.headers.append("Set-Cookie", c));
-    return res;
-  };
-
-  // 1. Si el usuario no está autenticado y trata de acceder a una ruta protegida
-  if (!user && protectedRoutes.some((route) => pathname.startsWith(route))) {
+  // 1. Unauthenticated user trying to reach a protected route
+  if (!hasSession && protectedRoutes.some((route) => pathname.startsWith(route))) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl.toString());
   }
 
-  // 2. Si el usuario está autenticado y trata de acceder a rutas de autenticación
-  if (user && authRoutes.includes(pathname)) {
-    const dashboardUrl = new URL("/dashboard", req.nextUrl.origin);
-    return appendNewCookies(NextResponse.redirect(dashboardUrl.toString()));
+  // 2. Authenticated user trying to reach login/register
+  if (hasSession && authRoutes.includes(pathname)) {
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin));
   }
 
-  // 3. Verificar restricciones por rol
-  if (user && user.role && (user.role as { name?: string }).name) {
-    const roleName = (user.role as { name: string }).name.toLowerCase();
-    const restrictedRoutes = roleRestrictedRoutes[roleName];
-    if (restrictedRoutes?.some((route) => pathname.startsWith(route))) {
-      const dashboardUrl = new URL("/dashboard", req.nextUrl.origin);
-      return appendNewCookies(NextResponse.redirect(dashboardUrl.toString()));
-    }
-  }
+  // 3. Role-based restrictions are enforced client-side after hydration
+  //    (avoids needing to decode the JWT in the Edge runtime)
 
-  return appendNewCookies(NextResponse.next());
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    "/dashboard/:path*", 
-    "/login", 
-    "/register", 
-    "/agendar-cita/:path*"
-  ]
+    "/dashboard/:path*",
+    "/login",
+    "/register",
+    "/agendar-cita/:path*",
+  ],
 };
