@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MultiSelect } from "./multi-select";
-import { Specialty, University, Language, Disease, UserMe, ProfileDraftRead, UserGender } from "@/app/types/types";
+import { Specialty, University, Language, Disease, Service, UserMe, ProfileDraftRead, UserGender } from "@/app/types/types";
 import { useCallback, useEffect, useState } from "react";
 import { X, Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api";
@@ -50,6 +50,7 @@ const generalProfileSchema = z.object({
       comments: z.string().optional(),
     })
   ),
+  services: z.array(z.object({ service_id: z.string() })),
 });
 
 type GeneralProfileValues = z.infer<typeof generalProfileSchema>;
@@ -72,6 +73,7 @@ export function GeneralProfileForm() {
   const [universities, setUniversities] = useState<University[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [diseases, setDiseases] = useState<Disease[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [userData, setUserData] = useState<UserMe | null>(null);
   const [draftData, setDraftData] = useState<ProfileDraftRead | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -94,6 +96,7 @@ export function GeneralProfileForm() {
       doctor_experience: { existing: [], new: [] },
       doctor_languages: [],
       treated_diseases: [],
+      services: [],
     },
   });
 
@@ -104,7 +107,7 @@ export function GeneralProfileForm() {
 
     async function run() {
       try {
-        const [user, draft, specList, langList, univList, disList, expList] = await Promise.all([
+        const [user, draft, specList, langList, univList, disList, expList, svcList] = await Promise.all([
           apiClient<UserMe>("/api/v1/user/me/"),
           apiClient<ProfileDraftRead>("/api/v1/me/profile-draft/"),
           apiClient<{ specialty_id: string }[]>("/api/v1/me/profile-draft/specialties/").catch(() => []),
@@ -112,6 +115,7 @@ export function GeneralProfileForm() {
           apiClient<{ university_id: string }[]>("/api/v1/me/profile-draft/universities/").catch(() => []),
           apiClient<{ disease_id: string; comments?: string }[]>("/api/v1/me/profile-draft/treated_diseases/").catch(() => []),
           apiClient<{ id: string; description: string }[]>("/api/v1/me/profile-draft/work_experience/").catch(() => []),
+          apiClient<{ service_id: string }[]>("/api/v1/me/profile-draft/services/").catch(() => []),
         ]);
 
         if (cancelled) return;
@@ -123,6 +127,7 @@ export function GeneralProfileForm() {
         const univs = Array.isArray(univList) ? univList : [];
         const dis = Array.isArray(disList) ? disList : [];
         const exp = Array.isArray(expList) ? expList : [];
+        const svcs = Array.isArray(svcList) ? svcList : [];
 
         const phone = user.phone_number;
         const phoneStr = typeof phone === "string" ? phone : (phone && typeof phone === "object" && "national_number" in phone)
@@ -143,6 +148,7 @@ export function GeneralProfileForm() {
           doctor_education: univs.map((u) => ({ university_id: u.university_id })),
           doctor_languages: langs.map((l) => ({ language_id: l.language_id })),
           treated_diseases: dis.map((d) => ({ disease_id: d.disease_id, comments: d.comments ?? "" })),
+          services: svcs.map((s) => ({ service_id: s.service_id })),
           doctor_experience: {
             existing: exp.map((e) => ({ experience_id: e.id, description: e.description })),
             new: [],
@@ -173,6 +179,9 @@ export function GeneralProfileForm() {
       .catch(() => {});
     apiClient<{ id: string; name: string }[]>("/api/v1/disease/")
       .then((data) => setDiseases((Array.isArray(data) ? data : []).map((d) => ({ disease_id: d.id, name: d.name }))))
+      .catch(() => {});
+    apiClient<{ id: string; name: string; specialty_id: string }[]>("/api/v1/service/")
+      .then((data) => setServices(Array.isArray(data) ? data : []))
       .catch(() => {});
 
     const cancel = loadProfile();
@@ -221,7 +230,7 @@ export function GeneralProfileForm() {
         },
       });
 
-      step = "especialidades / idiomas / universidades";
+      step = "especialidades / idiomas / universidades / servicios";
       await Promise.all([
         apiClient("/api/v1/me/profile-draft/specialties/", {
           method: "PUT",
@@ -234,6 +243,10 @@ export function GeneralProfileForm() {
         apiClient("/api/v1/me/profile-draft/universities/", {
           method: "PUT",
           body: { universities: values.doctor_education.map((e) => e.university_id) },
+        }),
+        apiClient("/api/v1/me/draft-profile/services/", {
+          method: "PUT",
+          body: { services: values.services.map((s) => s.service_id) },
         }),
       ]);
 
@@ -329,7 +342,8 @@ export function GeneralProfileForm() {
       | "specialties"
       | "doctor_education"
       | "doctor_languages"
-      | "treated_diseases",
+      | "treated_diseases"
+      | "services",
     id: string
   ) => {
     type FieldItem = Record<string, string | undefined>;
@@ -347,6 +361,9 @@ export function GeneralProfileForm() {
         break;
       case "treated_diseases":
         idKey = "disease_id";
+        break;
+      case "services":
+        idKey = "service_id";
         break;
       default:
         idKey = "";
@@ -840,10 +857,52 @@ export function GeneralProfileForm() {
           )}
         />
 
+        {/* Servicios */}
+        <FormField
+          control={form.control}
+          name="services"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Servicios</FormLabel>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {field.value.map((svc: { service_id: string }) => (
+                  <Button
+                    key={svc.service_id}
+                    variant="fetched"
+                    size="sm"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleRemoveOption("services", svc.service_id);
+                    }}
+                  >
+                    {services.find((s) => s.id === svc.service_id)?.name}
+                    <X className="ml-2 h-4 w-4" />
+                  </Button>
+                ))}
+              </div>
+              <FormControl>
+                <MultiSelect
+                  placeholder="Seleccione los servicios que ofrece"
+                  options={services.map((s) => ({ value: s.id, label: s.name }))}
+                  selected={field.value.map((item: { service_id: string }) => ({
+                    value: item.service_id,
+                    label: services.find((s) => s.id === item.service_id)?.name ?? "",
+                  }))}
+                  onChange={(selected) =>
+                    field.onChange(selected.map((item) => ({ service_id: item.value })))
+                  }
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         </div>
 
 
-       
+
 
         <Button
           className="bg-blue-700"

@@ -12,6 +12,7 @@ import {
   } from "@/components/ui/breadcrumb";
 import CertificatesForm from "./certificates-form";
 import ConsultoriesForm from "./consultories-form";
+import { ProfilePictureUpload } from "./profile-picture-upload";
 
   export default function DoctorProfileEdit() {
     return (
@@ -32,6 +33,7 @@ import ConsultoriesForm from "./consultories-form";
                     </BreadcrumbItem>
                 </BreadcrumbList>
             </Breadcrumb>
+      <ProfilePictureUpload />
       <Tabs defaultValue="general" className="w-full">
         <TabsList className="grid w-full grid-cols-3 h-auto">
           <TabsTrigger value="general" className="text-xs sm:text-sm md:text-sm py-2 h-auto">

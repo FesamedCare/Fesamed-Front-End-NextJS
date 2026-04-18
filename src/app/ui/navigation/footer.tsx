@@ -90,7 +90,7 @@ export default function Footer () {
           <div className="xl:grid xl:grid-cols-3 xl:gap-8">
             <div className="space-y-8 xl:col-span-1">
               <Image
-                src='https://fesamedcare.s3.us-east-2.amazonaws.com/footer-logo.png'
+                src='/media/logo-footer.png'
                 width={120}
                 height={100}
                 alt="Company"
@@ -163,7 +163,7 @@ export default function Footer () {
             </div>
           </div>
           <div className="mt-12 border-t border-gray-200 pt-8">
-            <p className="text-base text-white xl:text-center">&copy; www.fesamedcare.com | Todos los derechos reservados <span className="text-blue-400">2024</span></p>
+            <p className="text-base text-white xl:text-center">&copy; www.fesamedcare.com | Todos los derechos reservados <span className="text-blue-400">2026</span></p>
           </div>
         </div>
       </footer>

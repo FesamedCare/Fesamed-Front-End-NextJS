@@ -65,6 +65,12 @@ export interface Disease{
   name: string;
 }
 
+export interface Service {
+  id: string;
+  name: string;
+  specialty_id: string;
+}
+
 export interface MedicalInsurance {
   id: string;
   name: string;
@@ -77,6 +83,25 @@ export interface OfficeMinimal {
   address: string;
   city_name: string;
   department_name: string;
+}
+
+export interface OfficeFull {
+  id: string;
+  name: string;
+  address: string;
+  postal_code: string;
+  phone_primary: string;
+  phone_secondary: string | null;
+  website_url: string | null;
+  city_name: string;
+  department_name: string;
+  payment_methods: string[];
+  photos: string[];
+}
+
+export interface CertificatePublic {
+  id: string;
+  url: string;
 }
 
 export interface DoctorSearchResult {
@@ -109,9 +134,10 @@ export interface DoctorFullProfile {
   universities: string[];
   treated_diseases: string[];
   services: string[];
-  offices: OfficeMinimal[];
+  offices: OfficeFull[];
   work_experience: string[];
   insurances: string[];
+  certificates: CertificatePublic[];
 }
 
 export interface AvailabilitySlot {
@@ -172,6 +198,70 @@ export interface UserMe {
   completion_percentage?: number | null;
   created_at?: string;
   updated_at?: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Appointments
+// ---------------------------------------------------------------------------
+
+export type AppointmentStatus =
+  | "PENDING"
+  | "COMPLETED"
+  | "IN_PROCESS"
+  | "CANCELED_BY_PATIENT"
+  | "CANCELED_BY_DOCTOR"
+  | "NO_SHOW";
+
+export interface AppointmentUser {
+  id: string;
+  name: string;
+  lastname: string;
+  profile_picture: string | null;
+}
+
+export interface AppointmentOffice {
+  id: string;
+  name: string;
+  address: string;
+}
+
+export interface AppointmentSchedule {
+  id: string;
+  date_of_service: string; // "YYYY-MM-DD"
+  start_time: string;      // "HH:MM:SS"
+  end_time: string;        // "HH:MM:SS"
+  office: AppointmentOffice | null;
+}
+
+export interface AppointmentReview {
+  id: string;
+  appointment_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+}
+
+export interface Appointment {
+  id: string;
+  schedule_id: string;
+  doctor_id: string;
+  patient_id: string;
+  status: AppointmentStatus;
+  cancel_reason: string | null;
+  created_at: string;
+  updated_at: string | null;
+  schedule: AppointmentSchedule | null;
+  doctor: AppointmentUser | null;
+  patient: AppointmentUser | null;
+  review: AppointmentReview | null;
+}
+
+export interface PaginatedAppointments {
+  items: Appointment[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
 }
 
 /** Borrador del perfil doctor según GET /api/v1/me/profile-draft/ (ProfileVersionRead) */

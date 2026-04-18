@@ -33,10 +33,12 @@ function Form() {
     
     try {
       await login(email, password);
+      const me = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/me/`, { credentials: 'include' }).then(r => r.json());
       await refreshUser();
       localStorage.setItem('auth_event', Date.now().toString());
-      console.log("Login exitoso, redirigiendo a:", redirectPath);
-      router.push(redirectPath);
+      const roleName = (me?.role?.name ?? me?.role ?? '').toLowerCase();
+      const destination = roleName === 'admin' ? '/admin/review-queue' : redirectPath;
+      router.push(destination);
     } catch (err) {
       console.error("Error de login:", err);
       if (err instanceof Error) {

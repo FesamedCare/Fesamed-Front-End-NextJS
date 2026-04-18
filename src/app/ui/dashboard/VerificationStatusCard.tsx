@@ -24,9 +24,11 @@ export interface VerificationStatus {
 export interface VerificationStatusCardProps {
   /** Si es true, el aviso se puede contraer/expandir y ocupa todo el ancho. Para dashboard. */
   collapsible?: boolean;
+  /** Incrementar este valor fuerza un re-fetch del estado. */
+  refreshTrigger?: number;
 }
 
-export function VerificationStatusCard({ collapsible = false }: VerificationStatusCardProps) {
+export function VerificationStatusCard({ collapsible = false, refreshTrigger = 0 }: VerificationStatusCardProps) {
   const [status, setStatus] = useState<VerificationStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +76,7 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshTrigger]);
 
   if (loading) {
     const loadingCard = (
@@ -93,27 +95,33 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
   }
 
   const { completion_percentage, status: verifyStatus, missing, is_profile_approved } = status;
-  const isUnderReview = String(verifyStatus).toUpperCase() === "UNDER_REVIEW";
-  const isApproved = is_profile_approved === true || String(verifyStatus).toUpperCase() === "APPROVED";
-  const isRejected = String(verifyStatus).toUpperCase() === "REJECTED";
+  const draftStatus = String(verifyStatus).toUpperCase();
+  const isUnderReview = draftStatus === "UNDER_REVIEW" && !is_profile_approved;
+  const hasPendingChanges = draftStatus === "UNDER_REVIEW" && is_profile_approved === true;
+  const isApproved = is_profile_approved === true && draftStatus !== "UNDER_REVIEW" && draftStatus !== "REJECTED";
+  const isRejected = draftStatus === "REJECTED";
 
   const summary =
-    isApproved
-      ? "Perfil verificado"
-      : isUnderReview
-        ? "Perfil en revisión"
-        : isRejected
-          ? "Perfil rechazado"
-          : `Completa tu perfil para verificación (${completion_percentage}%)`;
+    hasPendingChanges
+      ? "Cambios pendientes de aprobación"
+      : isApproved
+        ? "Perfil verificado"
+        : isUnderReview
+          ? "Perfil en revisión"
+          : isRejected
+            ? "Perfil rechazado"
+            : `Completa tu perfil para verificación (${completion_percentage}%)`;
 
   const collapsedBarClass =
-    isApproved
-      ? "border-green-200 bg-green-50/50 text-green-800"
-      : isUnderReview
-        ? "border-blue-200 bg-blue-50/50 text-blue-800"
-        : isRejected
-          ? "border-red-200 bg-red-50/50 text-red-800"
-          : "border-amber-200 bg-amber-50/50 text-amber-800";
+    hasPendingChanges
+      ? "border-amber-200 bg-amber-50/50 text-amber-800"
+      : isApproved
+        ? "border-green-200 bg-green-50/50 text-green-800"
+        : isUnderReview
+          ? "border-blue-200 bg-blue-50/50 text-blue-800"
+          : isRejected
+            ? "border-red-200 bg-red-50/50 text-red-800"
+            : "border-amber-200 bg-amber-50/50 text-amber-800";
 
   if (collapsible && collapsed) {
     return (
@@ -158,6 +166,28 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
     ) : (
       card
     );
+
+  if (hasPendingChanges) {
+    return wrap(
+      <Card className="border-amber-200 bg-amber-50/50">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="text-sm text-amber-800">
+              <p className="font-medium">Cambios pendientes de aprobación</p>
+              <p className="text-amber-700 mt-1">
+                Realizaste cambios en tu perfil y están siendo revisados por el equipo de Fesamed.
+                Tu perfil aprobado anterior sigue visible para los pacientes mientras tanto.
+              </p>
+              <Button asChild variant="outline" size="sm" className="mt-2 border-amber-400 text-amber-800 hover:bg-amber-100">
+                <Link href="/dashboard/edit-doctor-profile">Ver mis cambios</Link>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (isApproved) {
     return wrap(

@@ -1,58 +1,53 @@
 'use client'
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import ClientDashboard from "../ui/dashboard/client-dashboard";
 import Footer from "../ui/navigation/footer";
 import DoctorDashboard from "../ui/dashboard/doctor-dashboard";
 
 export default function Page() {
   const [isLoading, setIsLoading] = useState(true);
-  const [isPatient, setIsPatient] = useState(false);
-  const [isDoctor, setIsDoctor] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/me/`,
-          {
-            credentials: "include",
-          }
+          { credentials: "include" }
         );
-        
-        if (!response.ok) {
-          throw new Error("No se pudo obtener la información del usuario");
-        }
-        
+
+        if (!response.ok) throw new Error("No autorizado");
+
         const data = await response.json();
-        
-        // El rol viene como un objeto con la propiedad 'name'
-        const roleName = data.role?.name?.toLowerCase() || data.role?.toLowerCase();
-        
-        if (roleName === "patient") {
-          setIsPatient(true);
-        } else if (roleName === "doctor") {
-          setIsDoctor(true);
+        const roleName = (data.role?.name ?? data.role ?? "").toLowerCase();
+
+        if (roleName === "admin") {
+          router.replace("/admin/review-queue");
+          return;
         }
+
+        setRole(roleName);
       } catch (error) {
         console.error("Error fetching user data:", error);
+        setRole(null);
       } finally {
         setIsLoading(false);
       }
     };
-    
-    fetchUserData();
-  }, []);
 
-  if (isLoading) {
-    return null; // or a skeleton loader if you prefer
-  }
+    fetchUserData();
+  }, [router]);
+
+  if (isLoading) return null;
 
   return (
     <div>
-      {isPatient && <ClientDashboard/>}
-      {isDoctor && <DoctorDashboard/>}
-      {!isPatient && !isDoctor && !isLoading && <p className="text-center text-red-500 p-4">No se pudo cargar el dashboard. Por favor, inicie sesión nuevamente.</p>}
-      <Footer/>
+      {role === "patient" && <ClientDashboard />}
+      {role === "doctor" && <DoctorDashboard />}
+      {!role && <p className="text-center text-red-500 p-4">No se pudo cargar el dashboard. Por favor, inicie sesión nuevamente.</p>}
+      <Footer />
     </div>
   );
 }

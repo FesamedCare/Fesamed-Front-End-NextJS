@@ -15,10 +15,13 @@ import {
   FiSettings,
   FiShield,
 } from "react-icons/fi";
-import { useEffect, useState } from "react";
-import { CalendarIcon, MapPinIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { Loader2 } from "lucide-react";
+import { CropImageModal } from "@/components/CropImageModal";
 import { VerificationStatusCard } from "./VerificationStatusCard";
+import { VerificationActionsCard } from "./VerificationActionsCard";
+import { AppointmentsList } from "./AppointmentsList";
 
 // Tipo para la información del usuario
 interface UserData {
@@ -27,60 +30,81 @@ interface UserData {
   phone_number: string;
   email: string;
   address?: string;
-  profile_image?: string;
-  // Agrega más campos según lo que devuelva tu API
+  profile_picture?: string;
+  is_email_verified: boolean;
+  is_phone_verified: boolean;
 }
 
 export default function DoctorDashboard() {
-  const [activeTab, setActiveTab] = useState("proximas");
   const [errorMessage, setErrorMessage] = useState("");
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [verificationRefresh, setVerificationRefresh] = useState(0);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  const appointments = [
-    {
-      date: "Agosto 22, 2024 - 10.00 AM",
-      doctor: "Dr. Julio Jaramillo",
-      specialty: "Dermatologo",
-      location: "Imbanaco",
-      img: "https://fesamedcare.s3.us-east-2.amazonaws.com/doctorsimages/david.png",
-    },
-    {
-      date: "Septiembre 14, 2024 - 15.00pm",
-      doctor: "Dr. Daniel Lee",
-      specialty: "Medico General",
-      location: "Imbanaco",
-      img: "https://fesamedcare.s3.us-east-2.amazonaws.com/doctorsimages/jessica.png",
-    },
-  ];
+  const fetchUserData = async () => {
+    try {
+      const [userRes, draftRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/me/`, { credentials: "include" }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/me/profile-draft/`, { credentials: "include" }),
+      ]);
+
+      if (!userRes.ok) {
+        throw new Error("No se pudo obtener la información del usuario");
+      }
+
+      const user = await userRes.json();
+      const draft = draftRes.ok ? await draftRes.json() : {};
+      setUserId(user.id);
+      const pic = draft.profile_picture ? `${draft.profile_picture}?t=${Date.now()}` : null;
+      setUserData({ ...user, profile_picture: pic });
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      setErrorMessage("Error al cargar los datos del usuario");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/me/`,
-          {
-            credentials: "include",
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("No se pudo obtener la información del usuario");
-        }
-
-        const data = await response.json();
-        console.log("User data:", data);
-        setUserData(data);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        setErrorMessage("Error al cargar los datos del usuario");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchUserData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCropSrc(URL.createObjectURL(file));
+    e.target.value = "";
+  };
+
+  const handleCropConfirm = async (blob: Blob) => {
+    if (!userId) return;
+    setCropSrc(null);
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", blob, "profile.jpg");
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/${userId}/profile-picture/`,
+        { method: "POST", body: formData, credentials: "include" }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.detail ?? `Error ${res.status}`);
+      }
+      const data = await res.json();
+      setUserData((prev) => prev ? { ...prev, profile_picture: `${data.profile_picture_url}?t=${Date.now()}` } : prev);
+      setVerificationRefresh((n) => n + 1);
+    } catch (e) {
+      setErrorMessage(e instanceof Error ? e.message : "Error al subir la foto. Inténtalo de nuevo.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -107,6 +131,13 @@ export default function DoctorDashboard() {
 
   return (
     <div className="container mx-auto px-4 md:px-8 lg:px-28 xl:px-16 pb-12 max-w-7xl">
+      {cropSrc && (
+        <CropImageModal
+          imageSrc={cropSrc}
+          onConfirm={handleCropConfirm}
+          onCancel={() => setCropSrc(null)}
+        />
+      )}
       {errorMessage && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {errorMessage}
@@ -129,23 +160,45 @@ export default function DoctorDashboard() {
           </Breadcrumb>
 
           <div className="w-full mb-4">
-            <VerificationStatusCard collapsible />
+            <VerificationStatusCard collapsible refreshTrigger={verificationRefresh} />
+            <VerificationActionsCard
+              emailVerified={userData?.is_email_verified ?? false}
+              phoneVerified={userData?.is_phone_verified ?? false}
+              onVerified={fetchUserData}
+            />
           </div>
 
           <div className="grid md:grid-cols-[300px,1fr] gap-8">
             <div className="space-y-6">
               <div className="bg-white rounded-lg drop-shadow-lg p-6">
                 <div className="relative mb-4">
-                  <Image
-                    src="https://via.placeholder.com/150"
-                    alt="Profile"
-                    width={128}
-                    height={128}
-                    className="w-32 h-32 rounded-full mx-auto"
-                  />
-                  <button className="absolute bottom-0 right-1/4 bg-blue-500 text-white p-2 rounded-full">
-                    <FiEdit2 className="w-4 h-4" />
+                  {userData?.profile_picture ? (
+                    <Image
+                      src={userData.profile_picture}
+                      alt="Profile"
+                      width={128}
+                      height={128}
+                      className="w-32 h-32 rounded-full mx-auto object-cover"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 rounded-full mx-auto bg-blue-100 flex items-center justify-center text-blue-500 text-3xl font-semibold">
+                      {userData?.name?.[0]?.toUpperCase() ?? "?"}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={uploading}
+                    className="absolute bottom-0 right-1/4 bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-colors disabled:opacity-60"
+                  >
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FiEdit2 className="w-4 h-4" />}
                   </button>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
                 </div>
                 <div className="text-center">
                   <h2 className="text-xl font-semibold">
@@ -226,65 +279,7 @@ export default function DoctorDashboard() {
             </div>
             <div>
               <h2 className="text-xl font-semibold mb-4">Mis consultas</h2>
-              <div className="mb-4">
-                <div className="flex border-b">
-                  {["proximas", "pasadas", "canceladas"].map((tab) => (
-                    <button
-                      key={tab}
-                      className={`py-2 px-4 ${
-                        activeTab === tab ? "border-b-2 border-blue-500" : ""
-                      }`}
-                      onClick={() => setActiveTab(tab)}
-                    >
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {activeTab === "proximas" && (
-                <div className="space-y-4 p-4">
-                  {appointments.map((appointment, index) => (
-                    <div
-                      key={index}
-                      className="bg-white rounded-lg shadow-md p-4 transition-all hover:shadow-lg"
-                    >
-                      <p className="font-semibold mb-2 text-sm sm:text-base flex items-center">
-                        <CalendarIcon className="w-4 h-4 mr-2 text-blue-500" />
-                        {appointment.date}
-                      </p>
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center">
-                        <Image
-                          src={appointment.img}
-                          alt={appointment.doctor}
-                          width={80}
-                          height={80}
-                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-full mb-4 sm:mb-0 sm:mr-4"
-                        />
-                        <div className="flex-grow mb-4 sm:mb-0">
-                          <h4 className="font-semibold text-lg">
-                            {appointment.doctor}
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            {appointment.specialty}
-                          </p>
-                          <p className="text-sm text-gray-500 flex items-center">
-                            <MapPinIcon className="w-4 h-4 mr-1 text-gray-400" />
-                            {appointment.location}
-                          </p>
-                        </div>
-                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
-                          <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 text-sm transition-colors duration-200">
-                            Cancelar
-                          </button>
-                          <button className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm transition-colors duration-200">
-                            Re agendar
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <AppointmentsList role="doctor" />
             </div>
           </div>
         </>

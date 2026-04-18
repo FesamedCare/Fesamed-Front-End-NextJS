@@ -20,7 +20,7 @@ function UseCases() {
 
           <div className="">
             <Image
-              src="https://fesamedcare.s3.us-east-2.amazonaws.com/Review.png"
+              src="/media/Review.png"
               alt="review"
               width={400}
               height={400} // Ajusta esta altura si es necesario
@@ -32,7 +32,7 @@ function UseCases() {
         <div className="hidden lg:block xl:block">
           <div className="pr-12 pt-20 2xl:pr-14">
             <Image
-              src="https://fesamedcare.s3.us-east-2.amazonaws.com/calendar-app-example.png"
+              src="/media/calendar-app-example.png"
               alt="calendar-app-example"
               width={450}
               height={450} // Ajusta esta altura si es necesario

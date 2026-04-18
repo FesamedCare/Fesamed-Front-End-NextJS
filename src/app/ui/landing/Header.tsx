@@ -94,7 +94,7 @@ function Header() {
 
             <div className="hidden xl:block lg:hidden md:hidden shadow-navbar opacity-0 xl:opacity-100 transform translate-x-4 xl:translate-x-0 transition-all duration-500 ease-in-out">
               <Image
-                src="https://fesamedcare.s3.us-east-2.amazonaws.com/calendar-example.png"
+                src="/media/calendar-example.png"
                 alt="calendar-example"
                 width={280}
                 height={350}

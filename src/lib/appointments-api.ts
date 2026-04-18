@@ -1,0 +1,73 @@
+/**
+ * API calls for appointment management (patient and doctor).
+ */
+
+import { get, post, patch } from "@/lib/api";
+import type { Appointment, AppointmentReview, PaginatedAppointments } from "@/app/types/types";
+
+const BASE = "/api/v1";
+
+/** Patient: get all appointments for the current user */
+export async function getAppointments(): Promise<Appointment[]> {
+  return get<Appointment[]>(`${BASE}/appointment/`);
+}
+
+/** Get a single appointment by ID */
+export async function getAppointmentById(id: string): Promise<Appointment> {
+  return get<Appointment>(`${BASE}/appointment/${id}/`);
+}
+
+/** Cancel an appointment (patient or doctor) */
+export async function cancelAppointment(
+  id: string,
+  cancel_reason?: string
+): Promise<Appointment> {
+  return patch<Appointment>(`${BASE}/appointment/${id}/cancel/`, { cancel_reason });
+}
+
+/** Patient: submit a review for a completed appointment */
+export async function createReview(
+  appointmentId: string,
+  rating: number,
+  comment?: string
+): Promise<AppointmentReview> {
+  return post<AppointmentReview>(`${BASE}/appointment/${appointmentId}/review/`, {
+    rating,
+    comment,
+  });
+}
+
+export interface DoctorAppointmentFilters {
+  from_date?: string;
+  to_date?: string;
+  status?: string;
+  page?: number;
+  size?: number;
+}
+
+/** Doctor: get own appointments with optional filters (paginated) */
+export async function getDoctorAppointments(
+  filters: DoctorAppointmentFilters = {}
+): Promise<PaginatedAppointments> {
+  const sp = new URLSearchParams();
+  if (filters.from_date) sp.set("from_date", filters.from_date);
+  if (filters.to_date) sp.set("to_date", filters.to_date);
+  if (filters.status) sp.set("status", filters.status);
+  if (filters.page != null) sp.set("page", String(filters.page));
+  if (filters.size != null) sp.set("size", String(filters.size));
+  const qs = sp.toString();
+  const url = qs
+    ? `${BASE}/doctors/me/appointments/?${qs}`
+    : `${BASE}/doctors/me/appointments/`;
+  return get<PaginatedAppointments>(url);
+}
+
+/** Doctor: mark appointment as IN_PROCESS (check-in) */
+export async function checkInAppointment(id: string): Promise<Appointment> {
+  return post<Appointment>(`${BASE}/appointment/${id}/check-in/`);
+}
+
+/** Doctor: mark appointment as NO_SHOW */
+export async function markNoShow(id: string): Promise<Appointment> {
+  return post<Appointment>(`${BASE}/appointment/${id}/no-show/`);
+}

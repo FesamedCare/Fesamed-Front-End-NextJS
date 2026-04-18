@@ -86,8 +86,18 @@ const solutionsDesktop = [
   }
 ];
 
+const adminLinks = [
+  {
+    name: "Panel de Administración",
+    description: "Gestionar solicitudes de doctores",
+    href: "/admin/review-queue",
+  }
+];
+
 export default function Navbar() {
   const { user, isAuthenticated, loading, logout, refreshUser } = useAuthContext();
+  const userRole = typeof user?.role === "string" ? user.role : (user?.role as { name?: string } | undefined)?.name;
+  const isAdmin = userRole === "admin";
   const [navbarShadow, setNavbarShadow] = useState(false);
 
   // Detectar cambios de autenticación
@@ -162,7 +172,7 @@ export default function Navbar() {
           <div className="flex">
             <Link href="/" className="mb-4 mt-6 h-14 w-48">
               <Image
-                src="https://fesamedcare.s3.us-east-2.amazonaws.com/FesaMedCareLogo.png"
+                src="/media/logo-nav.png"
                 width={200}
                 height={56}
                 alt="FesaMedCare Logo"
@@ -235,7 +245,7 @@ export default function Navbar() {
                           <Popover.Panel className="absolute -right-28 z-10 mt-3 w-60 max-w-sm -translate-x-1/2 transform px-4 sm:px-0 lg:max-w-3xl">
                             <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
                               <div className="relative grid gap-8 bg-white p-7">
-                                {solutionsDesktop.map((item) => (
+                                {(isAdmin ? adminLinks : solutionsDesktop).map((item) => (
                                   <Link
                                     key={item.name}
                                     href={item.href}
@@ -282,7 +292,7 @@ export default function Navbar() {
           <div className="h-10 w-44">
             <Link href="/">
               <Image
-                src="https://fesamedcare.s3.us-east-2.amazonaws.com/FesaMedCareLogo.png"
+                src="/media/logo-nav.png"
                 width={200}
                 height={56}
                 alt="FesaMedCare Logo"

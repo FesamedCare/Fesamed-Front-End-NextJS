@@ -9,7 +9,7 @@ function Incentives() {
         <div className="hidden lg:block xl:block">
           <div className="image-container">
             <Image
-              src="https://fesamedcare.s3.us-east-2.amazonaws.com/grid-doctors.png"
+              src="/media/specialists.png"
               alt="grid-doctors"
               width={500}
               height={500} // Ajusta esto según tus necesidades
