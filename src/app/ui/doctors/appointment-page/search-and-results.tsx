@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import Image from "next/image";
+import { UserAvatar } from "@/components/UserAvatar";
 import { Search, Loader2, MapPin, Stethoscope, Info } from "lucide-react";
 import {
   searchDoctors,
@@ -26,8 +26,6 @@ import type {
   CatalogDepartment,
   CatalogSpecialty,
 } from "@/app/types/types";
-
-const defaultImage = "https://via.placeholder.com/150?text=Doctor";
 
 interface SearchAndResultsProps {
   onSelectDoctor: (doctorId: string) => void;
@@ -228,13 +226,12 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
                     <CardContent className="p-4">
                       <div className="flex gap-4">
                         <div className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-muted">
-                          <Image
-                            src={doc.profile_picture || defaultImage}
+                          <UserAvatar
+                            src={doc.profile_picture}
+                            name={doc.full_name}
                             alt={doc.full_name}
                             fill
-                            className="object-cover"
                             sizes="80px"
-                            unoptimized={doc.profile_picture?.startsWith("http") === false}
                           />
                         </div>
                         <div className="min-w-0 flex-1">

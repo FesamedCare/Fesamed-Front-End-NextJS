@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { CalendarIcon, MapPinIcon, Loader2, Star } from "lucide-react";
-import Image from "next/image";
+import { UserAvatar } from "@/components/UserAvatar";
 import {
   Dialog,
   DialogContent,
@@ -96,8 +96,7 @@ export function AppointmentsList({ role }: Props) {
     setFetchError(null);
     try {
       if (role === "doctor") {
-        const page = await getDoctorAppointments({ size: 100 });
-        setAppointments(page.items);
+        setAppointments(await getDoctorAppointments());
       } else {
         setAppointments(await getAppointments());
       }
@@ -112,13 +111,27 @@ export function AppointmentsList({ role }: Props) {
     load();
   }, [load]);
 
-  const visible = appointments.filter((a) =>
-    tab === "proximas"
-      ? UPCOMING.includes(a.status)
-      : tab === "pasadas"
-      ? PAST.includes(a.status)
-      : CANCELED.includes(a.status)
-  );
+  const isDatePast = (appt: Appointment): boolean => {
+    if (!appt.schedule) return false;
+    try {
+      const dateStr = appt.schedule.date_of_service;
+      const todayStr = format(new Date(), "yyyy-MM-dd");
+      if (dateStr < todayStr) return true;
+      if (dateStr > todayStr) return false;
+      const [h, m] = appt.schedule.end_time.split(":").map(Number);
+      const now = new Date();
+      return now.getHours() > h || (now.getHours() === h && now.getMinutes() >= m);
+    } catch {
+      return false;
+    }
+  };
+
+  const visible = appointments.filter((a) => {
+    const datePast = isDatePast(a);
+    if (tab === "proximas") return UPCOMING.includes(a.status) && !datePast;
+    if (tab === "pasadas") return PAST.includes(a.status) || (UPCOMING.includes(a.status) && datePast);
+    return CANCELED.includes(a.status);
+  });
 
   const handleCancel = async () => {
     if (!cancelId) return;
@@ -246,10 +259,6 @@ export function AppointmentsList({ role }: Props) {
             const person =
               role === "patient" ? appt.doctor : appt.patient;
             const isActing = actionLoading === appt.id;
-            const fallbackSrc = `https://via.placeholder.com/80?text=${encodeURIComponent(
-              person ? person.name.charAt(0) : "?"
-            )}`;
-
             return (
               <div
                 key={appt.id}
@@ -276,17 +285,13 @@ export function AppointmentsList({ role }: Props) {
 
                 {/* Body: person info + actions */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <Image
-                    src={person?.profile_picture || fallbackSrc}
-                    alt={
-                      person
-                        ? `${person.name} ${person.lastname}`
-                        : "Usuario"
-                    }
+                  <UserAvatar
+                    src={person?.profile_picture}
+                    name={person?.name}
+                    lastname={person?.lastname}
                     width={64}
                     height={64}
                     className="w-16 h-16 rounded-full object-cover shrink-0"
-                    unoptimized
                   />
 
                   <div className="flex-grow min-w-0">
@@ -387,6 +392,18 @@ export function AppointmentsList({ role }: Props) {
                           onClick={() => handleNoShow(appt.id)}
                         >
                           No asistió
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={isActing}
+                          onClick={() => {
+                            setCancelId(appt.id);
+                            setCancelReason("");
+                            setCancelError(null);
+                          }}
+                        >
+                          Cancelar
                         </Button>
                       </>
                     )}

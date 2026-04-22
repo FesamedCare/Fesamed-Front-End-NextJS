@@ -13,11 +13,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { UserAvatar } from "@/components/UserAvatar";
 import Link from "next/link";
 import { getDoctorProfile, getDoctorAvailability, createAppointment } from "@/lib/doctors-api";
 import type { DoctorFullProfile, AvailabilitySlot, OfficeFull, CertificatePublic } from "@/app/types/types";
-
-const defaultImage = "https://via.placeholder.com/150?text=Doctor";
 
 interface DoctorBookingViewProps {
   doctorId: string;
@@ -297,10 +296,12 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
               {/* Identity */}
               <div className="flex gap-4 items-start mb-6">
                 <div className="relative w-20 h-20 shrink-0 rounded-full overflow-hidden bg-muted">
-                  <Image
-                    src={profile.profile_picture || defaultImage}
-                    alt={`${profile.name} ${profile.lastname}`}
-                    fill className="object-cover" sizes="80px"
+                  <UserAvatar
+                    src={profile.profile_picture}
+                    name={profile.name}
+                    lastname={profile.lastname}
+                    fill
+                    sizes="80px"
                   />
                 </div>
                 <div>
