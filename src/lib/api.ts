@@ -3,12 +3,15 @@
  */
 
 import { PUBLIC_PATHS } from '@/hooks/useAuth';
+import { AuthExpiredError, parseErrorDetail, shouldAttemptRefresh } from './apiError';
 
 type ApiOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   body?: unknown;
   headers?: Record<string, string>;
   noCredentials?: boolean;
+  /** Uso interno: evita que un 401 persistente encadene reintentos sin fin. */
+  _retried?: boolean;
 };
 
 // Control to prevent multiple simultaneous refresh requests
@@ -54,29 +57,34 @@ export async function apiClient<T = unknown>(
       return await response.json();
     }
 
-    // Si el token ha expirado (401), intentar renovarlo
-    if (response.status === 401) {
-      // Intentar renovar el token
-      const refreshResult = await refreshToken();
-
-      // Si se renovó con éxito, reintentar la solicitud original
-      if (refreshResult) {
-        return apiClient<T>(endpoint, options);
+    // Un 401 puede significar dos cosas distintas y hay que separarlas:
+    //   - el access token venció        -> renovar y reintentar
+    //   - el endpoint rechazó los datos -> mostrar el mensaje del backend
+    // Tratarlas igual hacía que un login con contraseña mala mostrara
+    // "Session expired" en vez de "Email o contraseña no válidos".
+    if (response.status === 401 && shouldAttemptRefresh(endpoint)) {
+      // Si ya reintentamos con un token nuevo y sigue en 401, la sesión no sirve.
+      // Sin este corte, un 401 persistente encadenaba refresh y reintento sin fin.
+      if (options._retried) {
+        throw new AuthExpiredError();
       }
 
-      // Si la renovación falló, lanzar error
-      throw new Error('Session expired');
+      const refreshResult = await refreshToken();
+
+      // Si se renovó con éxito, reintentar la solicitud original una sola vez.
+      if (refreshResult) {
+        return apiClient<T>(endpoint, { ...options, _retried: true });
+      }
+
+      // El refresh también falló: la sesión ya no es recuperable.
+      throw new AuthExpiredError();
     }
 
-    // Otros errores (FastAPI devuelve detail como string o array de { msg, loc })
+    // Cualquier otro error, incluido el 401 de credenciales inválidas.
     const errorData = await response.json().catch(() => ({}));
-    const raw = errorData.detail;
-    const message = Array.isArray(raw)
-      ? (raw as { msg?: string }[]).map((e) => e.msg ?? String(e)).filter(Boolean).join('. ') || `Error ${response.status}`
-      : (raw || `Error ${response.status}: ${response.statusText}`);
-    throw new Error(typeof message === 'string' ? message : JSON.stringify(message));
+    throw new Error(parseErrorDetail(errorData, response.status, response.statusText));
   } catch (error) {
-    if ((error as Error).message === 'Session expired') {
+    if (error instanceof AuthExpiredError && typeof window !== 'undefined') {
       // Evitar bucle de redirecciones si ya estamos en una página pública
       const currentPath = window.location.pathname;
       const isPublicPage = PUBLIC_PATHS.some((path: string) =>
