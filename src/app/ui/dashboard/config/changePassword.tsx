@@ -8,30 +8,54 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Eye, EyeOff } from "lucide-react"
+import { apiClient } from "@/lib/api"
 
 export function CambiarContrasena() {
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState<string | null>("Contraseña incorrecta")
+  // Arranca vacío. Antes venía con "Contraseña incorrecta" precargado, así que
+  // la página abría con un error en rojo sin que el usuario hubiera hecho nada.
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
+    setSuccess(null)
 
-    // Validar contraseñas
     if (newPassword !== confirmPassword) {
       setError("Las contraseñas no coinciden")
       return
     }
-    
-    // Si todo está bien, limpiar el error
-    setError(null)
-    
-    // Aquí iría la lógica para validar y cambiar la contraseña
-    console.log("Cambiar contraseña:", { currentPassword, newPassword, confirmPassword })
+
+    setIsLoading(true)
+
+    try {
+      const res = await apiClient<{ message: string }>("/api/v1/me/password/", {
+        method: "PATCH",
+        body: {
+          current_password: currentPassword,
+          new_password: newPassword,
+          new_password_confirm: confirmPassword,
+        },
+      })
+      setSuccess(res.message)
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+    } catch (err) {
+      // apiClient ya tradujo el detail del backend, incluidos los 422 de
+      // política con la regla que falló.
+      setError(err instanceof Error ? err.message : "No se pudo cambiar la contraseña.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -53,7 +77,8 @@ export function CambiarContrasena() {
                 type={showCurrentPassword ? "text" : "password"}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className={error ? "border-red-500 pr-10" : "pr-10"}
+                className="pr-10"
+                disabled={isLoading}
               />
               <button
                 type="button"
@@ -67,7 +92,6 @@ export function CambiarContrasena() {
                 )}
               </button>
             </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
 
           <div className="space-y-2">
@@ -79,6 +103,7 @@ export function CambiarContrasena() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="pr-10"
+                disabled={isLoading}
               />
               <button
                 type="button"
@@ -103,6 +128,7 @@ export function CambiarContrasena() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="pr-10"
+                disabled={isLoading}
               />
               <button
                 type="button"
@@ -118,8 +144,17 @@ export function CambiarContrasena() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700">
-            Guardar
+          {/* El mensaje va junto al botón, no dentro del primer campo: un error
+              de confirmación no pertenece debajo de "Contraseña actual". */}
+          {error && <p className="text-sm text-red-500">{error}</p>}
+          {success && <p className="text-sm text-green-600">{success}</p>}
+
+          <Button
+            type="submit"
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+            disabled={isLoading}
+          >
+            {isLoading ? "Guardando..." : "Guardar"}
           </Button>
         </form>
       </CardContent>
