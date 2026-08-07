@@ -29,7 +29,8 @@ export function ProfilePictureUpload() {
     ])
       .then(([user, draft]) => {
         setUserId(user.id);
-        if (draft.profile_picture) setPreview(`${draft.profile_picture}?t=${Date.now()}`);
+        // Sin cache-buster: ya viene prefirmada del backend.
+        if (draft.profile_picture) setPreview(draft.profile_picture);
       })
       .catch(() => {});
   }, []);

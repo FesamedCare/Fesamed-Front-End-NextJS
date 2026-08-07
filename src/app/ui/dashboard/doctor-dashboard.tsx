@@ -59,7 +59,9 @@ export default function DoctorDashboard() {
       const user = await userRes.json();
       const draft = draftRes.ok ? await draftRes.json() : {};
       setUserId(user.id);
-      const pic = draft.profile_picture ? `${draft.profile_picture}?t=${Date.now()}` : null;
+      // Sin cache-buster: el backend ya la devuelve prefirmada y cualquier
+      // parámetro extra rompe la firma SigV4. Ver scripts/presigned-urls.test.mjs.
+      const pic = draft.profile_picture ?? null;
       setUserData({ ...user, profile_picture: pic });
     } catch (error) {
       console.error("Error fetching user data:", error);
