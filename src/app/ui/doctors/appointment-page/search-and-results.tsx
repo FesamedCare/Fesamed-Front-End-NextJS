@@ -143,8 +143,8 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
             propósito, en vez de dejar un botón huérfano.
           */}
           <div className="max-w-4xl mx-auto flex flex-col gap-4 lg:flex-row lg:items-end lg:flex-wrap">
-          <Select value={departmentId || "all"} onValueChange={(v) => setDepartmentId(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[150px] bg-white rounded-full border-blue-500 text-blue-600">
+          <Select value={departmentId} onValueChange={(v) => setDepartmentId(v === "all" ? "" : v)}>
+            <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[130px] bg-white rounded-full border-blue-500 text-blue-600 data-[placeholder]:text-blue-600/60">
               <SelectValue placeholder="Departamento" />
             </SelectTrigger>
             <SelectContent>
@@ -156,8 +156,8 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
               ))}
             </SelectContent>
           </Select>
-          <Select value={cityId || "all"} onValueChange={(v) => setCityId(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[150px] bg-white rounded-full border-blue-500 text-blue-600">
+          <Select value={cityId} onValueChange={(v) => setCityId(v === "all" ? "" : v)}>
+            <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[130px] bg-white rounded-full border-blue-500 text-blue-600 data-[placeholder]:text-blue-600/60">
               <SelectValue placeholder="Ciudad" />
             </SelectTrigger>
             <SelectContent>
@@ -169,8 +169,8 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
               ))}
             </SelectContent>
           </Select>
-          <Select value={specialtyId || "all"} onValueChange={(v) => setSpecialtyId(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[150px] bg-white rounded-full border-blue-500 text-blue-600">
+          <Select value={specialtyId} onValueChange={(v) => setSpecialtyId(v === "all" ? "" : v)}>
+            <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[130px] bg-white rounded-full border-blue-500 text-blue-600 data-[placeholder]:text-blue-600/60">
               <SelectValue placeholder="Especialidad" />
             </SelectTrigger>
             <SelectContent>
@@ -182,7 +182,7 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
               ))}
             </SelectContent>
           </Select>
-          <div className="w-full lg:flex-1 lg:min-w-[170px] relative">
+          <div className="w-full lg:flex-[2] lg:min-w-[200px] relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
