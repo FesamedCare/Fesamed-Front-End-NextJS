@@ -169,7 +169,14 @@ export default function DoctorDashboard() {
             <VerificationActionsCard
               emailVerified={userData?.is_email_verified ?? false}
               phoneVerified={userData?.is_phone_verified ?? false}
-              onVerified={fetchUserData}
+              // Verificar el teléfono suma 5 puntos al perfil, y el backend ya
+              // los recalcula en /api/v1/check. fetchUserData solo actualiza los
+              // datos del usuario; sin bump del contador, la tarjeta del
+              // porcentaje se queda con el valor viejo hasta recargar la página.
+              onVerified={() => {
+                fetchUserData();
+                setVerificationRefresh((n) => n + 1);
+              }}
             />
           </div>
 
