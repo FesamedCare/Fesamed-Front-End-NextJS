@@ -11,6 +11,11 @@ import "../../globals.css";
 import { useAuthContext } from "@/contexts/AuthContext";
 
 // Menú para usuarios no autenticados
+  // El Blog está fuera de la navegación a propósito: el frontend está hecho pero
+  // el backend nunca se construyó. No hay tabla de posts, ni endpoint, ni forma
+  // de escribir uno, así que /blog solo muestra "No hay publicaciones
+  // disponibles". El código del front queda intacto: para reponerlo alcanza con
+  // devolver este enlace, una vez que existan GET /posts y GET /categories.
 const publicLinks = [
   {
     name: "Buscar Doctor",
@@ -21,11 +26,6 @@ const publicLinks = [
     name: "Nosotros",
     description: "Aprende más sobre nosotros",
     href: "/about",
-  },
-  {
-    name: "Blog",
-    description: "Entérate de las últimas noticias",
-    href: "/blog",
   },
   {
     name: "Contacto",
@@ -55,11 +55,6 @@ const userLinks = [
     name: "Nosotros",
     description: "Aprende más sobre nosotros",
     href: "/about",
-  },
-  {
-    name: "Blog",
-    description: "Entérate de las últimas noticias",
-    href: "/blog",
   },
   {
     name: "Contacto",
@@ -192,12 +187,6 @@ export default function Navbar() {
                 className="4xl:text-lg text-base inline-flex font-medium leading-6 text-blue-700 border-b-2 border-white transition duration-300 ease-in-out hover:border-blue-700 mx-4"
               >
                 Nosotros
-              </Link>
-              <Link
-                href="/blog"
-                className="4xl:text-lg text-base inline-flex font-medium leading-6 text-blue-700 border-b-2 border-white transition duration-300 ease-in-out hover:border-blue-700 mx-4"
-              >
-                Blog
               </Link>
               <Link
                 href="/contact"

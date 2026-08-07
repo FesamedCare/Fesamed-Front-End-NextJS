@@ -1,20 +1,24 @@
 import Link from "next/link"
 import Image from "next/image"
 
+// El Blog está fuera de la navegación a propósito: el frontend está hecho pero
+// el backend nunca se construyó. No hay tabla de posts, ni endpoint, ni forma de
+// escribir uno. Para reponerlo alcanza con devolver los enlaces, una vez que
+// existan GET /posts y GET /categories.
 const navigation = {
     clientes: [
       { name: 'Pregunta Gratis a un Doctor', href: '#' },
       { name: 'Buscar un Doctor', href: '/buscar-doctor' },
-      { name: 'Leer articulos de salud', href: '/blog' }
     ],
     doctores: [
       { name: 'FesamedCare Perfil', href: '/contact' },
-      { name: 'Agenda', href: '/blog' }
+      // Decía Agenda y apuntaba a /blog, que no tiene nada que ver. Ahora va a
+      // la pantalla donde el doctor configura sus horarios.
+      { name: 'Agenda', href: '/dashboard/settings/availability' }
     ],
     trabaja: [
       { name: 'Nosotros', href: '/about' },
       { name: 'Contacto', href: '/contact' },
-      { name: 'Blog', href: '/blog' },
       { name: 'Servicios', href: '/careers' },
       { name: 'Testimonios', href: '/' },
     ],
