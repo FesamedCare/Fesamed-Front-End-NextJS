@@ -17,13 +17,22 @@ import { Specialty, University, Language, Disease, Service, UserMe, ProfileDraft
 import { useCallback, useEffect, useState } from "react";
 import { X, Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api";
+import { EDAD_MINIMA_DOCTOR, aniosCumplidos, esFutura, hoyISO } from "@/lib/birthDate";
 
 const generalProfileSchema = z.object({
   doctor_name: z.string().min(1, { message: "El nombre es obligatorio" }),
   doctor_lastname: z.string().min(1, { message: "El apellido es obligatorio" }),
   email: z.string().email().optional().or(z.literal("")),
   phone_number: z.string().optional(),
-  birth_date: z.string().optional(),
+  birth_date: z
+    .string()
+    .optional()
+    .refine((v) => !v || !esFutura(v), {
+      message: "La fecha de nacimiento no puede estar en el futuro",
+    })
+    .refine((v) => !v || aniosCumplidos(v) >= EDAD_MINIMA_DOCTOR, {
+      message: `Un profesional debe tener al menos ${EDAD_MINIMA_DOCTOR} años cumplidos`,
+    }),
   gender: z.enum(["MASCULINO", "FEMENINO", "OTRO"]).optional().nullable(),
   id_card: z.string().optional(),
   license_number: z.string(),
@@ -446,7 +455,7 @@ export function GeneralProfileForm({ onSaved }: GeneralProfileFormProps = {}) {
                 <FormItem>
                   <FormLabel>Fecha de nacimiento</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} value={field.value ?? ""} />
+                    <Input type="date" max={hoyISO()} {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
