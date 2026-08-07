@@ -6,6 +6,7 @@ import { Folder, FileText, Image as ImageIcon, FileType } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import ImagePreviewModal from "./image-preview-modal"
+import { useAuthContext } from "@/contexts/AuthContext";
 
 interface FileWithPreview extends File {
   preview?: string;
@@ -26,12 +27,8 @@ interface Certificate {
 // Tamaño máximo en bytes (10 MB)
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-export interface CertificatesFormProps {
-  /** Se llama tras guardar o eliminar, para refrescar el porcentaje del perfil. */
-  onSaved?: () => void;
-}
-
-export default function CertificatesForm({ onSaved }: CertificatesFormProps = {}) {
+export default function CertificatesForm() {
+  const { notifyProfileChanged } = useAuthContext();
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
@@ -177,7 +174,7 @@ export default function CertificatesForm({ onSaved }: CertificatesFormProps = {}
           throw new Error(`Error: ${response.status}`);
         }
 
-        onSaved?.();
+        notifyProfileChanged();
         alert("Certificado eliminado correctamente");
       }
     } catch (error) {
@@ -225,7 +222,7 @@ export default function CertificatesForm({ onSaved }: CertificatesFormProps = {}
           throw new Error(`Error: ${response.status}`);
         }
 
-        onSaved?.();
+        notifyProfileChanged();
         alert("Certificados guardados correctamente");
         window.location.reload();
       } else {

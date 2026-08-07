@@ -30,6 +30,8 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  /** Se incrementa en cada cambio de perfil. Los consumidores lo usan como dependencia. */
+  const [profileVersion, setProfileVersion] = useState(0);
   const router = useRouter();
 
   // Stable function: does not depend on pathname.
@@ -47,6 +49,22 @@ export function useAuth() {
       setLoading(false);
     }
   }, []);
+
+  /**
+   * Fuente única para avisar que el perfil cambió.
+   *
+   * Antes cada pantalla tenía su propio contador y su propia prop, y un
+   * componente nuevo tenía que acordarse de cablear el correcto. De ahí
+   * salieron dos bugs: el porcentaje de completitud no subía al guardar el
+   * perfil ni al verificar el teléfono.
+   *
+   * Quien modifique el perfil llama a notifyProfileChanged(). Quien dependa de
+   * él se suscribe a profileVersion. No hay props que pasar.
+   */
+  const notifyProfileChanged = useCallback(async () => {
+    await fetchUser();
+    setProfileVersion((n) => n + 1);
+  }, [fetchUser]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -80,5 +98,7 @@ export function useAuth() {
     isAuthenticated: !!user,
     refreshUser: fetchUser,
     logout: handleLogout,
+    profileVersion,
+    notifyProfileChanged,
   };
 }

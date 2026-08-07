@@ -10,6 +10,10 @@ interface AuthContextType {
   isAuthenticated: boolean;
   refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
+  /** Se incrementa en cada cambio de perfil. Úsalo como dependencia de useEffect. */
+  profileVersion: number;
+  /** Llamar tras modificar el perfil: recarga el usuario y avisa a los suscriptores. */
+  notifyProfileChanged: () => Promise<void>;
 }
 
 // Valor por defecto para cuando no se ha inicializado el contexto
@@ -19,7 +23,9 @@ const defaultAuthContext: AuthContextType = {
   error: null,
   isAuthenticated: false,
   refreshUser: async () => {},
-  logout: async () => {}
+  logout: async () => {},
+  profileVersion: 0,
+  notifyProfileChanged: async () => {}
 };
 
 const AuthContext = createContext<AuthContextType>(defaultAuthContext);

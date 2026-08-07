@@ -4,6 +4,7 @@ import { useState, useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { AlertCircle, CheckCircle2, Loader2, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 import { get } from "@/lib/api";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -24,11 +25,13 @@ export interface VerificationStatus {
 export interface VerificationStatusCardProps {
   /** Si es true, el aviso se puede contraer/expandir y ocupa todo el ancho. Para dashboard. */
   collapsible?: boolean;
-  /** Incrementar este valor fuerza un re-fetch del estado. */
-  refreshTrigger?: number;
 }
 
-export function VerificationStatusCard({ collapsible = false, refreshTrigger = 0 }: VerificationStatusCardProps) {
+export function VerificationStatusCard({ collapsible = false }: VerificationStatusCardProps) {
+  // Se relee sola en cada cambio de perfil. Antes dependía de una prop
+  // refreshTrigger que cada pantalla tenía que acordarse de pasar, y las que se
+  // olvidaban mostraban el porcentaje viejo hasta recargar la página.
+  const { profileVersion } = useAuthContext();
   const [status, setStatus] = useState<VerificationStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +79,7 @@ export function VerificationStatusCard({ collapsible = false, refreshTrigger = 0
     return () => {
       cancelled = true;
     };
-  }, [refreshTrigger]);
+  }, [profileVersion]);
 
   if (loading) {
     const loadingCard = (

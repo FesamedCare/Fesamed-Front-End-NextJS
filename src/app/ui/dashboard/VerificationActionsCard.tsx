@@ -6,18 +6,21 @@ import { apiClient } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 interface VerificationActionsCardProps {
   emailVerified: boolean;
   phoneVerified: boolean;
-  onVerified?: () => void;
 }
 
 export function VerificationActionsCard({
   emailVerified,
   phoneVerified,
-  onVerified,
 }: VerificationActionsCardProps) {
+  // Avisa al contexto directamente. Antes lo hacía por una prop onVerified que
+  // cada dashboard cableaba a mano, y el del doctor la conectaba solo a la
+  // recarga del usuario: el porcentaje se quedaba viejo tras verificar.
+  const { notifyProfileChanged } = useAuthContext();
   // Email state
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailMsg, setEmailMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -76,7 +79,7 @@ export function VerificationActionsCard({
       });
       if (res.ok) {
         setPhoneMsg({ type: "success", text: "¡Teléfono verificado correctamente!" });
-        onVerified?.();
+        notifyProfileChanged();
       } else {
         setPhoneMsg({ type: "error", text: "Código incorrecto o expirado. Intenta de nuevo." });
       }

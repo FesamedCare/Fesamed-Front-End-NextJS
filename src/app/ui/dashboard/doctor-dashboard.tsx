@@ -22,6 +22,7 @@ import { CropImageModal } from "@/components/CropImageModal";
 import { VerificationStatusCard } from "./VerificationStatusCard";
 import { VerificationActionsCard } from "./VerificationActionsCard";
 import { AppointmentsList } from "./AppointmentsList";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 // Tipo para la información del usuario
 interface UserData {
@@ -36,13 +37,13 @@ interface UserData {
 }
 
 export default function DoctorDashboard() {
+  const { profileVersion, notifyProfileChanged } = useAuthContext();
   const [errorMessage, setErrorMessage] = useState("");
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
-  const [verificationRefresh, setVerificationRefresh] = useState(0);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const fetchUserData = async () => {
@@ -73,8 +74,10 @@ export default function DoctorDashboard() {
 
   useEffect(() => {
     fetchUserData();
+  // Se vuelve a pedir en cada cambio de perfil. La fuente es AuthContext, así
+  // que no hay props que cablear ni contadores locales que mantener.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [profileVersion]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -103,7 +106,8 @@ export default function DoctorDashboard() {
       // string, así que cualquier parámetro extra la rompe con 403. Cada subida
       // ya genera una clave nueva con UUID, así que no hay nada que invalidar.
       setUserData((prev) => prev ? { ...prev, profile_picture: data.profile_picture_url } : prev);
-      setVerificationRefresh((n) => n + 1);
+      // La foto suma al porcentaje del perfil.
+      notifyProfileChanged();
     } catch (e) {
       setErrorMessage(e instanceof Error ? e.message : "Error al subir la foto. Inténtalo de nuevo.");
     } finally {
@@ -165,18 +169,10 @@ export default function DoctorDashboard() {
           </Breadcrumb>
 
           <div className="w-full mb-4">
-            <VerificationStatusCard collapsible refreshTrigger={verificationRefresh} />
+            <VerificationStatusCard collapsible />
             <VerificationActionsCard
               emailVerified={userData?.is_email_verified ?? false}
               phoneVerified={userData?.is_phone_verified ?? false}
-              // Verificar el teléfono suma 5 puntos al perfil, y el backend ya
-              // los recalcula en /api/v1/check. fetchUserData solo actualiza los
-              // datos del usuario; sin bump del contador, la tarjeta del
-              // porcentaje se queda con el valor viejo hasta recargar la página.
-              onVerified={() => {
-                fetchUserData();
-                setVerificationRefresh((n) => n + 1);
-              }}
             />
           </div>
 

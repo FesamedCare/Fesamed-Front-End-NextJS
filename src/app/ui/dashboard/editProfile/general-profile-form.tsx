@@ -17,6 +17,7 @@ import { Specialty, University, Language, Disease, Service, UserMe, ProfileDraft
 import { useCallback, useEffect, useState } from "react";
 import { X, Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { EDAD_MINIMA_DOCTOR, aniosCumplidos, esFutura, hoyISO } from "@/lib/birthDate";
 
 const generalProfileSchema = z.object({
@@ -77,12 +78,8 @@ function formatBackendError(detail: unknown): string {
   return String(detail);
 }
 
-export interface GeneralProfileFormProps {
-  /** Se llama tras un guardado exitoso, para que la tarjeta de verificación relea el porcentaje. */
-  onSaved?: () => void;
-}
-
-export function GeneralProfileForm({ onSaved }: GeneralProfileFormProps = {}) {
+export function GeneralProfileForm() {
+  const { notifyProfileChanged } = useAuthContext();
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [universities, setUniversities] = useState<University[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -329,8 +326,8 @@ export function GeneralProfileForm({ onSaved }: GeneralProfileFormProps = {}) {
       }
 
       // El backend ya recalculó el porcentaje en cada endpoint que tocamos
-      // arriba. Esto le avisa a la tarjeta que vuelva a leerlo.
-      onSaved?.();
+      // arriba. Esto le avisa a todo lo que dependa del perfil.
+      notifyProfileChanged();
 
       alert("Perfil actualizado con éxito");
     } catch (error: unknown) {

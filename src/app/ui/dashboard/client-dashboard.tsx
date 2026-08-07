@@ -20,6 +20,7 @@ import Image from "next/image";
 import { UserAvatar } from "@/components/UserAvatar";
 import { AppointmentsList } from "./AppointmentsList";
 import { VerificationActionsCard } from "./VerificationActionsCard";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 // Tipo para la información del usuario
 interface UserData {
@@ -34,6 +35,7 @@ interface UserData {
 }
 
 export default function ClientDashboard() {
+  const { profileVersion } = useAuthContext();
   const [errorMessage, setErrorMessage] = useState("");
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,8 +63,10 @@ export default function ClientDashboard() {
 
   useEffect(() => {
     fetchUserData();
+  // Se vuelve a pedir en cada cambio de perfil. La fuente es AuthContext, así
+  // que no hay props que cablear ni contadores locales que mantener.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [profileVersion]);
 
   const handleLogout = async () => {
     try {
@@ -105,7 +109,6 @@ export default function ClientDashboard() {
         <VerificationActionsCard
           emailVerified={userData.is_email_verified}
           phoneVerified={userData.is_phone_verified}
-          onVerified={fetchUserData}
         />
       )}
 

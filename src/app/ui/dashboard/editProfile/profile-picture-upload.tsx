@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Camera, Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { CropImageModal } from "@/components/CropImageModal";
 
 interface UserMe {
@@ -14,12 +15,8 @@ interface ProfileDraft {
   profile_picture?: string | null;
 }
 
-export interface ProfilePictureUploadProps {
-  /** Se llama tras una subida exitosa, para refrescar el porcentaje del perfil. */
-  onSaved?: () => void;
-}
-
-export function ProfilePictureUpload({ onSaved }: ProfilePictureUploadProps = {}) {
+export function ProfilePictureUpload() {
+  const { notifyProfileChanged } = useAuthContext();
   const [userId, setUserId] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -72,7 +69,7 @@ export function ProfilePictureUpload({ onSaved }: ProfilePictureUploadProps = {}
       // No hace falta: cada subida genera una clave nueva con un UUID distinto.
       setPreview(data.profile_picture_url);
       setMsg({ type: "success", text: "Foto de perfil actualizada." });
-      onSaved?.();
+      notifyProfileChanged();
     } catch (e) {
       setMsg({ type: "error", text: e instanceof Error ? e.message : "Error al subir la foto." });
     } finally {

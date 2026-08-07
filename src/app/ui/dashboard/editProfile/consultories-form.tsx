@@ -15,6 +15,7 @@ import Image from "next/image"
 import { Pencil, Trash2, Upload, Plus, MapPin, Phone, Globe } from "lucide-react"
 import ImagePreviewModal from "./image-preview-modal"
 import { MultiSelect, type Option } from "./multi-select"
+import { useAuthContext } from "@/contexts/AuthContext";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? ""
 const MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -57,12 +58,8 @@ const emptyForm: OfficeFormData = {
   payment_methods: [],
 }
 
-export interface ConsultoriesFormProps {
-  /** Se llama tras crear, actualizar o eliminar, para refrescar el porcentaje del perfil. */
-  onSaved?: () => void;
-}
-
-export default function ConsultoriesForm({ onSaved }: ConsultoriesFormProps = {}) {
+export default function ConsultoriesForm() {
+  const { notifyProfileChanged } = useAuthContext();
   const [userId, setUserId] = useState<string | null>(null)
   const [offices, setOffices] = useState<ConsultingOffice[]>([])
   const [cities, setCities] = useState<City[]>([])
@@ -219,11 +216,11 @@ export default function ConsultoriesForm({ onSaved }: ConsultoriesFormProps = {}
       if (formMode === "create") {
         setOffices((prev) => [...prev, savedOffice])
         setOfficePhotos((prev) => ({ ...prev, [savedOffice.id]: [] }))
-        onSaved?.()
+        notifyProfileChanged()
         alert("Consultorio creado correctamente.")
       } else {
         setOffices((prev) => prev.map((o) => (o.id === savedOffice.id ? savedOffice : o)))
-        onSaved?.()
+        notifyProfileChanged()
         alert("Consultorio actualizado correctamente.")
       }
       cancelForm()
