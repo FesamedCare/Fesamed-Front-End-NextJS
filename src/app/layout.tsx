@@ -28,12 +28,27 @@ export default function RootLayout({
     <>
       <html lang="en" suppressHydrationWarning>
         <body>
-          <AuthProvider>
-            <Navbar />
-            <PageTransitionWrapper>
-              <div className="pt-24">{children}</div>
-            </PageTransitionWrapper>
-          </AuthProvider>
+          {/*
+            Todo va dentro de un único elemento raíz, a propósito.
+
+            Headless UI v2 decide qué clic es "afuera" en use-root-containers.js:
+            recorre los hijos directos de html y body, y a cada uno que NO
+            contiene su main tree node lo marca como contenedor interno.
+            useOutsideClick no cierra si el clic cae dentro de un contenedor.
+
+            Con <Navbar /> y el contenido como hermanos de primer nivel, el
+            subárbol del contenido quedaba marcado como interno: el menú de
+            usuario cerraba al hacer clic sobre la navbar, pero no sobre la
+            página. Ver scripts/layout-single-root.test.mjs.
+          */}
+          <div id="app-root">
+            <AuthProvider>
+              <Navbar />
+              <PageTransitionWrapper>
+                <div className="pt-24">{children}</div>
+              </PageTransitionWrapper>
+            </AuthProvider>
+          </div>
         </body>
       </html>
     </>
