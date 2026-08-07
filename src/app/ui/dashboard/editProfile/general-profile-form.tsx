@@ -68,7 +68,12 @@ function formatBackendError(detail: unknown): string {
   return String(detail);
 }
 
-export function GeneralProfileForm() {
+export interface GeneralProfileFormProps {
+  /** Se llama tras un guardado exitoso, para que la tarjeta de verificación relea el porcentaje. */
+  onSaved?: () => void;
+}
+
+export function GeneralProfileForm({ onSaved }: GeneralProfileFormProps = {}) {
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [universities, setUniversities] = useState<University[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -313,6 +318,10 @@ export function GeneralProfileForm() {
           });
         }
       }
+
+      // El backend ya recalculó el porcentaje en cada endpoint que tocamos
+      // arriba. Esto le avisa a la tarjeta que vuelva a leerlo.
+      onSaved?.();
 
       alert("Perfil actualizado con éxito");
     } catch (error: unknown) {

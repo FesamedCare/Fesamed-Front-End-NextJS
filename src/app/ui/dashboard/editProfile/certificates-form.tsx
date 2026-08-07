@@ -26,7 +26,12 @@ interface Certificate {
 // Tamaño máximo en bytes (10 MB)
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-export default function CertificatesForm() {
+export interface CertificatesFormProps {
+  /** Se llama tras guardar o eliminar, para refrescar el porcentaje del perfil. */
+  onSaved?: () => void;
+}
+
+export default function CertificatesForm({ onSaved }: CertificatesFormProps = {}) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
@@ -172,6 +177,7 @@ export default function CertificatesForm() {
           throw new Error(`Error: ${response.status}`);
         }
 
+        onSaved?.();
         alert("Certificado eliminado correctamente");
       }
     } catch (error) {
@@ -219,6 +225,7 @@ export default function CertificatesForm() {
           throw new Error(`Error: ${response.status}`);
         }
 
+        onSaved?.();
         alert("Certificados guardados correctamente");
         window.location.reload();
       } else {

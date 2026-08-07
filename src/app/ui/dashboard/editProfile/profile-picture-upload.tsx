@@ -14,7 +14,12 @@ interface ProfileDraft {
   profile_picture?: string | null;
 }
 
-export function ProfilePictureUpload() {
+export interface ProfilePictureUploadProps {
+  /** Se llama tras una subida exitosa, para refrescar el porcentaje del perfil. */
+  onSaved?: () => void;
+}
+
+export function ProfilePictureUpload({ onSaved }: ProfilePictureUploadProps = {}) {
   const [userId, setUserId] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -67,6 +72,7 @@ export function ProfilePictureUpload() {
       // No hace falta: cada subida genera una clave nueva con un UUID distinto.
       setPreview(data.profile_picture_url);
       setMsg({ type: "success", text: "Foto de perfil actualizada." });
+      onSaved?.();
     } catch (e) {
       setMsg({ type: "error", text: e instanceof Error ? e.message : "Error al subir la foto." });
     } finally {

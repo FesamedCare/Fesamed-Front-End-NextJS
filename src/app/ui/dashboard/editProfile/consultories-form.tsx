@@ -57,7 +57,12 @@ const emptyForm: OfficeFormData = {
   payment_methods: [],
 }
 
-export default function ConsultoriesForm() {
+export interface ConsultoriesFormProps {
+  /** Se llama tras crear, actualizar o eliminar, para refrescar el porcentaje del perfil. */
+  onSaved?: () => void;
+}
+
+export default function ConsultoriesForm({ onSaved }: ConsultoriesFormProps = {}) {
   const [userId, setUserId] = useState<string | null>(null)
   const [offices, setOffices] = useState<ConsultingOffice[]>([])
   const [cities, setCities] = useState<City[]>([])
@@ -214,9 +219,11 @@ export default function ConsultoriesForm() {
       if (formMode === "create") {
         setOffices((prev) => [...prev, savedOffice])
         setOfficePhotos((prev) => ({ ...prev, [savedOffice.id]: [] }))
+        onSaved?.()
         alert("Consultorio creado correctamente.")
       } else {
         setOffices((prev) => prev.map((o) => (o.id === savedOffice.id ? savedOffice : o)))
+        onSaved?.()
         alert("Consultorio actualizado correctamente.")
       }
       cancelForm()
