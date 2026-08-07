@@ -134,9 +134,17 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
         <p className="text-center text-muted-foreground text-sm mb-6">
           Solo se muestran doctores con perfil verificado por Fesamed.
         </p>
-        <div className="max-w-4xl mx-auto flex flex-col gap-4 md:flex-row md:items-end md:flex-wrap">
+        {/*
+            Cinco controles en una línea necesitan ~774px de mínimo: tres
+            selects de 150, el campo de texto de 170, el botón y los gaps. A
+            partir de lg quedan ~896px útiles y entran con holgura; en md solo
+            hay ~640 y el botón se caía solo a una segunda fila. Por eso la
+            fila horizontal arranca en lg y no antes: abajo se apila a
+            propósito, en vez de dejar un botón huérfano.
+          */}
+          <div className="max-w-4xl mx-auto flex flex-col gap-4 lg:flex-row lg:items-end lg:flex-wrap">
           <Select value={departmentId || "all"} onValueChange={(v) => setDepartmentId(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-full md:w-[180px] bg-white rounded-full border-blue-500 text-blue-600">
+            <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[150px] bg-white rounded-full border-blue-500 text-blue-600">
               <SelectValue placeholder="Departamento" />
             </SelectTrigger>
             <SelectContent>
@@ -149,7 +157,7 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
             </SelectContent>
           </Select>
           <Select value={cityId || "all"} onValueChange={(v) => setCityId(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-full md:w-[180px] bg-white rounded-full border-blue-500 text-blue-600">
+            <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[150px] bg-white rounded-full border-blue-500 text-blue-600">
               <SelectValue placeholder="Ciudad" />
             </SelectTrigger>
             <SelectContent>
@@ -162,7 +170,7 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
             </SelectContent>
           </Select>
           <Select value={specialtyId || "all"} onValueChange={(v) => setSpecialtyId(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-full md:w-[200px] bg-white rounded-full border-blue-500 text-blue-600">
+            <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[150px] bg-white rounded-full border-blue-500 text-blue-600">
               <SelectValue placeholder="Especialidad" />
             </SelectTrigger>
             <SelectContent>
@@ -174,7 +182,7 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
               ))}
             </SelectContent>
           </Select>
-          <div className="flex-1 min-w-[200px] relative">
+          <div className="w-full lg:flex-1 lg:min-w-[170px] relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
@@ -184,7 +192,7 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
               className="pl-9 rounded-full bg-gray-50 border-blue-500/30"
             />
           </div>
-          <Button type="submit" className="rounded-full" disabled={catalogLoading || loading}>
+          <Button type="submit" className="rounded-full shrink-0 whitespace-nowrap" disabled={catalogLoading || loading}>
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
