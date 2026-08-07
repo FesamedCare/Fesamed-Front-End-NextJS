@@ -106,10 +106,7 @@ export default function ClientDashboard() {
       </Breadcrumb>
 
       {userData && (
-        <VerificationActionsCard
-          emailVerified={userData.is_email_verified}
-          phoneVerified={userData.is_phone_verified}
-        />
+        <VerificationActionsCard />
       )}
 
       <div className="grid md:grid-cols-[300px,1fr] gap-8">

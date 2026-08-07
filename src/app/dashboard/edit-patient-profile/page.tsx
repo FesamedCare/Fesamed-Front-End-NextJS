@@ -1,30 +1,58 @@
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { VerificationActionsCard } from "../../ui/dashboard/VerificationActionsCard";
+import { PatientProfileForm } from "../../ui/dashboard/editProfile/patient-profile-form";
+import { ProfilePictureUpload } from "../../ui/dashboard/editProfile/profile-picture-upload";
 import Footer from "../../ui/navigation/footer";
 
-/**
- * Pendiente: formulario de datos personales del paciente.
- *
- * Hoy esta página es un esqueleto. El único lugar de la app donde se edita
- * `birth_date` es el formulario del doctor
- * (`ui/dashboard/editProfile/general-profile-form.tsx`).
- *
- * Cuando se construya, la fecha de nacimiento tiene que usar los helpers de
- * `@/lib/birthDate`:
- *
- *   - `max={hoyISO()}` en el `<input type="date">`, para que el selector nativo
- *     no ofrezca días futuros.
- *   - un `.refine((v) => !v || !esFutura(v), ...)` en el esquema de Zod.
- *
- * NO copiar la regla de `EDAD_MINIMA_DOCTOR`: los 18 años son solo para
- * profesionales. Un paciente puede ser menor de edad.
- *
- * El backend ya rechaza fechas futuras para cualquier rol, en
- * `src/app/api/v1/users/birth_date.py`, así que esa parte no hay que tocarla.
- */
 export default function Page() {
-    return (
-        <div>
-            <h1>Patient Section</h1>
-            <Footer/>
-        </div>
-    );
+  return (
+    <div>
+      <div className="max-w-5xl mx-auto px-4 md:px-8 lg:px-28 xl:px-16 pb-12">
+        <Breadcrumb className="pb-5 pt-2 font-medium">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard">Perfil</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard/edit-patient-profile">Editar Perfil</BreadcrumbLink>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        <ProfilePictureUpload />
+
+        <Card className="w-full mb-6">
+          <CardHeader>
+            <CardTitle className="text-xl">Datos personales</CardTitle>
+            <CardDescription className="text-sm md:text-base">
+              Estos datos los ve el profesional cuando agendas una cita con él.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PatientProfileForm />
+          </CardContent>
+        </Card>
+
+        {/*
+          Verificar correo y teléfono es lo único que el backend exige para
+          agendar, en appointments/router.py. Por eso la tarjeta va acá y no
+          solo en el dashboard: es el paso que destraba pedir una cita.
+        */}
+        <VerificationActionsCard />
+      </div>
+      <Footer />
+    </div>
+  );
 }

@@ -9,6 +9,8 @@ import { CropImageModal } from "@/components/CropImageModal";
 
 interface UserMe {
   id: string;
+  /** El paciente no tiene borrador de perfil: su foto sale de acá. */
+  profile_picture?: string | null;
 }
 
 interface ProfileDraft {
@@ -25,16 +27,26 @@ export function ProfilePictureUpload() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    Promise.all([
-      apiClient<UserMe>("/api/v1/user/me/"),
-      apiClient<ProfileDraft>("/api/v1/me/profile-draft/"),
-    ])
-      .then(([user, draft]) => {
+    // El borrador de perfil es solo de doctores: para un paciente devuelve 403.
+    // Se pide aparte y tolerando el fallo, porque antes iba en un Promise.all y
+    // ese 403 tumbaba también la carga del usuario, dejando el botón de subir
+    // deshabilitado para siempre.
+    async function cargar() {
+      try {
+        const user = await apiClient<UserMe>("/api/v1/user/me/");
         setUserId(user.id);
+
+        const draft = await apiClient<ProfileDraft>("/api/v1/me/profile-draft/").catch(() => null);
+
         // Sin cache-buster: ya viene prefirmada del backend.
-        if (draft.profile_picture) setPreview(draft.profile_picture);
-      })
-      .catch(() => {});
+        // El doctor ve la del borrador, que es la que está editando; el
+        // paciente no tiene borrador y ve la suya.
+        setPreview(draft?.profile_picture ?? user.profile_picture ?? null);
+      } catch {
+        // apiClient ya redirige al login si la sesión expiró.
+      }
+    }
+    cargar();
   }, []);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {

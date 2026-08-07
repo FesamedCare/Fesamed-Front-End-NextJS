@@ -8,19 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthContext } from "@/contexts/AuthContext";
 
-interface VerificationActionsCardProps {
-  emailVerified: boolean;
-  phoneVerified: boolean;
-}
-
-export function VerificationActionsCard({
-  emailVerified,
-  phoneVerified,
-}: VerificationActionsCardProps) {
-  // Avisa al contexto directamente. Antes lo hacía por una prop onVerified que
-  // cada dashboard cableaba a mano, y el del doctor la conectaba solo a la
-  // recarga del usuario: el porcentaje se quedaba viejo tras verificar.
-  const { notifyProfileChanged } = useAuthContext();
+export function VerificationActionsCard() {
+  // Estado y aviso salen los dos del contexto, que es la fuente única.
+  // Antes llegaban por props que cada pantalla cableaba a mano, y eso ya causó
+  // dos bugs: el porcentaje que no se refrescaba al verificar, y una página que
+  // pasaba `false` fijo y mostraba todo como sin verificar.
+  const { user, notifyProfileChanged } = useAuthContext();
+  const emailVerified = Boolean(user?.is_email_verified);
+  const phoneVerified = Boolean(user?.is_phone_verified);
   // Email state
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailMsg, setEmailMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);

@@ -170,10 +170,7 @@ export default function DoctorDashboard() {
 
           <div className="w-full mb-4">
             <VerificationStatusCard collapsible />
-            <VerificationActionsCard
-              emailVerified={userData?.is_email_verified ?? false}
-              phoneVerified={userData?.is_phone_verified ?? false}
-            />
+            <VerificationActionsCard />
           </div>
 
           <div className="grid md:grid-cols-[300px,1fr] gap-8">
