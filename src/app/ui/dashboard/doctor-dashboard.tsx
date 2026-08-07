@@ -97,7 +97,10 @@ export default function DoctorDashboard() {
         throw new Error(err?.detail ?? `Error ${res.status}`);
       }
       const data = await res.json();
-      setUserData((prev) => prev ? { ...prev, profile_picture: `${data.profile_picture_url}?t=${Date.now()}` } : prev);
+      // Sin cache-buster: la firma SigV4 de la URL prefirmada cubre el query
+      // string, así que cualquier parámetro extra la rompe con 403. Cada subida
+      // ya genera una clave nueva con UUID, así que no hay nada que invalidar.
+      setUserData((prev) => prev ? { ...prev, profile_picture: data.profile_picture_url } : prev);
       setVerificationRefresh((n) => n + 1);
     } catch (e) {
       setErrorMessage(e instanceof Error ? e.message : "Error al subir la foto. Inténtalo de nuevo.");

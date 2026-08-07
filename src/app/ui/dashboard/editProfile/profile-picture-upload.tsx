@@ -60,7 +60,11 @@ export function ProfilePictureUpload() {
         throw new Error(err?.detail ?? `Error ${res.status}`);
       }
       const data = await res.json();
-      setPreview(`${data.profile_picture_url}?t=${Date.now()}`);
+      // Sin cache-buster: la URL viene prefirmada por S3 y la firma SigV4 cubre
+      // el query string completo. Agregarle cualquier parámetro, con ? o con &,
+      // la invalida y el navegador recibe 403 SignatureDoesNotMatch.
+      // No hace falta: cada subida genera una clave nueva con un UUID distinto.
+      setPreview(data.profile_picture_url);
       setMsg({ type: "success", text: "Foto de perfil actualizada." });
     } catch (e) {
       setMsg({ type: "error", text: e instanceof Error ? e.message : "Error al subir la foto." });

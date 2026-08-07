@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'fesamedcare-files.s3.amazonaws.com',
+        hostname: 'fesamedcare-local-testing.s3.us-east-2.amazonaws.com',
       },
       {
         protocol: 'https',
