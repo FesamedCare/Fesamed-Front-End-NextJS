@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { format, addMonths, startOfToday, parseISO, isBefore, isAfter } from "date-fns";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { format, addMonths, startOfToday, parseISO, isBefore, isAfter, isSameDay } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -171,6 +171,48 @@ function ChipList({ items }: { items: string[] }) {
   );
 }
 
+function Dot({ className }: { className: string }) {
+  return <span className={cn("h-1.5 w-1.5 rounded-full", className)} />;
+}
+
+const DENSITY_STYLES = {
+  high: "bg-green-500",
+  low: "bg-amber-400",
+  full: "bg-red-400",
+} as const;
+
+/**
+ * Un día del calendario con su punto de disponibilidad.
+ *
+ * Verde: más de dos turnos libres. Ámbar: uno o dos. Rojo: el doctor publicó
+ * ese día y ya no queda ninguno. Sin punto: no publicó nada.
+ *
+ * El punto va debajo del número y no detrás, para no pelearse con el fondo
+ * del día seleccionado.
+ */
+function DayWithDensity({
+  date,
+  density,
+}: {
+  date: Date;
+  density: "high" | "low" | "full" | null;
+}) {
+  return (
+    <span className="relative flex h-full w-full items-center justify-center">
+      {date.getDate()}
+      {density && (
+        <span
+          aria-hidden
+          className={cn(
+            "absolute bottom-0.5 h-1.5 w-1.5 rounded-full",
+            DENSITY_STYLES[density]
+          )}
+        />
+      )}
+    </span>
+  );
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) {
   const { t, locale } = useTranslation();
@@ -219,10 +261,46 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
   useEffect(() => { loadProfile(); }, [loadProfile]);
   useEffect(() => { loadSlots(); }, [loadSlots]);
 
+  /**
+   * Turnos libres por fecha, en "yyyy-MM-dd".
+   *
+   * Los turnos de dos meses ya vienen en una sola petición, así que pintar el
+   * calendario no cuesta nada extra. Antes esa información estaba cargada y no
+   * se usaba: el paciente tenía que ir día por día, a ciegas, para descubrir
+   * dónde quedaba cupo.
+   */
+  const freeByDate = useMemo(() => {
+    const mapa = new Map<string, number>();
+    for (const slot of slots) {
+      const clave = String(slot.date_of_service).slice(0, 10);
+      const previos = mapa.get(clave) ?? 0;
+      mapa.set(clave, previos + (slot.is_booked ? 0 : 1));
+    }
+    return mapa;
+  }, [slots]);
+
+  /** `full` solo si el doctor publicó ese día y ya no queda nada. */
+  const densityFor = useCallback(
+    (day: Date): "high" | "low" | "full" | null => {
+      const clave = format(day, "yyyy-MM-dd");
+      if (!freeByDate.has(clave)) return null;
+      const libres = freeByDate.get(clave) ?? 0;
+      if (libres === 0) return "full";
+      return libres > 2 ? "high" : "low";
+    },
+    [freeByDate]
+  );
+
   const availableSlotsByDate = selectedDate
     ? slots.filter((s) => {
-        const d = typeof s.date_of_service === "string" ? parseISO(s.date_of_service) : new Date(s.date_of_service);
-        return !s.is_booked && d.getTime() === selectedDate.getTime();
+        // isSameDay y no getTime(): comparar marcas de tiempo exactas depende
+        // de que el backend mande la fecha sin hora. El día que mande un ISO
+        // con Z, la igualdad falla en silencio y el paciente ve "no hay turnos".
+        const d =
+          typeof s.date_of_service === "string"
+            ? parseISO(s.date_of_service)
+            : new Date(s.date_of_service);
+        return !s.is_booked && isSameDay(d, selectedDate);
       })
     : [];
 
@@ -297,23 +375,28 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
               </div>
 
               {/* Identity */}
-              <div className="flex gap-4 items-start mb-6">
-                <div className="relative w-20 h-20 shrink-0 rounded-full overflow-hidden bg-muted">
+              {/*
+                La foto es lo primero que mira un paciente al elegir médico,
+                y a 80px competía en peso con el texto de al lado. A 128 tiene
+                jerarquía propia; el anillo la despega del fondo.
+              */}
+              <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-start text-center sm:text-left mb-6">
+                <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-full bg-muted ring-4 ring-blue-50">
                   <UserAvatar
                     src={profile.profile_picture}
                     name={profile.name}
                     lastname={profile.lastname}
                     fill
-                    sizes="80px"
+                    sizes="128px"
                   />
                 </div>
-                <div>
-                  <h2 className="text-xl font-semibold">{profile.name} {profile.lastname}</h2>
+                <div className="min-w-0">
+                  <h2 className="text-2xl font-semibold">{profile.name} {profile.lastname}</h2>
                   <p className="text-sm text-muted-foreground">
                     {profile.specialties?.length ? profile.specialties.join(" · ") : "—"}
                   </p>
                   {primaryOffice && (
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                    <div className="flex items-center justify-center sm:justify-start gap-1 text-sm text-muted-foreground mt-1">
                       <MapPin className="h-3.5 w-3.5" />
                       <span>{primaryOffice.city_name}, {primaryOffice.department_name}</span>
                     </div>
@@ -440,7 +523,31 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
                   locale={dateLocale}
                   disabled={(date) => isBefore(date, today) || isAfter(date, maxDate)}
                   className="rounded-md border"
+                  components={{
+                    DayContent: (props) => (
+                      <DayWithDensity
+                        date={props.date}
+                        density={densityFor(props.date)}
+                      />
+                    ),
+                  }}
                 />
+
+                {/* Leyenda: sin ella tres colores de punto son un acertijo */}
+                <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Dot className="bg-green-500" />
+                    {t("booking.densityHigh")}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Dot className="bg-amber-400" />
+                    {t("booking.densityLow")}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Dot className="bg-red-400" />
+                    {t("booking.densityFull")}
+                  </span>
+                </div>
               </div>
 
               {selectedDate && (

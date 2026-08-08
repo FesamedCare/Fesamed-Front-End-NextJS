@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { TimePicker } from "@/components/TimePicker";
 import { cn } from "@/lib/utils";
+import { useWeekdayLabels } from "@/lib/useWeekdayLabels";
 import { useTranslation, type TranslationKey } from "@/i18n/LocaleProvider";
 import {
   WEEKDAY_PRESETS,
@@ -39,8 +40,6 @@ import {
 
 const SLOT_OPTIONS = [15, 20, 30, 45, 60];
 
-/** 0 = lunes … 6 = domingo. Coincide con el backend y con `date.weekday()`. */
-const WEEKDAY_LABELS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
 
 const PRESETS: { name: PresetName; labelKey: TranslationKey }[] = [
   { name: "weekdays", labelKey: "pattern.presetWeekdays" },
@@ -71,6 +70,7 @@ export function SchedulePlannerDialog({
   onPublished,
 }: Props) {
   const { t } = useTranslation();
+  const weekdayLabels = useWeekdayLabels();
   const hoy = startOfToday();
 
   const [mode, setMode] = useState<Mode>("single");
@@ -283,14 +283,14 @@ export function SchedulePlannerDialog({
                 atiende martes y jueves no entra en ningún atajo.
               */}
               <div className="flex flex-wrap gap-1.5">
-                {WEEKDAY_LABELS.map((label, day) => (
+                {weekdayLabels.map((label, day) => (
                   <button
                     key={day}
                     type="button"
                     onClick={() => toggleDay(day)}
                     aria-pressed={weekdays.includes(day)}
                     className={cn(
-                      "h-9 w-9 rounded-full text-sm transition-colors",
+                      "h-9 w-9 rounded-full text-sm capitalize transition-colors",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
                       weekdays.includes(day)
                         ? "bg-blue-500 font-medium text-white"

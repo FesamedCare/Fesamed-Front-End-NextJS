@@ -11,12 +11,11 @@ import {
   addMonths,
   subMonths,
   startOfToday,
-  startOfWeek,
-  addDays,
 } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/LocaleProvider";
+import { useWeekdayLabels } from "@/lib/useWeekdayLabels";
 import { SchedulePlannerDialog } from "./SchedulePlannerDialog";
 import { ClearRangeDialog } from "./ClearRangeDialog";
 import {
@@ -52,6 +51,7 @@ function formatTime(t: string): string {
 
 export function Disponibilidad() {
   const { t, locale } = useTranslation();
+  const weekdayLabels = useWeekdayLabels();
   const dateLocale = locale === "en" ? enUS : es;
   const today = startOfToday();
   const [currentMonth, setCurrentMonth] = useState(today);
@@ -123,16 +123,6 @@ export function Disponibilidad() {
       end: endOfMonth(currentMonth),
     });
   }, [currentMonth]);
-
-  // Las iniciales de los días salen del locale activo, no de una lista fija.
-  // La semana arranca en lunes en ambos idiomas, que es como está dibujada
-  // la grilla (el offset de abajo asume lunes en la primera columna).
-  const weekdayLabels = useMemo(() => {
-    const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-    return Array.from({ length: 7 }, (_, i) =>
-      format(addDays(weekStart, i), "EEEEEE", { locale: dateLocale })
-    );
-  }, [dateLocale, today]);
 
   const firstDayOffset = useMemo(() => {
     const dayOfWeek = days[0]?.getDay() ?? 0;

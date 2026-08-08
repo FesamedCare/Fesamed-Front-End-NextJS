@@ -171,6 +171,11 @@ export const en: Dictionary = {
     paymentMethods: "Payment methods",
     officesTitle: "Offices ({count})",
 
+    densityHigh: "Good availability",
+    densityLow: "Few slots left",
+    densityFull: "Fully booked",
+    slotsLeft: "{count} available",
+    oneSlotLeft: "1 available",
     bookTitle: "Book an appointment",
     pickDate: "Pick a date",
     availableSlots: "Available times",

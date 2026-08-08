@@ -174,6 +174,11 @@ export const es = {
     paymentMethods: "Métodos de pago",
     officesTitle: "Consultorios ({count})",
 
+    densityHigh: "Buena disponibilidad",
+    densityLow: "Quedan pocos turnos",
+    densityFull: "Sin turnos disponibles",
+    slotsLeft: "{count} disponibles",
+    oneSlotLeft: "1 disponible",
     bookTitle: "Agendar cita",
     pickDate: "Selecciona la fecha",
     availableSlots: "Horarios disponibles",

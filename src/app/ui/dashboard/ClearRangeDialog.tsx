@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useWeekdayLabels } from "@/lib/useWeekdayLabels";
 import { useTranslation } from "@/i18n/LocaleProvider";
 import {
   bulkDeleteSchedules,
@@ -27,7 +28,6 @@ import {
   type DoctorOfficeBasic,
 } from "@/lib/schedule-api";
 
-const WEEKDAY_LABELS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
 const TODOS = "__todos__";
 
 interface Props {
@@ -44,6 +44,7 @@ export function ClearRangeDialog({
   onCleared,
 }: Props) {
   const { t } = useTranslation();
+  const weekdayLabels = useWeekdayLabels();
   const hoy = startOfToday();
 
   const [dateFrom, setDateFrom] = useState(format(hoy, "yyyy-MM-dd"));
@@ -149,7 +150,7 @@ export function ClearRangeDialog({
                 </span>
               </Label>
               <div className="flex flex-wrap gap-1.5">
-                {WEEKDAY_LABELS.map((label, day) => (
+                {weekdayLabels.map((label, day) => (
                   <button
                     key={day}
                     type="button"
@@ -162,7 +163,7 @@ export function ClearRangeDialog({
                     }
                     aria-pressed={weekdays.includes(day)}
                     className={cn(
-                      "h-9 w-9 rounded-full text-sm transition-colors",
+                      "h-9 w-9 rounded-full text-sm capitalize transition-colors",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
                       weekdays.includes(day)
                         ? "bg-blue-500 font-medium text-white"
