@@ -20,6 +20,7 @@ Debajo hay bastante más que el modelo guarda y que nunca llega a la cita: telé
 - `User` tiene `email`, `phone_number`, `birth_date`, `gender`, `id_card`.
 - **`GET /appointment/{id}/` sí valida permisos** (`appointments/router.py:39`): rechaza a quien no sea el paciente, el doctor o un admin. En la conversación se afirmó lo contrario a partir de un fragmento incompleto; queda anotado aquí para que nadie vaya a "arreglar" algo que ya está bien.
 - No existe ningún endpoint que devuelva el historial entre un doctor y un paciente.
+- **El perfil público del doctor no tiene URL.** `agendar-cita-content.tsx` guarda el doctor elegido en `useState`, así que no hay dirección a la que enlazar. Es el hallazgo del audit del 2026-08-07 sobre el deep link, que esta funcionalidad convierte en bloqueante.
 - **Las especialidades y los idiomas del doctor no cuelgan del `User`**: viven en la versión aprobada de su perfil (`DoctorProfileVersion.specialties`, vía `DoctorProfilePointer.approved_version_id`). Exponerlas en la cita exige resolver ese puntero, no basta con leer `appointment.doctor`.
 
 ## Decisiones tomadas
@@ -31,6 +32,7 @@ Debajo hay bastante más que el modelo guarda y que nunca llega a la cita: telé
 | Historial de citas previas | **Se muestra al doctor** ("3 citas contigo · última el 12 jun 2026") | Iba en la vista aprobada. Solo para el doctor: al paciente no le aporta. |
 | Datos del doctor que ve el paciente | Profesionales y del consultorio. **Sin correo ni teléfono personales.** | Para hablar con el doctor está el chat, que es el proyecto siguiente. Exponer su móvil convertiría cada cita en una línea directa. |
 | Acciones | **En la tarjeta y en el diálogo** | El gesto rápido se conserva y el diálogo permite actuar sobre lo que se acaba de leer. Decisión de David. |
+| Detalle profundo del doctor | **Enlace al perfil público**, no copiado en el diálogo | Fotos del consultorio, métodos de pago y certificados ya existen allí. Duplicarlos sería mantener dos vistas del mismo dato. Decisión de David. |
 
 ## Diseño
 
@@ -87,6 +89,32 @@ Se hace **en bloque para toda la lista**, no por cita: `GET /appointment/` puede
 
 Si un doctor no tiene versión aprobada, `specialties` y `languages` salen como listas vacías. No es un error: es un doctor cuyo perfil cambió de estado después de que le agendaran.
 
+### El perfil del doctor necesita una URL
+
+Enlazar al perfil público exige que exista una dirección, y hoy no existe:
+`AgendarCitaContent` guarda el doctor elegido en `useState`. Entrar a un
+perfil, refrescar y volver atrás rompen; compartirlo es imposible.
+
+El estado pasa a la URL como parámetro de consulta:
+
+```
+/buscar-doctor                     lista de resultados
+/buscar-doctor?doctor=<uuid>       perfil y reserva de ese doctor
+```
+
+Se elige el parámetro y no un segmento (`/buscar-doctor/[id]`) porque
+`/buscar-doctor` y `/agendar-cita` montan hoy el **mismo** componente, y un
+segmento obligaría a duplicarlo o a resolver antes esa duplicación —que es
+otro asunto, también del audit—. Con el parámetro, las dos rutas siguen
+funcionando sin tocar su estructura.
+
+Lo que se gana además de poder enlazar: el botón atrás del navegador vuelve a
+los resultados en vez de sacar del sitio, refrescar mantiene el perfil
+abierto, y un perfil se puede compartir por WhatsApp.
+
+El enlace en el diálogo apunta a `/buscar-doctor?doctor=<doctor_id>`, la ruta
+pública. Un paciente con sesión llega igual.
+
 ### `GET /appointment/{id}/context/`
 
 Nuevo endpoint, **solo para el doctor** de esa cita:
@@ -128,6 +156,10 @@ Paciente:
   Cali, Valle del Cauca
    📞 +57 300 123 4567
    🗺  Cómo llegar                        ↗
+  ──────────────────────────────────────────────
+  Ver perfil completo del doctor            ↗
+  (fotos del consultorio, métodos de pago,
+   certificados)
   ──────────────────────────────────────────────
                               [Cancelar cita]
 ```
@@ -176,11 +208,13 @@ Frontend, siguiendo `scripts/*.test.mjs`:
 
 - Cálculo de la edad en el borde del cumpleaños: el día antes, el día mismo y el día después.
 - Que el enlace de mapa no se genere para una cita pasada.
+- Que el perfil del doctor se abra al entrar directamente a `/buscar-doctor?doctor=<uuid>`, y que quitar el parámetro devuelva a los resultados.
 
 ## Lo que queda fuera
 
 - **El chat.** Es el proyecto siguiente y tiene su propio spec. La ficha define dónde vive su botón.
-- **Fotos del consultorio y métodos de pago.** Están en el modelo y se ven en el perfil público del doctor. En la ficha de una cita ya agendada no aportan: quien ya reservó no está eligiendo.
+- **Fotos del consultorio, métodos de pago y certificados dentro del diálogo.** Se enlaza al perfil público en vez de copiarlos. Duplicarlos sería mantener dos vistas del mismo dato que se desincronizan.
+- **Consolidar `/buscar-doctor` y `/agendar-cita`**, que montan el mismo componente. Está en el audit y no bloquea esto.
 - **Documento de identidad del paciente.** Decisión explícita, ver la tabla de decisiones.
 
 ## Riesgos
