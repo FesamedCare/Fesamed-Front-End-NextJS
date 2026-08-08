@@ -17,13 +17,12 @@ import {
 import { es, enUS } from "date-fns/locale";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/LocaleProvider";
-import { RecurringScheduleDialog } from "./RecurringScheduleDialog";
+import { SchedulePlannerDialog } from "./SchedulePlannerDialog";
 import { ClearRangeDialog } from "./ClearRangeDialog";
 import {
   ChevronLeft,
   ChevronRight,
   CalendarRange,
-  Plus,
   Trash2,
   Loader2,
   Clock,
@@ -31,26 +30,9 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { TimePicker } from "@/components/TimePicker";
 import {
   getMyScheduleRange,
-  createSchedule,
   deleteSchedule,
   getMyOffices,
   getMyVerificationStatus,
@@ -83,12 +65,6 @@ export function Disponibilidad() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [showAdd, setShowAdd] = useState(false);
-  const [addStart, setAddStart] = useState("08:00");
-  const [addEnd, setAddEnd] = useState("09:00");
-  const [addOffice, setAddOffice] = useState<string>("");
-  const [addLoading, setAddLoading] = useState(false);
-  const [addError, setAddError] = useState<string | null>(null);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -184,38 +160,6 @@ export function Disponibilidad() {
   // sólo se ve después de hacer clic en el calendario.
   const missingOffices = offices.length === 0;
   const notApproved = approved === false;
-  const isPastDay = !!selectedDate && isBefore(selectedDate, today);
-  const canAddSlot = !missingOffices && !notApproved && !isPastDay;
-
-  const openAddDialog = () => {
-    setAddStart("08:00");
-    setAddEnd("09:00");
-    setAddOffice(offices[0]?.id ?? "");
-    setAddError(null);
-    setShowAdd(true);
-  };
-
-  const handleAddSlot = async () => {
-    if (!selectedDate || !addOffice) return;
-    setAddLoading(true);
-    setAddError(null);
-    try {
-      await createSchedule({
-        date_of_service: format(selectedDate, "yyyy-MM-dd"),
-        start_time: addStart,
-        end_time: addEnd,
-        office_id: addOffice,
-      });
-      setShowAdd(false);
-      await loadSlots();
-    } catch (e) {
-      setAddError(
-        e instanceof Error ? e.message : t("availability.createError")
-      );
-    } finally {
-      setAddLoading(false);
-    }
-  };
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
@@ -406,23 +350,7 @@ export function Disponibilidad() {
                         locale: dateLocale,
                       })}
                     </h3>
-                    <Button
-                      size="sm"
-                      onClick={openAddDialog}
-                      disabled={!canAddSlot}
-                      title={
-                        notApproved
-                          ? t("availability.disabledNotApproved")
-                          : missingOffices
-                          ? t("availability.disabledNoOffices")
-                          : isPastDay
-                          ? t("availability.disabledPastDay")
-                          : undefined
-                      }
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      {t("common.add")}
-                    </Button>
+
                   </div>
 
                   {deleteError && (
@@ -525,10 +453,11 @@ export function Disponibilidad() {
         </CardContent>
       </Card>
 
-      <RecurringScheduleDialog
+      <SchedulePlannerDialog
         open={showPattern}
         onOpenChange={setShowPattern}
         offices={offices}
+        selectedDate={selectedDate}
         onPublished={() => loadSlots()}
       />
 
@@ -539,78 +468,6 @@ export function Disponibilidad() {
         onCleared={() => loadSlots()}
       />
 
-      {/* ── Add Slot Dialog ── */}
-      <Dialog open={showAdd} onOpenChange={(open) => !open && setShowAdd(false)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("availability.addDialogTitle")}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            {selectedDate && (
-              <div>
-                <Label className="text-xs text-muted-foreground uppercase tracking-wide">
-                  {t("availability.fieldDate")}
-                </Label>
-                <p className="font-medium capitalize mt-0.5">
-                  {format(selectedDate, t("formats.dayLongYear"), {
-                    locale: dateLocale,
-                  })}
-                </p>
-              </div>
-            )}
-
-            <div className="space-y-3">
-              <div>
-                <Label htmlFor="start-time" className="mb-1.5 block">{t("availability.fieldStartTime")}</Label>
-                <TimePicker id="start-time" value={addStart} onChange={setAddStart} />
-              </div>
-              <div>
-                <Label htmlFor="end-time" className="mb-1.5 block">{t("availability.fieldEndTime")}</Label>
-                <TimePicker id="end-time" value={addEnd} onChange={setAddEnd} />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="office-select">{t("availability.fieldOffice")}</Label>
-              <Select value={addOffice} onValueChange={setAddOffice}>
-                <SelectTrigger id="office-select" className="mt-1">
-                  <SelectValue placeholder={t("availability.officePlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {offices.map((o) => (
-                    <SelectItem key={o.id} value={o.id}>
-                      {o.name}
-                      {o.address ? ` — ${o.address}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {addError && (
-              <p className="text-sm text-destructive">{addError}</p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowAdd(false)}
-              disabled={addLoading}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              onClick={handleAddSlot}
-              disabled={addLoading || !addOffice || !addStart || !addEnd}
-            >
-              {addLoading && (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              )}
-              {t("availability.submitAdd")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

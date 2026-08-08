@@ -32,6 +32,7 @@ import {
 } from "@/lib/schedulePattern";
 import {
   bulkCreateSchedules,
+  createSchedule,
   type BulkScheduleResult,
   type DoctorOfficeBasic,
 } from "@/lib/schedule-api";
@@ -50,22 +51,38 @@ const PRESETS: { name: PresetName; labelKey: TranslationKey }[] = [
 const PILL =
   "rounded-full px-3 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1";
 
+type Mode = "single" | "recurring";
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   offices: DoctorOfficeBasic[];
+  /** Día marcado en el calendario. Precarga la fecha del modo "un día". */
+  selectedDate: Date | null;
   /** Se llama tras publicar, para que la pantalla recargue el calendario. */
   onPublished: (created: number) => void;
 }
 
-export function RecurringScheduleDialog({
+export function SchedulePlannerDialog({
   open,
   onOpenChange,
   offices,
+  selectedDate,
   onPublished,
 }: Props) {
   const { t } = useTranslation();
   const hoy = startOfToday();
+
+  const [mode, setMode] = useState<Mode>("single");
+
+  // Modo "un día": un turno en una fecha concreta. Antes vivía en un diálogo
+  // aparte, con su propio botón en el panel del día. Dos entradas para lo
+  // mismo confundían, así que ahora es una pestaña de este.
+  const [singleDate, setSingleDate] = useState(
+    format(selectedDate ?? hoy, "yyyy-MM-dd")
+  );
+  const [singleStart, setSingleStart] = useState("08:00");
+  const [singleEnd, setSingleEnd] = useState("09:00");
 
   const [weekdays, setWeekdays] = useState<number[]>([...WEEKDAY_PRESETS.weekdays]);
   const [blocks, setBlocks] = useState<PatternBlock[]>([
@@ -111,6 +128,29 @@ export function RecurringScheduleDialog({
     setError(null);
   };
 
+  const singleValid =
+    singleStart < singleEnd && !!officeId && !!singleDate;
+
+  const addSingle = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await createSchedule({
+        date_of_service: singleDate,
+        start_time: singleStart,
+        end_time: singleEnd,
+        office_id: officeId,
+      });
+      onPublished(1);
+      onOpenChange(false);
+      reset();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("availability.createError"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const run = async (dryRun: boolean) => {
     setLoading(true);
     setError(null);
@@ -138,7 +178,7 @@ export function RecurringScheduleDialog({
         onOpenChange(next);
       }}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CalendarRange className="h-5 w-5 text-blue-500" />
@@ -146,7 +186,76 @@ export function RecurringScheduleDialog({
           </DialogTitle>
         </DialogHeader>
 
-        {preview === null ? (
+        {preview === null && (
+          <>
+            {/*
+              Un solo punto de entrada. Antes había dos botones que hacían lo
+              mismo con distinto alcance: "Agregar" en el panel del día y
+              "Publicar horario" arriba. Ahora es un modo dentro del mismo
+              diálogo.
+            */}
+            <div className="inline-flex w-full gap-1 rounded-full bg-gray-100 p-1">
+              {(["single", "recurring"] as Mode[]).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMode(m)}
+                  aria-pressed={mode === m}
+                  className={cn(
+                    PILL,
+                    "flex-1",
+                    mode === m
+                      ? "bg-white font-semibold text-blue-700 shadow-sm"
+                      : "text-gray-500 hover:text-gray-800"
+                  )}
+                >
+                  {m === "single"
+                    ? t("pattern.modeSingle")
+                    : t("pattern.modeRecurring")}
+                </button>
+              ))}
+            </div>
+            <p className="-mt-2 text-xs text-muted-foreground">
+              {mode === "single"
+                ? t("pattern.singleHint")
+                : t("pattern.recurringHint")}
+            </p>
+          </>
+        )}
+
+        {preview === null && mode === "single" ? (
+          <div className="space-y-5 py-2">
+            <div>
+              <Label htmlFor="single-date" className="mb-1.5 block">
+                {t("pattern.singleDate")}
+              </Label>
+              <input
+                id="single-date"
+                type="date"
+                value={singleDate}
+                min={format(hoy, "yyyy-MM-dd")}
+                onChange={(e) => setSingleDate(e.target.value)}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </div>
+
+            <TimeRange
+              start={singleStart}
+              end={singleEnd}
+              onStart={setSingleStart}
+              onEnd={setSingleEnd}
+            />
+
+            <OfficeField value={officeId} onChange={setOfficeId} offices={offices} />
+
+            {!singleValid && singleStart >= singleEnd && (
+              <p className="text-xs text-destructive">
+                {t("pattern.invalidBlock")}
+              </p>
+            )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </div>
+        ) : preview === null ? (
           <div className="space-y-5 py-2">
             {/* ── Días ── */}
             <div>
@@ -199,37 +308,38 @@ export function RecurringScheduleDialog({
               <Label className="mb-2 block">{t("pattern.blocks")}</Label>
               <div className="space-y-2">
                 {blocks.map((block, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <TimePicker
-                      value={block.start}
-                      onChange={(v) =>
+                  <div
+                    key={i}
+                    className="relative rounded-lg border border-gray-100 bg-gray-50/60 p-3"
+                  >
+                    <TimeRange
+                      start={block.start}
+                      end={block.end}
+                      onStart={(v) =>
                         setBlocks((prev) =>
                           prev.map((b, j) => (j === i ? { ...b, start: v } : b))
                         )
                       }
-                    />
-                    <span className="text-gray-400">→</span>
-                    <TimePicker
-                      value={block.end}
-                      onChange={(v) =>
+                      onEnd={(v) =>
                         setBlocks((prev) =>
                           prev.map((b, j) => (j === i ? { ...b, end: v } : b))
                         )
                       }
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      aria-label={t("pattern.removeBlock")}
-                      disabled={blocks.length === 1}
-                      onClick={() =>
-                        setBlocks((prev) => prev.filter((_, j) => j !== i))
-                      }
-                      className="h-8 w-8 shrink-0 text-gray-400 hover:text-red-600"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    {blocks.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t("pattern.removeBlock")}
+                        onClick={() =>
+                          setBlocks((prev) => prev.filter((_, j) => j !== i))
+                        }
+                        className="absolute right-1.5 top-1.5 h-7 w-7 text-gray-400 hover:text-red-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -305,24 +415,7 @@ export function RecurringScheduleDialog({
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="pattern-office" className="mb-1.5 block">
-                {t("availability.fieldOffice")}
-              </Label>
-              <Select value={officeId} onValueChange={setOfficeId}>
-                <SelectTrigger id="pattern-office">
-                  <SelectValue placeholder={t("availability.officePlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {offices.map((o) => (
-                    <SelectItem key={o.id} value={o.id}>
-                      {o.name}
-                      {o.address ? ` — ${o.address}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <OfficeField value={officeId} onChange={setOfficeId} offices={offices} />
 
             {/* Anticipo local: orienta mientras se escribe. El resumen real
                 lo da el servidor, que además conoce las colisiones. */}
@@ -348,7 +441,16 @@ export function RecurringScheduleDialog({
         )}
 
         <DialogFooter>
-          {preview === null ? (
+          {preview === null && mode === "single" ? (
+            <Button
+              onClick={addSingle}
+              disabled={!singleValid || loading}
+              className="rounded-full"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {loading ? t("pattern.adding") : t("pattern.addSlot")}
+            </Button>
+          ) : preview === null ? (
             <Button
               onClick={() => run(true)}
               disabled={!canReview || loading}
@@ -382,6 +484,80 @@ export function RecurringScheduleDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Par de horas apiladas y etiquetadas.
+ *
+ * Los dos TimePicker en una misma fila pedían ~426 px de mínimo (cada uno
+ * lleva un select de minutos fijo en w-24) y el diálogo en móvil da ~295:
+ * eso era el desbordamiento horizontal. Apilados no hay nada que desbordar,
+ * y de paso cada hora queda dicha con su nombre en vez de con una flecha.
+ */
+function TimeRange({
+  start,
+  end,
+  onStart,
+  onEnd,
+}: {
+  start: string;
+  end: string;
+  onStart: (value: string) => void;
+  onEnd: (value: string) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+        <span className="w-14 shrink-0 text-sm text-muted-foreground">
+          {t("pattern.blockFrom")}
+        </span>
+        <div className="min-w-0 flex-1">
+          <TimePicker value={start} onChange={onStart} />
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+        <span className="w-14 shrink-0 text-sm text-muted-foreground">
+          {t("pattern.blockTo")}
+        </span>
+        <div className="min-w-0 flex-1">
+          <TimePicker value={end} onChange={onEnd} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OfficeField({
+  value,
+  onChange,
+  offices,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  offices: DoctorOfficeBasic[];
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="min-w-0">
+      <Label htmlFor="planner-office" className="mb-1.5 block">
+        {t("availability.fieldOffice")}
+      </Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger id="planner-office" className="w-full">
+          <SelectValue placeholder={t("availability.officePlaceholder")} />
+        </SelectTrigger>
+        <SelectContent>
+          {offices.map((o) => (
+            <SelectItem key={o.id} value={o.id}>
+              {o.name}
+              {o.address ? ` — ${o.address}` : ""}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
 

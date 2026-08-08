@@ -635,11 +635,18 @@ export const en: Dictionary = {
   },
 
   pattern: {
-    openCreate: "Publish schedule",
+    openCreate: "Plan schedule",
     openDelete: "Clear range",
     singleSlot: "Single slot",
 
-    title: "Publish a recurring schedule",
+    title: "Plan your schedule",
+    modeSingle: "One day",
+    modeRecurring: "Several days",
+    singleHint: "Publish a single slot on a specific date.",
+    recurringHint: "Repeat the same hours on the days you pick.",
+    singleDate: "Date",
+    addSlot: "Add slot",
+    adding: "Adding…",
     days: "Days",
     presetWeekdays: "Monday to Friday",
     presetMonToSat: "Monday to Saturday",

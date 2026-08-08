@@ -646,11 +646,18 @@ export const es = {
   },
 
   pattern: {
-    openCreate: "Publicar horario",
+    openCreate: "Planear horario",
     openDelete: "Liberar rango",
     singleSlot: "Turno suelto",
 
-    title: "Publicar horario recurrente",
+    title: "Planear horario",
+    modeSingle: "Un día",
+    modeRecurring: "Varios días",
+    singleHint: "Publica un turno en una fecha concreta.",
+    recurringHint: "Repite el mismo horario en los días que elijas.",
+    singleDate: "Fecha",
+    addSlot: "Agregar turno",
+    adding: "Agregando…",
     days: "Días",
     presetWeekdays: "Lunes a viernes",
     presetMonToSat: "Lunes a sábado",
