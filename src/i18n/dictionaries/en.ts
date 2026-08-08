@@ -634,6 +634,61 @@ export const en: Dictionary = {
     canceledBody: "Canceled appointments stay here, along with the reason.",
   },
 
+  pattern: {
+    openCreate: "Publish schedule",
+    openDelete: "Clear range",
+    singleSlot: "Single slot",
+
+    title: "Publish a recurring schedule",
+    days: "Days",
+    presetWeekdays: "Monday to Friday",
+    presetMonToSat: "Monday to Saturday",
+    presetWeekend: "Weekend",
+
+    blocks: "Daily time ranges",
+    addBlock: "Add range",
+    removeBlock: "Remove range",
+    blockFrom: "From",
+    blockTo: "To",
+    duration: "Appointment length",
+    minutesShort: "min",
+    dateFrom: "From",
+    dateTo: "To",
+
+    review: "Review",
+    back: "Back",
+    publishCount: "Publish {count} slots",
+    publishing: "Publishing…",
+
+    summaryTotal: "{count} slots across {days} working days",
+    summaryPerDay: "{perDay} per day",
+    summaryRange: "{from} to {to}",
+    summarySkipped: "{count} skipped — they clash with slots you already had",
+    summaryLeftover: "{minutes} min left over at the end of each range",
+    summaryEmpty:
+      "This pattern produces no slots. Check the days and time ranges.",
+    seeDetail: "see",
+    hideDetail: "hide",
+
+    deleteTitle: "Clear a range",
+    deleteHint:
+      "This clears the slots published in that range. Slots that already have an appointment are kept.",
+    deleteAllDays: "Every day",
+    deleteAllOffices: "All offices",
+    deleteSummary: "{count} slots will be cleared",
+    deleteKept: "{count} are kept because they already have an appointment",
+    deleteConfirm: "Clear {count} slots",
+    deleting: "Clearing…",
+    deleteEmpty: "No slots to clear in that range.",
+
+    created: "{count} slots published.",
+    deleted: "{count} slots cleared.",
+    createError: "Couldn't publish the schedule.",
+    deleteError: "Couldn't clear the range.",
+    invalidBlock: "Check the ranges: the start time must be earlier than the end time.",
+    noDays: "Pick at least one day.",
+  },
+
   nav: {
     searchDoctor: "Find a Doctor",
     searchDoctorDesc: "Search for a specialist",

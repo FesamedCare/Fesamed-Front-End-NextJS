@@ -645,6 +645,61 @@ export const es = {
     canceledBody: "Las citas canceladas se registran acá, junto con su motivo.",
   },
 
+  pattern: {
+    openCreate: "Publicar horario",
+    openDelete: "Liberar rango",
+    singleSlot: "Turno suelto",
+
+    title: "Publicar horario recurrente",
+    days: "Días",
+    presetWeekdays: "Lunes a viernes",
+    presetMonToSat: "Lunes a sábado",
+    presetWeekend: "Fin de semana",
+
+    blocks: "Franjas del día",
+    addBlock: "Agregar franja",
+    removeBlock: "Quitar franja",
+    blockFrom: "Desde",
+    blockTo: "Hasta",
+    duration: "Duración de cada cita",
+    minutesShort: "min",
+    dateFrom: "Desde",
+    dateTo: "Hasta",
+
+    review: "Ver resumen",
+    back: "Volver",
+    publishCount: "Publicar {count} turnos",
+    publishing: "Publicando…",
+
+    summaryTotal: "{count} turnos en {days} días con atención",
+    summaryPerDay: "{perDay} por día",
+    summaryRange: "del {from} al {to}",
+    summarySkipped: "{count} se omiten por chocar con horarios que ya tenías",
+    summaryLeftover: "Sobran {minutes} min al final de las franjas",
+    summaryEmpty:
+      "Este patrón no genera ningún turno. Revisa los días y las franjas.",
+    seeDetail: "ver",
+    hideDetail: "ocultar",
+
+    deleteTitle: "Liberar un rango",
+    deleteHint:
+      "Se liberan los turnos publicados en ese rango. Los que ya tienen cita agendada se conservan.",
+    deleteAllDays: "Todos los días",
+    deleteAllOffices: "Todos los consultorios",
+    deleteSummary: "Se liberan {count} turnos",
+    deleteKept: "{count} se conservan porque ya tienen cita agendada",
+    deleteConfirm: "Liberar {count} turnos",
+    deleting: "Liberando…",
+    deleteEmpty: "No hay turnos para liberar en ese rango.",
+
+    created: "Se publicaron {count} turnos.",
+    deleted: "Se liberaron {count} turnos.",
+    createError: "No se pudo publicar el horario.",
+    deleteError: "No se pudo liberar el rango.",
+    invalidBlock: "Revisa las franjas: la hora de inicio debe ser menor a la de fin.",
+    noDays: "Elige al menos un día.",
+  },
+
   nav: {
     searchDoctor: "Buscar un Doctor",
     searchDoctorDesc: "Busca un doctor especializado",
