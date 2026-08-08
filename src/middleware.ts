@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { detectLocale, isLocale, LOCALE_COOKIE } from "@/i18n/config";
 
 // Routes that require authentication
 const protectedRoutes = ["/dashboard", "/agendar-cita"];
@@ -38,14 +39,39 @@ export default function middleware(req: NextRequest) {
   // 3. Role-based restrictions are enforced client-side after hydration
   //    (avoids needing to decode the JWT in the Edge runtime)
 
-  return NextResponse.next();
+  return withLocaleCookie(req, NextResponse.next());
+}
+
+/**
+ * Escribe la cookie de idioma la primera vez que alguien llega.
+ *
+ * Sólo se escribe si no existe: una vez que el usuario eligió idioma a mano,
+ * su elección manda sobre lo que diga el navegador. La detección es una
+ * suposición inicial, no una regla permanente.
+ */
+function withLocaleCookie(req: NextRequest, res: NextResponse): NextResponse {
+  const existing = req.cookies.get(LOCALE_COOKIE)?.value;
+  if (isLocale(existing)) return res;
+
+  const locale = detectLocale(
+    req.headers.get("accept-language"),
+    // Lo pone el hosting (Vercel). Sin él, manda el Accept-Language.
+    req.headers.get("x-vercel-ip-country")
+  );
+
+  res.cookies.set(LOCALE_COOKIE, locale, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+  });
+  return res;
 }
 
 export const config = {
+  // El idioma se detecta en cualquier ruta, así que el middleware corre en
+  // todas menos los estáticos. Las reglas de sesión de arriba siguen
+  // limitadas a sus rutas por los `startsWith` / `includes`.
   matcher: [
-    "/dashboard/:path*",
-    "/login",
-    "/register",
-    "/agendar-cita/:path*",
+    "/((?!api|_next/static|_next/image|media|favicon.png|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico)$).*)",
   ],
 };
