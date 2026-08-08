@@ -4,13 +4,26 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "@/i18n/LocaleProvider";
+import { cn } from "@/lib/utils";
 
 interface ImagePreviewModalProps {
   images: { src: string; name: string }[];
   initialIndex?: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * Acción opcional bajo la imagen. La galería de certificados no la usa; la
+   * foto de perfil sí, porque ahí mirar y reemplazar son el mismo gesto.
+   */
+  footerAction?: React.ReactNode;
+  /**
+   * Lienzo reducido, para una imagen suelta como la foto de perfil.
+   * Por defecto va el tamaño de galería, que es lo que usan certificados,
+   * consultorios y fotos de consultorio.
+   */
+  compact?: boolean;
 }
 
 export default function ImagePreviewModal({
@@ -18,7 +31,10 @@ export default function ImagePreviewModal({
   initialIndex = 0,
   open,
   onOpenChange,
+  footerAction,
+  compact = false,
 }: ImagePreviewModalProps) {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
   const handlePrevious = () => {
@@ -33,25 +49,16 @@ export default function ImagePreviewModal({
 
   const currentImage = images[currentIndex];
 
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-[70vw] p-0 bg-white border-none">
+      <DialogContent className={cn("p-0 bg-white border-none", compact ? "max-w-md w-[90vw]" : "max-w-4xl w-[70vw]")}>
         <DialogTitle className="sr-only">
-          Vista previa de imagen: {currentImage.name}
+          {t("ui.imagePreview")}: {currentImage.name}
         </DialogTitle>
         <div className="relative flex flex-col">
-          {/* Botón de cerrar */}
-          {/* <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 z-50 text-black hover:bg-white/20 rounded-full"
-            onClick={() => onOpenChange(false)}
-          >
-            <X className="h-6 w-6" />
-          </Button> */}
-
           {/* Imagen principal */}
-          <div className="flex items-center justify-center h-[80vh] relative">
+          <div className={cn("flex items-center justify-center relative", compact ? "h-[55vh]" : "h-[80vh]")}>
             <Image
               src={currentImage.src || "/placeholder.svg"}
               alt={currentImage.name}
@@ -87,8 +94,11 @@ export default function ImagePreviewModal({
             <p className="font-medium">{currentImage.name}</p>
             {images.length > 1 && (
               <p className="text-sm text-gray-500">
-                {currentIndex + 1} de {images.length}
+                {t("ui.indexOf", { current: currentIndex + 1, total: images.length })}
               </p>
+            )}
+            {footerAction && (
+              <div className="mt-3 flex justify-center gap-2">{footerAction}</div>
             )}
           </div>
 
@@ -107,7 +117,7 @@ export default function ImagePreviewModal({
                 >
                   <Image
                     src={image.src || "/placeholder.svg"}
-                    alt={`Miniatura ${index + 1}`}
+                    alt={t("ui.thumbnail", { n: index + 1 })}
                     fill
                     className="object-cover"
                   />

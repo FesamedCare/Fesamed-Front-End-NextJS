@@ -1,43 +1,27 @@
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+"use client";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { VerificationActionsCard } from "../../ui/dashboard/VerificationActionsCard";
 import { PatientProfileForm } from "../../ui/dashboard/editProfile/patient-profile-form";
 import { ProfilePictureUpload } from "../../ui/dashboard/editProfile/profile-picture-upload";
 import Footer from "../../ui/navigation/footer";
+import { useTranslation } from "@/i18n/LocaleProvider";
+import { DashboardBreadcrumb } from "@/app/ui/dashboard/DashboardBreadcrumb";
 
 export default function Page() {
+  const { t } = useTranslation();
   return (
     <div>
-      <div className="max-w-5xl mx-auto px-4 md:px-8 lg:px-28 xl:px-16 pb-12">
-        <Breadcrumb className="pb-5 pt-2 font-medium">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/">Home</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/dashboard">Perfil</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/dashboard/edit-patient-profile">Editar Perfil</BreadcrumbLink>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+      <div className="container mx-auto px-4 md:px-8 lg:px-28 xl:px-16 pb-12 max-w-7xl">
+        <DashboardBreadcrumb current={t("dashboard.editProfile")} />
 
         <ProfilePictureUpload />
 
         <Card className="w-full mb-6">
           <CardHeader>
-            <CardTitle className="text-xl">Datos personales</CardTitle>
+            <CardTitle className="text-xl">{t("misc.personalData")}</CardTitle>
             <CardDescription className="text-sm md:text-base">
-              Estos datos los ve el profesional cuando agendas una cita con él.
+              {t("misc.personalDataHint")}
             </CardDescription>
           </CardHeader>
           <CardContent>
