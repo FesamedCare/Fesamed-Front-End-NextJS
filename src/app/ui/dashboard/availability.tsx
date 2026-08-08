@@ -17,9 +17,12 @@ import {
 import { es, enUS } from "date-fns/locale";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/LocaleProvider";
+import { RecurringScheduleDialog } from "./RecurringScheduleDialog";
+import { ClearRangeDialog } from "./ClearRangeDialog";
 import {
   ChevronLeft,
   ChevronRight,
+  CalendarRange,
   Plus,
   Trash2,
   Loader2,
@@ -89,6 +92,9 @@ export function Disponibilidad() {
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const [showPattern, setShowPattern] = useState(false);
+  const [showClear, setShowClear] = useState(false);
 
   const loadSlots = useCallback(async () => {
     setLoading(true);
@@ -258,6 +264,32 @@ export function Disponibilidad() {
               </p>
             </div>
           )}
+
+          {/*
+            Publicar un horario completo es la accion principal; el turno
+            suelto sigue existiendo porque con un dia ya elegido es el gesto
+            mas corto. Las mismas condiciones que bloquean "Agregar" bloquean
+            "Publicar horario": sin perfil aprobado o sin consultorio el
+            servidor lo rechaza igual.
+          */}
+          <div className="mb-5 flex flex-wrap items-center gap-2">
+            <Button
+              onClick={() => setShowPattern(true)}
+              disabled={notApproved || missingOffices}
+              className="rounded-full"
+            >
+              <CalendarRange className="mr-2 h-4 w-4" />
+              {t("pattern.openCreate")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowClear(true)}
+              className="rounded-full"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {t("pattern.openDelete")}
+            </Button>
+          </div>
 
           <div className="grid lg:grid-cols-[320px,1fr] gap-8">
             {/* ── Calendar ── */}
@@ -492,6 +524,20 @@ export function Disponibilidad() {
           </div>
         </CardContent>
       </Card>
+
+      <RecurringScheduleDialog
+        open={showPattern}
+        onOpenChange={setShowPattern}
+        offices={offices}
+        onPublished={() => loadSlots()}
+      />
+
+      <ClearRangeDialog
+        open={showClear}
+        onOpenChange={setShowClear}
+        offices={offices}
+        onCleared={() => loadSlots()}
+      />
 
       {/* ── Add Slot Dialog ── */}
       <Dialog open={showAdd} onOpenChange={(open) => !open && setShowAdd(false)}>
