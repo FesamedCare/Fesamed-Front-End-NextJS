@@ -96,11 +96,31 @@ export default {
   				to: {
   					height: '0'
   				}
+  			},
+  			'float-soft': {
+  				'0%, 100%': {
+  					transform: 'translateY(0)'
+  				},
+  				'50%': {
+  					transform: 'translateY(-6px)'
+  				}
+  			},
+  			'breathe': {
+  				'0%, 100%': {
+  					opacity: '1'
+  				},
+  				'50%': {
+  					opacity: '0.4'
+  				}
   			}
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			// Lentas y de recorrido corto a propósito: acompañan un estado
+  			// vacío, no piden atención. Se aplican con motion-safe:.
+  			'float-soft': 'float-soft 4s ease-in-out infinite',
+  			'breathe': 'breathe 3s ease-in-out infinite'
   		}
   	},
   	boxShadow: {

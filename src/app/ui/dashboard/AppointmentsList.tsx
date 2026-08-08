@@ -2,9 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
+import type { Locale } from "date-fns";
+import { es, enUS } from "date-fns/locale";
 import { CalendarIcon, MapPinIcon, Loader2, Star } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
+import { useTranslation, type TranslationKey } from "@/i18n/LocaleProvider";
+import { cn } from "@/lib/utils";
+import { AppointmentsEmptyState } from "./AppointmentsEmptyState";
 import {
   Dialog,
   DialogContent,
@@ -26,17 +30,20 @@ import {
 
 type Tab = "proximas" | "pasadas" | "canceladas";
 
+const TABS: Tab[] = ["proximas", "pasadas", "canceladas"];
+
 const UPCOMING = ["PENDING", "IN_PROCESS"];
 const PAST = ["COMPLETED", "NO_SHOW"];
 const CANCELED = ["CANCELED_BY_PATIENT", "CANCELED_BY_DOCTOR"];
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Pendiente",
-  IN_PROCESS: "En proceso",
-  COMPLETED: "Completada",
-  NO_SHOW: "No asistió",
-  CANCELED_BY_PATIENT: "Cancelada por paciente",
-  CANCELED_BY_DOCTOR: "Cancelada por médico",
+// El estado viaja como enum del backend; aquí sólo se mapea a una clave.
+const STATUS_KEYS: Record<string, TranslationKey> = {
+  PENDING: "appointments.statusPending",
+  IN_PROCESS: "appointments.statusInProcess",
+  COMPLETED: "appointments.statusCompleted",
+  NO_SHOW: "appointments.statusNoShow",
+  CANCELED_BY_PATIENT: "appointments.statusCanceledByPatient",
+  CANCELED_BY_DOCTOR: "appointments.statusCanceledByDoctor",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -48,9 +55,9 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELED_BY_DOCTOR: "bg-red-100 text-red-600",
 };
 
-function formatDate(d: string) {
+function formatDate(d: string, pattern: string, dateLocale: Locale) {
   try {
-    return format(parseISO(d), "d 'de' MMMM yyyy", { locale: es });
+    return format(parseISO(d), pattern, { locale: dateLocale });
   } catch {
     return d;
   }
@@ -69,6 +76,8 @@ interface Props {
 }
 
 export function AppointmentsList({ role }: Props) {
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "en" ? enUS : es;
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -101,11 +110,11 @@ export function AppointmentsList({ role }: Props) {
         setAppointments(await getAppointments());
       }
     } catch {
-      setFetchError("No se pudieron cargar las citas.");
+      setFetchError(t("appointments.loadError"));
     } finally {
       setLoading(false);
     }
-  }, [role]);
+  }, [role, t]);
 
   useEffect(() => {
     load();
@@ -126,12 +135,46 @@ export function AppointmentsList({ role }: Props) {
     }
   };
 
-  const visible = appointments.filter((a) => {
-    const datePast = isDatePast(a);
-    if (tab === "proximas") return UPCOMING.includes(a.status) && !datePast;
-    if (tab === "pasadas") return PAST.includes(a.status) || (UPCOMING.includes(a.status) && datePast);
-    return CANCELED.includes(a.status);
-  });
+  const tabLabel = (value: Tab) =>
+    value === "proximas"
+      ? t("appointments.tabUpcoming")
+      : value === "pasadas"
+      ? t("appointments.tabPast")
+      : t("appointments.tabCanceled");
+
+  // Una sola definición de "qué cae en cada pestaña", usada por la lista y por
+  // los contadores. Duplicarla era la forma segura de que el número dijera una
+  // cosa y la lista mostrara otra.
+  const forTab = useCallback(
+    (which: Tab) =>
+      appointments.filter((a) => {
+        const datePast = isDatePast(a);
+        if (which === "proximas")
+          return UPCOMING.includes(a.status) && !datePast;
+        if (which === "pasadas")
+          return (
+            PAST.includes(a.status) ||
+            (UPCOMING.includes(a.status) && datePast)
+          );
+        return CANCELED.includes(a.status);
+      }),
+    [appointments]
+  );
+
+  const visible = forTab(tab);
+  const countFor = (which: Tab) => forTab(which).length;
+
+  // Un role="tablist" sin flechas es peor que no ponerlo: se anuncia como
+  // pestañas y luego no responde como pestañas.
+  const handleTabKeys = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const delta =
+      e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    if (!delta) return;
+    e.preventDefault();
+    const next = TABS[(TABS.indexOf(tab) + delta + TABS.length) % TABS.length];
+    setTab(next);
+    document.getElementById(`tab-${next}`)?.focus();
+  };
 
   const handleCancel = async () => {
     if (!cancelId) return;
@@ -145,7 +188,7 @@ export function AppointmentsList({ role }: Props) {
       setCancelId(null);
     } catch (e: unknown) {
       setCancelError(
-        e instanceof Error ? e.message : "Error al cancelar la cita."
+        e instanceof Error ? e.message : t("appointments.cancelError")
       );
     } finally {
       setCanceling(false);
@@ -164,7 +207,7 @@ export function AppointmentsList({ role }: Props) {
       setReviewId(null);
     } catch (e: unknown) {
       setReviewError(
-        e instanceof Error ? e.message : "Error al enviar la reseña."
+        e instanceof Error ? e.message : t("appointments.reviewError")
       );
     } finally {
       setSubmitting(false);
@@ -179,7 +222,7 @@ export function AppointmentsList({ role }: Props) {
       setAppointments((prev) => prev.map((a) => (a.id === id ? updated : a)));
     } catch (e: unknown) {
       setActionError(
-        e instanceof Error ? e.message : "Error al registrar la llegada."
+        e instanceof Error ? e.message : t("appointments.checkInError")
       );
     } finally {
       setActionLoading(null);
@@ -194,7 +237,7 @@ export function AppointmentsList({ role }: Props) {
       setAppointments((prev) => prev.map((a) => (a.id === id ? updated : a)));
     } catch (e: unknown) {
       setActionError(
-        e instanceof Error ? e.message : "Error al marcar como no asistida."
+        e instanceof Error ? e.message : t("appointments.noShowError")
       );
     } finally {
       setActionLoading(null);
@@ -214,7 +257,7 @@ export function AppointmentsList({ role }: Props) {
       <div className="text-center py-8">
         <p className="text-red-500 mb-3">{fetchError}</p>
         <Button variant="outline" onClick={load}>
-          Reintentar
+          {t("common.retry")}
         </Button>
       </div>
     );
@@ -222,25 +265,56 @@ export function AppointmentsList({ role }: Props) {
 
   return (
     <>
-      {/* Tabs */}
-      <div className="flex border-b mb-4">
-        {(["proximas", "pasadas", "canceladas"] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`py-2 px-4 text-sm transition-colors ${
-              tab === t
-                ? "border-b-2 border-blue-500 font-semibold text-blue-600"
-                : "text-gray-500 hover:text-gray-800"
-            }`}
-          >
-            {t === "proximas"
-              ? "Próximas"
-              : t === "pasadas"
-              ? "Pasadas"
-              : "Canceladas"}
-          </button>
-        ))}
+      {/*
+        Control segmentado en vez de tres pestañas subrayadas: se lee como un
+        solo control con un estado activo, y recoge el lenguaje de píldoras
+        (rounded-full, azul) que ya usan el buscador y los botones del sitio.
+        El contador es la mitad del valor: el doctor entra a saber cuántas
+        tiene hoy, no a leer tres etiquetas.
+      */}
+      <div
+        role="tablist"
+        aria-label={t("appointments.pageTitle")}
+        onKeyDown={handleTabKeys}
+        className="inline-flex w-full sm:w-auto items-center gap-1 rounded-full bg-gray-100 p-1 mb-5"
+      >
+        {TABS.map((t2) => {
+          const isActive = tab === t2;
+          const count = countFor(t2);
+          return (
+            <button
+              key={t2}
+              id={`tab-${t2}`}
+              role="tab"
+              type="button"
+              aria-selected={isActive}
+              aria-controls="appointments-panel"
+              tabIndex={isActive ? 0 : -1}
+              onClick={() => setTab(t2)}
+              className={cn(
+                "flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm whitespace-nowrap",
+                "transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1",
+                isActive
+                  ? "bg-white font-semibold text-blue-700 shadow-sm"
+                  : "text-gray-500 hover:text-gray-800"
+              )}
+            >
+              {tabLabel(t2)}
+              {count > 0 && (
+                <span
+                  className={cn(
+                    "min-w-[1.25rem] rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none",
+                    isActive
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-gray-200 text-gray-600"
+                  )}
+                >
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {actionError && (
@@ -249,10 +323,10 @@ export function AppointmentsList({ role }: Props) {
         </div>
       )}
 
+      <div id="appointments-panel" role="tabpanel" aria-labelledby={`tab-${tab}`}>
+
       {visible.length === 0 ? (
-        <p className="text-gray-500 text-sm py-6 px-2">
-          No hay citas en esta categoría.
-        </p>
+        <AppointmentsEmptyState tab={tab} role={role} />
       ) : (
         <div className="space-y-4">
           {visible.map((appt) => {
@@ -269,17 +343,17 @@ export function AppointmentsList({ role }: Props) {
                   <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
                     <CalendarIcon className="w-4 h-4 text-blue-500 shrink-0" />
                     {appt.schedule
-                      ? `${formatDate(appt.schedule.date_of_service)} · ${formatTime(
+                      ? `${formatDate(appt.schedule.date_of_service, t("formats.dateLong"), dateLocale)} · ${formatTime(
                           appt.schedule.start_time
                         )} – ${formatTime(appt.schedule.end_time)}`
-                      : "Fecha no disponible"}
+                      : t("appointments.dateUnavailable")}
                   </p>
                   <span
                     className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
                       STATUS_COLORS[appt.status] || "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {STATUS_LABELS[appt.status] || appt.status}
+                    {STATUS_KEYS[appt.status] ? t(STATUS_KEYS[appt.status]) : appt.status}
                   </span>
                 </div>
 
@@ -315,7 +389,7 @@ export function AppointmentsList({ role }: Props) {
 
                     {appt.cancel_reason && (
                       <p className="text-xs text-gray-400 mt-1">
-                        Motivo: {appt.cancel_reason}
+                        {t("appointments.reasonLabel")} {appt.cancel_reason}
                       </p>
                     )}
 
@@ -352,7 +426,7 @@ export function AppointmentsList({ role }: Props) {
                           setCancelError(null);
                         }}
                       >
-                        Cancelar
+                        {t("appointments.actionCancel")}
                       </Button>
                     )}
 
@@ -368,7 +442,7 @@ export function AppointmentsList({ role }: Props) {
                             setReviewError(null);
                           }}
                         >
-                          Reseñar
+                          {t("appointments.actionReview")}
                         </Button>
                       )}
 
@@ -382,7 +456,7 @@ export function AppointmentsList({ role }: Props) {
                           {isActing ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
-                            "Check-in"
+                            t("appointments.actionCheckIn")
                           )}
                         </Button>
                         <Button
@@ -391,7 +465,7 @@ export function AppointmentsList({ role }: Props) {
                           disabled={isActing}
                           onClick={() => handleNoShow(appt.id)}
                         >
-                          No asistió
+                          {t("appointments.actionNoShow")}
                         </Button>
                         <Button
                           variant="outline"
@@ -403,7 +477,7 @@ export function AppointmentsList({ role }: Props) {
                             setCancelError(null);
                           }}
                         >
-                          Cancelar
+                          {t("appointments.actionCancel")}
                         </Button>
                       </>
                     )}
@@ -414,6 +488,7 @@ export function AppointmentsList({ role }: Props) {
           })}
         </div>
       )}
+      </div>
 
       {/* Cancel Dialog */}
       <Dialog
@@ -422,14 +497,13 @@ export function AppointmentsList({ role }: Props) {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Cancelar cita</DialogTitle>
+            <DialogTitle>{t("appointments.cancelDialogTitle")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-gray-600 -mt-2">
-            ¿Estás seguro de que deseas cancelar esta cita? Esta acción no se
-            puede deshacer.
+            {t("appointments.cancelDialogBody")}
           </p>
           <Textarea
-            placeholder="Motivo de cancelación (opcional)"
+            placeholder={t("appointments.cancelReasonPlaceholder")}
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
             rows={3}
@@ -443,7 +517,7 @@ export function AppointmentsList({ role }: Props) {
               onClick={() => setCancelId(null)}
               disabled={canceling}
             >
-              Volver
+              {t("appointments.cancelDialogBack")}
             </Button>
             <Button
               variant="destructive"
@@ -453,7 +527,7 @@ export function AppointmentsList({ role }: Props) {
               {canceling && (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               )}
-              Confirmar cancelación
+              {t("appointments.cancelDialogConfirm")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -466,11 +540,11 @@ export function AppointmentsList({ role }: Props) {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Dejar reseña</DialogTitle>
+            <DialogTitle>{t("appointments.reviewDialogTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Califica tu experiencia con el médico
+              {t("appointments.reviewPrompt")}
             </p>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((s) => (
@@ -491,7 +565,7 @@ export function AppointmentsList({ role }: Props) {
               ))}
             </div>
             <Textarea
-              placeholder="Comentario (opcional)"
+              placeholder={t("appointments.reviewCommentPlaceholder")}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
@@ -506,7 +580,7 @@ export function AppointmentsList({ role }: Props) {
               onClick={() => setReviewId(null)}
               disabled={submitting}
             >
-              Cancelar
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={handleReview}
@@ -515,7 +589,7 @@ export function AppointmentsList({ role }: Props) {
               {submitting && (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               )}
-              Enviar reseña
+              {t("appointments.reviewSubmit")}
             </Button>
           </DialogFooter>
         </DialogContent>
