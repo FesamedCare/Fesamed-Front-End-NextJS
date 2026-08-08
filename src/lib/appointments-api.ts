@@ -3,7 +3,11 @@
  */
 
 import { get, post, patch } from "@/lib/api";
-import type { Appointment, AppointmentReview } from "@/app/types/types";
+import type {
+  Appointment,
+  AppointmentContext,
+  AppointmentReview,
+} from "@/app/types/types";
 
 const BASE = "/api/v1";
 
@@ -77,4 +81,18 @@ export async function checkOutAppointment(id: string): Promise<Appointment> {
 /** Doctor: mark appointment as NO_SHOW */
 export async function markNoShow(id: string): Promise<Appointment> {
   return post<Appointment>(`${BASE}/appointment/${id}/no-show/`);
+}
+
+
+/**
+ * Historial del paciente con este doctor.
+ *
+ * Aparte del detalle y no dentro de la cita: pedirlo en la lista serían N
+ * consultas para pintar algo que quizá nadie abra. Solo lo puede pedir el
+ * doctor de la cita.
+ */
+export async function getAppointmentContext(
+  id: string
+): Promise<AppointmentContext> {
+  return get<AppointmentContext>(`${BASE}/appointment/${id}/context/`);
 }

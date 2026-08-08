@@ -715,6 +715,25 @@ export const es = {
     noDays: "Elige al menos un día.",
   },
 
+  detail: {
+    title: "Detalle de la cita",
+    where: "Dónde",
+    history: "Historial",
+    directions: "Cómo llegar",
+    viewFullProfile: "Ver perfil completo del doctor",
+    viewFullProfileHint: "Fotos del consultorio, métodos de pago y certificados",
+    professionalCard: "Tarjeta profesional",
+    speaks: "Habla",
+    years: "{count} años",
+    genderMale: "Masculino",
+    genderFemale: "Femenino",
+    genderOther: "Otro",
+    visitsWithYou: "{count} citas contigo",
+    oneVisitWithYou: "1 cita contigo",
+    noVisitsWithYou: "Primera cita contigo",
+    lastVisit: "última el {date}",
+  },
+
   nav: {
     searchDoctor: "Buscar un Doctor",
     searchDoctorDesc: "Busca un doctor especializado",

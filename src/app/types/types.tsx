@@ -212,17 +212,50 @@ export type AppointmentStatus =
   | "CANCELED_BY_DOCTOR"
   | "NO_SHOW";
 
-export interface AppointmentUser {
+/** Lo que el doctor ve del paciente. Sin documento de identidad, a propósito. */
+export interface AppointmentPatient {
   id: string;
   name: string;
   lastname: string;
   profile_picture: string | null;
+  email?: string | null;
+  phone_number?: string | null;
+  birth_date?: string | null;
+  gender?: string | null;
+}
+
+/**
+ * Lo que el paciente ve del doctor.
+ *
+ * Sin correo ni teléfono: para hablar con él está el chat. No es que vengan
+ * vacíos, es que el backend no los manda en este tipo.
+ */
+export interface AppointmentDoctor {
+  id: string;
+  name: string;
+  lastname: string;
+  profile_picture: string | null;
+  specialties: string[];
+  languages: string[];
+  professional_card_number?: string | null;
 }
 
 export interface AppointmentOffice {
   id: string;
   name: string;
   address: string;
+  city_name?: string | null;
+  department_name?: string | null;
+  phone_primary?: string | null;
+  phone_secondary?: string | null;
+  /** Sitio web o enlace de Google Maps. De aquí sale "Cómo llegar". */
+  website_url?: string | null;
+}
+
+/** Historial del paciente con este doctor. Solo lo puede pedir el doctor. */
+export interface AppointmentContext {
+  previous_count: number;
+  last_visit?: string | null;
 }
 
 export interface AppointmentSchedule {
@@ -253,8 +286,8 @@ export interface Appointment {
   created_at: string;
   updated_at: string | null;
   schedule: AppointmentSchedule | null;
-  doctor: AppointmentUser | null;
-  patient: AppointmentUser | null;
+  doctor: AppointmentDoctor | null;
+  patient: AppointmentPatient | null;
   review: AppointmentReview | null;
 }
 

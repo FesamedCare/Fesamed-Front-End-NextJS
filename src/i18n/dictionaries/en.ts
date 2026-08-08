@@ -704,6 +704,25 @@ export const en: Dictionary = {
     noDays: "Pick at least one day.",
   },
 
+  detail: {
+    title: "Appointment details",
+    where: "Where",
+    history: "History",
+    directions: "Get directions",
+    viewFullProfile: "View the doctor's full profile",
+    viewFullProfileHint: "Office photos, payment methods and certificates",
+    professionalCard: "License number",
+    speaks: "Speaks",
+    years: "{count} years old",
+    genderMale: "Male",
+    genderFemale: "Female",
+    genderOther: "Other",
+    visitsWithYou: "{count} appointments with you",
+    oneVisitWithYou: "1 appointment with you",
+    noVisitsWithYou: "First appointment with you",
+    lastVisit: "last on {date}",
+  },
+
   nav: {
     searchDoctor: "Find a Doctor",
     searchDoctorDesc: "Search for a specialist",
