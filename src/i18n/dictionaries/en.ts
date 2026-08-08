@@ -205,6 +205,11 @@ export const en: Dictionary = {
 
     actionCancel: "Cancel",
     actionReview: "Leave a review",
+    actionCheckOut: "Close consultation",
+    checkOutError: "Couldn't close the consultation.",
+    tooEarly: "You'll be able to check in once the appointment starts.",
+    windowClosed: "The check-in window has closed.",
+    autoClosed: "Closed automatically",
     actionCheckIn: "Check in",
     actionNoShow: "No show",
 

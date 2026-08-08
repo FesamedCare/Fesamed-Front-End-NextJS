@@ -208,6 +208,11 @@ export const es = {
 
     actionCancel: "Cancelar",
     actionReview: "Reseñar",
+    actionCheckOut: "Cerrar consulta",
+    checkOutError: "No se pudo cerrar la consulta.",
+    tooEarly: "Podrás registrar la llegada cuando empiece la cita.",
+    windowClosed: "El plazo para registrar la llegada expiró.",
+    autoClosed: "Cerrada automáticamente",
     actionCheckIn: "Check-in",
     actionNoShow: "No asistió",
 

@@ -25,6 +25,7 @@ import {
   cancelAppointment,
   createReview,
   checkInAppointment,
+  checkOutAppointment,
   markNoShow,
 } from "@/lib/appointments-api";
 
@@ -132,6 +133,39 @@ export function AppointmentsList({ role }: Props) {
       return now.getHours() > h || (now.getHours() === h && now.getMinutes() >= m);
     } catch {
       return false;
+    }
+  };
+
+  /**
+   * Si ahora cae dentro de la ventana de check-in del backend:
+   * desde el inicio del turno hasta 30 min después de su fin.
+   *
+   * Sin esto el botón aparecía para una cita de la semana entrante y fallaba
+   * con un 400 al pulsarlo: el servidor validaba bien y la UI no lo reflejaba.
+   */
+  const checkInWindow = (appt: Appointment): "early" | "open" | "closed" => {
+    if (!appt.schedule) return "closed";
+    const { date_of_service, start_time, end_time } = appt.schedule;
+    const inicio = new Date(`${date_of_service}T${start_time}`);
+    const fin = new Date(`${date_of_service}T${end_time}`);
+    const cierre = new Date(fin.getTime() + 30 * 60 * 1000);
+    const ahora = new Date();
+    if (ahora < inicio) return "early";
+    return ahora <= cierre ? "open" : "closed";
+  };
+
+  const handleCheckOut = async (id: string) => {
+    setActionLoading(id);
+    setActionError(null);
+    try {
+      const updated = await checkOutAppointment(id);
+      setAppointments((prev) => prev.map((a) => (a.id === id ? updated : a)));
+    } catch (e: unknown) {
+      setActionError(
+        e instanceof Error ? e.message : t("appointments.checkOutError")
+      );
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -387,6 +421,12 @@ export function AppointmentsList({ role }: Props) {
                       </p>
                     )}
 
+                    {appt.auto_closed_at && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        {t("appointments.autoClosed")}
+                      </p>
+                    )}
+
                     {appt.cancel_reason && (
                       <p className="text-xs text-gray-400 mt-1">
                         {t("appointments.reasonLabel")} {appt.cancel_reason}
@@ -446,27 +486,54 @@ export function AppointmentsList({ role }: Props) {
                         </Button>
                       )}
 
+                    {role === "doctor" && appt.status === "IN_PROCESS" && (
+                      <Button
+                        size="sm"
+                        disabled={isActing}
+                        onClick={() => handleCheckOut(appt.id)}
+                      >
+                        {isActing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          t("appointments.actionCheckOut")
+                        )}
+                      </Button>
+                    )}
+
                     {role === "doctor" && appt.status === "PENDING" && (
                       <>
-                        <Button
-                          size="sm"
-                          disabled={isActing}
-                          onClick={() => handleCheckIn(appt.id)}
-                        >
-                          {isActing ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            t("appointments.actionCheckIn")
-                          )}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={isActing}
-                          onClick={() => handleNoShow(appt.id)}
-                        >
-                          {t("appointments.actionNoShow")}
-                        </Button>
+                        {/* El botón solo aparece dentro de la ventana real;
+                            fuera de ella se dice por qué, en vez de dejar un
+                            botón que falla al pulsarlo. */}
+                        {checkInWindow(appt) === "open" ? (
+                          <Button
+                            size="sm"
+                            disabled={isActing}
+                            onClick={() => handleCheckIn(appt.id)}
+                          >
+                            {isActing ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              t("appointments.actionCheckIn")
+                            )}
+                          </Button>
+                        ) : (
+                          <span className="self-center text-xs text-gray-400">
+                            {checkInWindow(appt) === "early"
+                              ? t("appointments.tooEarly")
+                              : t("appointments.windowClosed")}
+                          </span>
+                        )}
+                        {checkInWindow(appt) !== "early" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={isActing}
+                            onClick={() => handleNoShow(appt.id)}
+                          >
+                            {t("appointments.actionNoShow")}
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"

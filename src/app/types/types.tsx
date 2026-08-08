@@ -248,6 +248,8 @@ export interface Appointment {
   patient_id: string;
   status: AppointmentStatus;
   cancel_reason: string | null;
+  /** Marcada por la tarea de cierre por vencimiento, no por el doctor. */
+  auto_closed_at?: string | null;
   created_at: string;
   updated_at: string | null;
   schedule: AppointmentSchedule | null;

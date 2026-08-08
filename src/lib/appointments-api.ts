@@ -58,9 +58,20 @@ export async function getDoctorAppointments(
   return get<Appointment[]>(url);
 }
 
-/** Doctor: mark appointment as IN_PROCESS (check-in) */
+/**
+ * Doctor: registra que el paciente llegó. PENDING -> IN_PROCESS.
+ *
+ * Es el primero de dos momentos. Antes este endpoint escribía COMPLETED
+ * directamente, así que el doctor daba la consulta por realizada antes de
+ * atenderla y no había forma de deshacerlo.
+ */
 export async function checkInAppointment(id: string): Promise<Appointment> {
   return post<Appointment>(`${BASE}/appointment/${id}/check-in/`);
+}
+
+/** Doctor: cierra la consulta. IN_PROCESS -> COMPLETED. */
+export async function checkOutAppointment(id: string): Promise<Appointment> {
+  return post<Appointment>(`${BASE}/appointment/${id}/check-out/`);
 }
 
 /** Doctor: mark appointment as NO_SHOW */
