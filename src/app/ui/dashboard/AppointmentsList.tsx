@@ -9,6 +9,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { useTranslation, type TranslationKey } from "@/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
 import { AppointmentsEmptyState } from "./AppointmentsEmptyState";
+import { AppointmentDetailDialog } from "./AppointmentDetailDialog";
 import {
   Dialog,
   DialogContent,
@@ -38,7 +39,8 @@ const PAST = ["COMPLETED", "NO_SHOW"];
 const CANCELED = ["CANCELED_BY_PATIENT", "CANCELED_BY_DOCTOR"];
 
 // El estado viaja como enum del backend; aquí sólo se mapea a una clave.
-const STATUS_KEYS: Record<string, TranslationKey> = {
+// Exportados: el diálogo de detalle los usa en vez de copiarlos.
+export const STATUS_KEYS: Record<string, TranslationKey> = {
   PENDING: "appointments.statusPending",
   IN_PROCESS: "appointments.statusInProcess",
   COMPLETED: "appointments.statusCompleted",
@@ -47,7 +49,7 @@ const STATUS_KEYS: Record<string, TranslationKey> = {
   CANCELED_BY_DOCTOR: "appointments.statusCanceledByDoctor",
 };
 
-const STATUS_COLORS: Record<string, string> = {
+export const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-blue-100 text-blue-700",
   IN_PROCESS: "bg-amber-100 text-amber-700",
   COMPLETED: "bg-green-100 text-green-700",
@@ -100,6 +102,7 @@ export function AppointmentsList({ role }: Props) {
   // Doctor action state
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -194,6 +197,111 @@ export function AppointmentsList({ role }: Props) {
       }),
     [appointments]
   );
+
+  /**
+   * Los botones de una cita. La tarjeta y el diálogo llaman a la misma
+   * función, no a dos copias: así el diálogo respeta automáticamente las
+   * ventanas de tiempo del check-in.
+   */
+  const renderActions = (appt: Appointment) => {
+    const isActing = actionLoading === appt.id;
+    return (
+      <>
+      {role === "patient" && appt.status === "PENDING" && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setCancelId(appt.id);
+            setCancelReason("");
+            setCancelError(null);
+          }}
+        >
+          {t("appointments.actionCancel")}
+        </Button>
+      )}
+
+      {role === "patient" &&
+        appt.status === "COMPLETED" &&
+        !appt.review && (
+          <Button
+            size="sm"
+            onClick={() => {
+              setReviewId(appt.id);
+              setRating(0);
+              setComment("");
+              setReviewError(null);
+            }}
+          >
+            {t("appointments.actionReview")}
+          </Button>
+        )}
+
+      {role === "doctor" && appt.status === "IN_PROCESS" && (
+        <Button
+          size="sm"
+          disabled={isActing}
+          onClick={() => handleCheckOut(appt.id)}
+        >
+          {isActing ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            t("appointments.actionCheckOut")
+          )}
+        </Button>
+      )}
+
+      {role === "doctor" && appt.status === "PENDING" && (
+        <>
+          {/* El botón solo aparece dentro de la ventana real;
+              fuera de ella se dice por qué, en vez de dejar un
+              botón que falla al pulsarlo. */}
+          {checkInWindow(appt) === "open" ? (
+            <Button
+              size="sm"
+              disabled={isActing}
+              onClick={() => handleCheckIn(appt.id)}
+            >
+              {isActing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                t("appointments.actionCheckIn")
+              )}
+            </Button>
+          ) : (
+            <span className="self-center text-xs text-gray-400">
+              {checkInWindow(appt) === "early"
+                ? t("appointments.tooEarly")
+                : t("appointments.windowClosed")}
+            </span>
+          )}
+          {checkInWindow(appt) !== "early" && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isActing}
+              onClick={() => handleNoShow(appt.id)}
+            >
+              {t("appointments.actionNoShow")}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isActing}
+            onClick={() => {
+              setCancelId(appt.id);
+              setCancelReason("");
+              setCancelError(null);
+            }}
+          >
+            {t("appointments.actionCancel")}
+          </Button>
+        </>
+      )}
+      </>
+    );
+  };
 
   const visible = forTab(tab);
   const countFor = (which: Tab) => forTab(which).length;
@@ -366,11 +474,10 @@ export function AppointmentsList({ role }: Props) {
           {visible.map((appt) => {
             const person =
               role === "patient" ? appt.doctor : appt.patient;
-            const isActing = actionLoading === appt.id;
             return (
               <div
                 key={appt.id}
-                className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
+                className="relative bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
               >
                 {/* Header: date + status badge */}
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -403,11 +510,24 @@ export function AppointmentsList({ role }: Props) {
                   />
 
                   <div className="flex-grow min-w-0">
-                    <h4 className="font-semibold text-base truncate">
-                      {person
-                        ? `${role === "patient" ? "Dr. " : ""}${person.name} ${person.lastname}`
-                        : "—"}
-                    </h4>
+                    {/*
+                      Enlace estirado: el nombre es el botón real y su ::after
+                      extiende el área de clic sobre toda la tarjeta. No se
+                      envuelve la tarjeta en un <button> porque ya contiene
+                      botones, y un interactivo dentro de otro es HTML inválido
+                      y se comporta mal con teclado y lectores de pantalla.
+                    */}
+                    <button
+                      type="button"
+                      onClick={() => setDetailId(appt.id)}
+                      className="rounded text-left after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                    >
+                      <h4 className="font-semibold text-base truncate">
+                        {person
+                          ? `${role === "patient" ? "Dr. " : ""}${person.name} ${person.lastname}`
+                          : "—"}
+                      </h4>
+                    </button>
 
                     {appt.schedule?.office && (
                       <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
@@ -455,99 +575,8 @@ export function AppointmentsList({ role }: Props) {
                   </div>
 
                   {/* Action buttons */}
-                  <div className="flex gap-2 shrink-0 flex-wrap">
-                    {role === "patient" && appt.status === "PENDING" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setCancelId(appt.id);
-                          setCancelReason("");
-                          setCancelError(null);
-                        }}
-                      >
-                        {t("appointments.actionCancel")}
-                      </Button>
-                    )}
-
-                    {role === "patient" &&
-                      appt.status === "COMPLETED" &&
-                      !appt.review && (
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setReviewId(appt.id);
-                            setRating(0);
-                            setComment("");
-                            setReviewError(null);
-                          }}
-                        >
-                          {t("appointments.actionReview")}
-                        </Button>
-                      )}
-
-                    {role === "doctor" && appt.status === "IN_PROCESS" && (
-                      <Button
-                        size="sm"
-                        disabled={isActing}
-                        onClick={() => handleCheckOut(appt.id)}
-                      >
-                        {isActing ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          t("appointments.actionCheckOut")
-                        )}
-                      </Button>
-                    )}
-
-                    {role === "doctor" && appt.status === "PENDING" && (
-                      <>
-                        {/* El botón solo aparece dentro de la ventana real;
-                            fuera de ella se dice por qué, en vez de dejar un
-                            botón que falla al pulsarlo. */}
-                        {checkInWindow(appt) === "open" ? (
-                          <Button
-                            size="sm"
-                            disabled={isActing}
-                            onClick={() => handleCheckIn(appt.id)}
-                          >
-                            {isActing ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              t("appointments.actionCheckIn")
-                            )}
-                          </Button>
-                        ) : (
-                          <span className="self-center text-xs text-gray-400">
-                            {checkInWindow(appt) === "early"
-                              ? t("appointments.tooEarly")
-                              : t("appointments.windowClosed")}
-                          </span>
-                        )}
-                        {checkInWindow(appt) !== "early" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={isActing}
-                            onClick={() => handleNoShow(appt.id)}
-                          >
-                            {t("appointments.actionNoShow")}
-                          </Button>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={isActing}
-                          onClick={() => {
-                            setCancelId(appt.id);
-                            setCancelReason("");
-                            setCancelError(null);
-                          }}
-                        >
-                          {t("appointments.actionCancel")}
-                        </Button>
-                      </>
-                    )}
+                  <div className="relative z-10 flex gap-2 shrink-0 flex-wrap">
+                    {renderActions(appt)}
                   </div>
                 </div>
               </div>
@@ -556,6 +585,17 @@ export function AppointmentsList({ role }: Props) {
         </div>
       )}
       </div>
+
+      <AppointmentDetailDialog
+        appointment={appointments.find((a) => a.id === detailId) ?? null}
+        role={role}
+        open={detailId !== null}
+        onOpenChange={(next) => !next && setDetailId(null)}
+        actions={(() => {
+          const cita = appointments.find((a) => a.id === detailId);
+          return cita ? renderActions(cita) : null;
+        })()}
+      />
 
       {/* Cancel Dialog */}
       <Dialog
