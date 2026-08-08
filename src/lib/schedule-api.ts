@@ -65,3 +65,77 @@ export async function getMyVerificationStatus(): Promise<DoctorVerificationStatu
     `${BASE}/me/profile-draft/verification-status/`
   );
 }
+
+
+// ─── Operaciones por lote ────────────────────────────────────────────────────
+//
+// Publicar una jornada normal (lunes a viernes, 8-12 y 14-17, 30 min, dos
+// meses) son 560 turnos. Uno por petición no es viable, así que el patrón
+// viaja entero y el servidor lo expande en una transacción.
+
+export interface TimeBlockIn {
+  /** "HH:MM" */
+  start_time: string;
+  end_time: string;
+}
+
+export interface BulkScheduleCreate {
+  /** 0 = lunes … 6 = domingo */
+  weekdays: number[];
+  blocks: TimeBlockIn[];
+  slot_minutes: number;
+  date_from: string;
+  date_to: string;
+  office_id: string;
+  /** Con `true` el servidor no escribe: devuelve los conteos de la vista previa. */
+  dry_run?: boolean;
+}
+
+export interface BulkScheduleDeleteData {
+  date_from: string;
+  date_to: string;
+  weekdays?: number[];
+  office_id?: string;
+  dry_run?: boolean;
+}
+
+export interface SkippedSlot {
+  date_of_service: string;
+  start_time: string;
+  end_time: string;
+  /** `overlap`: chocaba con uno publicado. `booked`: tiene cita activa. */
+  reason: "overlap" | "booked";
+}
+
+export interface BulkScheduleResult {
+  created: number;
+  skipped: number;
+  skipped_details: SkippedSlot[];
+  /** Minutos que sobran al final de las franjas en un día. */
+  leftover_minutes_per_day: number;
+  dry_run: boolean;
+}
+
+export interface BulkDeleteResult {
+  deleted: number;
+  kept: number;
+  /** Los que no se borraron por tener cita agendada. */
+  kept_details: SkippedSlot[];
+  dry_run: boolean;
+}
+
+export async function bulkCreateSchedules(
+  data: BulkScheduleCreate
+): Promise<BulkScheduleResult> {
+  return post<BulkScheduleResult>(`${BASE}/me/schedules/bulk/`, data);
+}
+
+/**
+ * Un DELETE con cuerpo es válido en HTTP y FastAPI lo declara en el
+ * openapi.json; `del()` ya acepta `body` en sus opciones.
+ */
+export async function bulkDeleteSchedules(
+  data: BulkScheduleDeleteData
+): Promise<BulkDeleteResult> {
+  return del<BulkDeleteResult>(`${BASE}/me/schedules/bulk/`, { body: data });
+}
