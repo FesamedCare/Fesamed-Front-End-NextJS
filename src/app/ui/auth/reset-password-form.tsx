@@ -4,18 +4,25 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import { useTranslation, type TranslationKey } from "@/i18n/LocaleProvider";
 
 // Mismas reglas que valida el backend en
 // src/app/api/v1/auth/password_policy.py. Si cambian allá, cambian acá.
-const REGLAS = [
-  { etiqueta: 'Al menos 8 caracteres', ok: (v: string) => v.length >= 8 },
-  { etiqueta: 'Una mayúscula', ok: (v: string) => /[A-Z]/.test(v) },
-  { etiqueta: 'Una minúscula', ok: (v: string) => /[a-z]/.test(v) },
-  { etiqueta: 'Un número', ok: (v: string) => /[0-9]/.test(v) },
-  { etiqueta: 'Un carácter especial', ok: (v: string) => /[!@#$%^&*(),.?":{}|<>]/.test(v) },
-];
+// Las etiquetas dependen del idioma, así que la lista se arma dentro del
+// componente en vez de vivir a nivel de módulo.
+function construirReglas(t: (k: TranslationKey) => string) {
+  return [
+    { etiqueta: t('register.ruleMinLength'), ok: (v: string) => v.length >= 8 },
+    { etiqueta: t('profile.ruleUppercase'), ok: (v: string) => /[A-Z]/.test(v) },
+    { etiqueta: t('profile.ruleLowercase'), ok: (v: string) => /[a-z]/.test(v) },
+    { etiqueta: t('profile.ruleNumber'), ok: (v: string) => /[0-9]/.test(v) },
+    { etiqueta: t('profile.ruleSpecial'), ok: (v: string) => /[!@#$%^&*(),.?":{}|<>]/.test(v) },
+  ];
+}
 
 export function ResetPasswordForm() {
+  const { t } = useTranslation();
+  const REGLAS = construirReglas(t);
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get('token');
@@ -40,7 +47,7 @@ export function ResetPasswordForm() {
       });
       router.push('/login');
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'No se pudo cambiar la contraseña.');
+      setErrorMessage(err instanceof Error ? err.message : t("profile.passwordChangeError"));
     } finally {
       setIsLoading(false);
     }
@@ -55,13 +62,13 @@ export function ResetPasswordForm() {
             <div className="w-full md:mt-0 sm:max-w-md xl:p-0">
               <div className="p-6 sm:p-8 text-center">
                 <h1 className="text-xl font-bold text-gray-900 md:text-2xl mb-4">
-                  Enlace incompleto
+                  {t("auth.resetIncompleteTitle")}
                 </h1>
                 <p className="text-gray-500 mb-6">
-                  Este enlace no trae el código de recuperación. Pide uno nuevo.
+                  {t("auth.resetIncompleteBody")}
                 </p>
                 <Link href="/forgot-password" className="font-medium text-blue-500 hover:underline">
-                  Pedir otro enlace
+                  {t("auth.resetRequestAnother")}
                 </Link>
               </div>
             </div>
@@ -78,10 +85,10 @@ export function ResetPasswordForm() {
           <div className="w-full md:mt-0 sm:max-w-md xl:p-0">
             <div className="p-6 sm:p-8">
               <h1 className="text-xl text-center font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
-                Crea una contraseña nueva
+                {t("auth.resetTitle")}
               </h1>
               <p className="text-gray-500 text-center mb-6">
-                Elige una que no hayas usado antes.
+                {t("auth.resetSubtitle")}
               </p>
               <div className="flex flex-col items-center">
                 <form onSubmit={onSubmit} className="flex flex-col gap-6 w-80">
@@ -92,7 +99,7 @@ export function ResetPasswordForm() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-                      placeholder="Contraseña nueva"
+                      placeholder={t("auth.newPasswordPlaceholder")}
                       required
                       disabled={isLoading}
                     />
@@ -104,7 +111,7 @@ export function ResetPasswordForm() {
                       value={confirm}
                       onChange={(e) => setConfirm(e.target.value)}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-                      placeholder="Repite la contraseña"
+                      placeholder={t("auth.repeatPasswordPlaceholder")}
                       required
                       disabled={isLoading}
                     />
@@ -133,7 +140,7 @@ export function ResetPasswordForm() {
                     className="w-full text-white bg-blue-950 hover:bg-primary-700 focus:ring-2 focus:outline-none focus:ring-blue-300 focus:text-blue-500 focus:bg-white font-medium rounded-full text-lg px-5 py-1.5 text-center disabled:opacity-70"
                     disabled={isLoading || !cumpleTodo || !coinciden}
                   >
-                    {isLoading ? 'Guardando...' : 'Guardar contraseña'}
+                    {isLoading ? t("profile.saving") : t("profile.savePassword")}
                   </button>
                 </form>
               </div>

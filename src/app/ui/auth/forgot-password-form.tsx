@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import { apiClient } from "@/lib/api";
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 export function ForgotPasswordForm() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [sentMessage, setSentMessage] = useState('');
@@ -38,10 +40,10 @@ export function ForgotPasswordForm() {
           <div className="w-full md:mt-0 sm:max-w-md xl:p-0">
             <div className="p-6 sm:p-8">
               <h1 className="text-xl text-center font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
-                ¿Olvidaste tu contraseña?
+                {t("auth.forgotTitle")}
               </h1>
               <p className="text-gray-500 text-center mb-6">
-                Escribe tu correo y te enviamos un enlace para crear una nueva.
+                {t("auth.forgotSubtitle")}
               </p>
               <div className="flex flex-col items-center">
                 {sentMessage ? (
@@ -50,7 +52,7 @@ export function ForgotPasswordForm() {
                     <p className="text-sm font-light text-gray-500">
                       Revisa tu bandeja de entrada.{" "}
                       <Link href="/login" className="font-medium text-blue-500 hover:underline">
-                        Volver a ingresar
+                        {t("auth.backToSignIn")}
                       </Link>
                     </p>
                   </div>
@@ -64,7 +66,7 @@ export function ForgotPasswordForm() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-                        placeholder="Correo"
+                        placeholder={t("auth.emailPlaceholder")}
                         required
                         disabled={isLoading}
                       />
@@ -78,9 +80,9 @@ export function ForgotPasswordForm() {
                       {isLoading ? 'Enviando...' : 'Enviar enlace'}
                     </button>
                     <p className="text-sm font-light text-gray-500">
-                      ¿Ya la recordaste?{" "}
+                      {t("misc.rememberedIt")}{" "}
                       <Link href="/login" className="font-medium text-blue-500 hover:underline">
-                        Ingresar
+                        {t("auth.signIn")}
                       </Link>
                     </p>
                   </form>

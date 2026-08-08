@@ -5,6 +5,7 @@ import Cropper, { Area } from "react-easy-crop";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 interface CropImageModalProps {
   imageSrc: string;
@@ -46,6 +47,7 @@ async function getCroppedBlob(imageSrc: string, pixelCrop: Area): Promise<Blob> 
 }
 
 export function CropImageModal({ imageSrc, onConfirm, onCancel }: CropImageModalProps) {
+  const { t } = useTranslation();
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
@@ -70,7 +72,7 @@ export function CropImageModal({ imageSrc, onConfirm, onCancel }: CropImageModal
     <Dialog open onOpenChange={(open) => { if (!open) onCancel(); }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Ajustar foto de perfil</DialogTitle>
+          <DialogTitle>{t("ui.adjustProfilePhoto")}</DialogTitle>
         </DialogHeader>
 
         <div className="relative w-full h-72 bg-gray-900 rounded-lg overflow-hidden">
@@ -88,7 +90,7 @@ export function CropImageModal({ imageSrc, onConfirm, onCancel }: CropImageModal
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">Zoom</label>
+          <label className="text-xs text-gray-500">{t("ui.zoom")}</label>
           <input
             type="range"
             min={1}
@@ -102,10 +104,10 @@ export function CropImageModal({ imageSrc, onConfirm, onCancel }: CropImageModal
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={onCancel} disabled={processing}>
-            Cancelar
+            {t("common.cancel")}
           </Button>
           <Button onClick={handleConfirm} disabled={processing} className="bg-blue-600 hover:bg-blue-700 text-white">
-            {processing ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Procesando...</> : "Aplicar recorte"}
+            {processing ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />{t("ui.processing")}</> : "Aplicar recorte"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import ImagePreviewModal from "./image-preview-modal"
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 interface FileWithPreview extends File {
   preview?: string;
@@ -28,6 +29,7 @@ interface Certificate {
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export default function CertificatesForm() {
+  const { t } = useTranslation();
   const { notifyProfileChanged } = useAuthContext();
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -102,13 +104,13 @@ export default function CertificatesForm() {
   }, [certificatesUrl, apiBase]);
 
   // Función para validar el tamaño del archivo
-  const validateFileSize = (file: File): boolean => {
+  const validateFileSize = useCallback((file: File): boolean => {
     if (file.size > MAX_FILE_SIZE) {
-      alert(`El archivo "${file.name}" excede el límite de 10 MB.`);
+      alert(t("profile.fileTooLarge", { name: file.name }));
       return false;
     }
     return true;
-  };
+  }, [t]);
 
   // Manejar la subida de archivos
   const onDrop = useCallback((acceptedFiles: FileWithPreview[]) => {
@@ -125,7 +127,7 @@ export default function CertificatesForm() {
       });
       return [...prevFiles, ...newFiles];
     });
-  }, []);
+  }, [validateFileSize]);
 
   // Manejar el evento de arrastrar y soltar
   const handleDragOver = (e: React.DragEvent) => {
@@ -240,7 +242,7 @@ export default function CertificatesForm() {
     <div className="flex justify-center items-center w-full">
       <div className="w-full min-h-[70vh] space-y-4">
         <div className="border px-4 pt-4 pb-8 mt-8 border-blue-200 rounded-lg">
-          <h1 className="text-lg font-bold pt-4 pl-6 pb-8">Sube tus certificados</h1>
+          <h1 className="text-lg font-bold pt-4 pl-6 pb-8">{t("profile.uploadCertificates")}</h1>
           <div className="flex items-center justify-center">
             <div
               onDragOver={handleDragOver}
@@ -250,8 +252,8 @@ export default function CertificatesForm() {
               <div className="flex flex-col items-center gap-4">
                 <Folder className="w-12 h-12 text-blue-500" />
                 <div>
-                  <p className="text-lg mb-2">Haga clic o arrastre para cargar su archivo</p>
-                  <p className="text-sm text-gray-500">PNG, JPG, PDF, SVG (Máximo 10 MB)</p>
+                  <p className="text-lg mb-2">{t("profile.dropzoneHint")}</p>
+                  <p className="text-sm text-gray-500">{t("profile.fileTypesWithPdf")}</p>
                 </div>
                 <input
                   type="file"
@@ -265,7 +267,7 @@ export default function CertificatesForm() {
                   onClick={() => document.getElementById("file-upload")?.click()}
                   className="bg-blue-500 hover:bg-blue-600"
                 >
-                  Seleccionar Archivos
+                  {t("ui.selectFiles")}
                 </Button>
               </div>
             </div>
@@ -274,7 +276,7 @@ export default function CertificatesForm() {
 
         {isLoading ? (
           <div className="flex justify-center p-8">
-            <p>Cargando certificados...</p>
+            <p>{t("ui.loadingCertificates")}</p>
           </div>
         ) : (
           <>
@@ -309,7 +311,7 @@ export default function CertificatesForm() {
                             }
                           }}
                         >
-                          Vista previa
+                          {t("ui.preview")}
                         </Button>
                       )}
                       <Button
@@ -333,7 +335,7 @@ export default function CertificatesForm() {
               </div>
             ) : (
               <div className="text-center p-8 text-gray-500">
-                No hay certificados cargados. Sube algunos usando el formulario anterior.
+                {t("ui.noCertificates")}
               </div>
             )}
           </>

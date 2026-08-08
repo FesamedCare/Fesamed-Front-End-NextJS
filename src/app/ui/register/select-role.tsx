@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import Lottie from 'react-lottie';
 import PatientAnimation from '../../../../public/lottie/patient.json';
 import DoctorAnimation from '../../../../public/lottie/doctor.json';
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 const RoleCard = ({ href, animationData, title, description } : any) => {
   const defaultOptions = {
@@ -30,33 +31,34 @@ const RoleCard = ({ href, animationData, title, description } : any) => {
 };
 
 export default function RoleSelection() {
+  const { t } = useTranslation();
   return (
     <div className="container mx-auto max-w-[800px] px-4 py-8">
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-semibold mb-2">Crea una cuenta 👋</h1>
-        <p className="text-gray-500">Selecciona tu rol para comenzar</p>
+        <h1 className="text-2xl font-semibold mb-2">{t("auth.createAccountTitle")}</h1>
+        <p className="text-gray-500">{t("auth.selectRole")}</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <RoleCard
           href="/register/patient"
           animationData={PatientAnimation}
-          title="Paciente"
-          description="Encuentra y agenda citas con profesionales de la salud"
+          title={t("auth.rolePatient")}
+          description={t("auth.rolePatientDesc")}
         />
         <RoleCard
           href="/register/doctor"
           animationData={DoctorAnimation}
-          title="Doctor"
-          description="Gestiona tu consulta y atiende pacientes en línea"
+          title={t("auth.roleDoctor")}
+          description={t("auth.roleDoctorDesc")}
         />
       </div>
 
       <div className="text-center mt-8">
         <p className="text-gray-500">
-          ¿Ya tienes una cuenta?{' '}
+          {t("misc.alreadyHaveAccount")}{' '}
           <Link href="/login" className="text-blue-600 hover:underline">
-            Iniciar Sesión
+            {t("auth.alreadyHaveAccount")}
           </Link>
         </p>
       </div>

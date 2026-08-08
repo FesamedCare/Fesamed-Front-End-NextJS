@@ -19,6 +19,7 @@ import { X, Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { EDAD_MINIMA_DOCTOR, aniosCumplidos, esFutura, hoyISO } from "@/lib/birthDate";
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 const generalProfileSchema = z.object({
   doctor_name: z.string().min(1, { message: "El nombre es obligatorio" }),
@@ -79,6 +80,7 @@ function formatBackendError(detail: unknown): string {
 }
 
 export function GeneralProfileForm() {
+  const { t } = useTranslation();
   const { notifyProfileChanged } = useAuthContext();
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [universities, setUniversities] = useState<University[]>([]);
@@ -394,7 +396,7 @@ export function GeneralProfileForm() {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4">
         <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-        <p className="text-muted-foreground">Cargando tu perfil...</p>
+        <p className="text-muted-foreground">{t("ui.loadingProfile")}</p>
       </div>
     );
   }
@@ -402,10 +404,10 @@ export function GeneralProfileForm() {
   if (loadError) {
     return (
       <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-        <p className="text-destructive font-medium">Error al cargar el perfil</p>
+        <p className="text-destructive font-medium">{t("profile.loadError")}</p>
         <p className="text-sm text-muted-foreground mt-1">{loadError}</p>
         <Button type="button" variant="outline" className="mt-4" onClick={() => { setLoadError(null); loadProfile(); }}>
-          Reintentar
+          {t("common.retry")}
         </Button>
       </div>
     );
@@ -417,16 +419,16 @@ export function GeneralProfileForm() {
 
         {/* Datos personales y de contacto */}
         <div className="flex flex-col gap-4 mt-4 border border-blue-100 rounded-lg p-8">
-          <h4 className="font-semibold">Datos personales y de contacto</h4>
+          <h4 className="font-semibold">{t("profile.personalContact")}</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Correo electrónico</FormLabel>
+                  <FormLabel>{t("profile.email")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="correo@ejemplo.com" disabled {...field} value={field.value ?? ""} />
+                    <Input placeholder={t("ui.emailExamplePlaceholder")} disabled {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -437,9 +439,9 @@ export function GeneralProfileForm() {
               name="phone_number"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Teléfono</FormLabel>
+                  <FormLabel>{t("profile.phone")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="+57 300 123 4567" {...field} value={field.value ?? ""} />
+                    <Input placeholder={t("profile.phonePlaceholder")} {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -450,7 +452,7 @@ export function GeneralProfileForm() {
               name="birth_date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Fecha de nacimiento</FormLabel>
+                  <FormLabel>{t("profile.birthDate")}</FormLabel>
                   <FormControl>
                     <Input type="date" max={hoyISO()} {...field} value={field.value ?? ""} />
                   </FormControl>
@@ -463,17 +465,17 @@ export function GeneralProfileForm() {
               name="gender"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Género</FormLabel>
+                  <FormLabel>{t("profile.gender")}</FormLabel>
                   <FormControl>
                     <select
                       className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       value={field.value ?? ""}
                       onChange={(e) => field.onChange(e.target.value === "" ? null : (e.target.value as UserGender))}
                     >
-                      <option value="">Seleccione...</option>
-                      <option value="MASCULINO">Masculino</option>
-                      <option value="FEMENINO">Femenino</option>
-                      <option value="OTRO">Otro</option>
+                      <option value="">{t("ui.selectPrompt")}</option>
+                      <option value="MASCULINO">{t("profile.male")}</option>
+                      <option value="FEMENINO">{t("profile.female")}</option>
+                      <option value="OTRO">{t("profile.other")}</option>
                     </select>
                   </FormControl>
                   <FormMessage />
@@ -485,9 +487,9 @@ export function GeneralProfileForm() {
               name="id_card"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cédula / Documento de identidad</FormLabel>
+                  <FormLabel>{t("profile.idDocument")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Número de identificación" {...field} value={field.value ?? ""} />
+                    <Input placeholder={t("profile.idPlaceholder")} {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -498,16 +500,16 @@ export function GeneralProfileForm() {
 
         {/* Sobre ti */}
         <div className="flex flex-col gap-4 mt-4 border border-blue-100 rounded-lg p-8">
-          <h4 className="font-semibold">Sobre ti</h4>
+          <h4 className="font-semibold">{t("profile.aboutYou")}</h4>
           <div className="flex flex-wrap justify-between gap-4">
             <FormField
               control={form.control}
               name="doctor_name"
               render={({ field }) => (
                 <FormItem className="min-w-[200px] flex-1">
-                  <FormLabel>Nombre</FormLabel>
+                  <FormLabel>{t("profile.firstName")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ingrese su primer nombre" {...field} />
+                    <Input placeholder={t("profile.firstNamePlaceholder")} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -518,9 +520,9 @@ export function GeneralProfileForm() {
               name="doctor_lastname"
               render={({ field }) => (
                 <FormItem className="min-w-[200px] flex-1">
-                  <FormLabel>Apellido</FormLabel>
+                  <FormLabel>{t("profile.lastName")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ingrese su apellido" {...field} />
+                    <Input placeholder={t("profile.lastNamePlaceholder")} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -532,9 +534,9 @@ export function GeneralProfileForm() {
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Descripción</FormLabel>
+                <FormLabel>{t("profile.description")}</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Escriba una breve descripción sobre usted" {...field} />
+                  <Textarea placeholder={t("profile.descriptionPlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -544,7 +546,7 @@ export function GeneralProfileForm() {
 
           {/* Información Profesional */}
         <div className="flex flex-col gap-4 mt-4 border border-blue-100 rounded-lg p-8">
-        <h4 className="font-semibold">Información Profesional</h4>
+        <h4 className="font-semibold">{t("profile.professionalInfo")}</h4>
 
         {/* Número de Licencia */}
         <FormField
@@ -552,12 +554,12 @@ export function GeneralProfileForm() {
           name="license_number"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Número de Licencia</FormLabel>
+              <FormLabel>{t("profile.licenseNumber")}</FormLabel>
               <FormControl>
                 <Input
                   placeholder={
                     draftData?.professional_card_number ||
-                    "Ingrese su número de licencia"
+                    t("profile.licensePlaceholder")
                   }
                   {...field}
                 />
@@ -572,7 +574,7 @@ export function GeneralProfileForm() {
           name="doctor_education"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Educación</FormLabel>
+              <FormLabel>{t("profile.education")}</FormLabel>
               <div className="flex flex-wrap gap-2 mb-2">
                 {field.value.map((education: { university_id: string }) => (
                   <Button
@@ -599,7 +601,7 @@ export function GeneralProfileForm() {
               </div>
               <FormControl>
                 <MultiSelect
-                  placeholder="Seleccione sus universidades"
+                  placeholder={t("profile.universitiesPlaceholder")}
                   options={universities.map((university) => ({
                     value: university.university_id,
                     label: university.name,
@@ -631,10 +633,10 @@ export function GeneralProfileForm() {
           name="doctor_experience"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Experiencia</FormLabel>
+              <FormLabel>{t("profile.experience")}</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Describa su experiencia profesional"
+                  placeholder={t("profile.experiencePlaceholder")}
                   value={
                     // Mostrar la experiencia existente o nueva
                     field.value.existing?.[0]?.description ||
@@ -681,7 +683,7 @@ export function GeneralProfileForm() {
           name="doctor_languages"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Idiomas</FormLabel>
+              <FormLabel>{t("profile.languages")}</FormLabel>
               <div className="flex flex-wrap gap-2 mb-2">
                 {field.value.map((language: { language_id: string }) => (
                   <Button
@@ -708,7 +710,7 @@ export function GeneralProfileForm() {
               </div>
               <FormControl>
                 <MultiSelect
-                  placeholder="Seleccione los idiomas que habla"
+                  placeholder={t("profile.languagesPlaceholder")}
                   options={languages.map((language) => ({
                     value: language.language_id,
                     label: language.name,
@@ -737,14 +739,14 @@ export function GeneralProfileForm() {
 
           {/* Especialización y tratamientos */}
         <div className="flex flex-col gap-4 mt-4 border border-blue-100 rounded-lg p-8">
-        <h4 className="font-semibold">Especialización y tratamientos</h4>
+        <h4 className="font-semibold">{t("profile.specializationTreatments")}</h4>
            {/* Especialidades */}
         <FormField
           control={form.control}
           name="specialties"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Especialidades</FormLabel>
+              <FormLabel>{t("profile.specialties")}</FormLabel>
               <div className="flex flex-wrap gap-2 mb-2">
                 {field.value.map((specialty: { id: string }) => (
                   <Button
@@ -768,7 +770,7 @@ export function GeneralProfileForm() {
               </div>
               <FormControl>
                 <MultiSelect
-                  placeholder="Seleccione sus especialidades"
+                  placeholder={t("profile.specialtiesPlaceholder")}
                   options={specialties.map((specialty) => ({
                     value: specialty.id,
                     label: specialty.name,
@@ -800,7 +802,7 @@ export function GeneralProfileForm() {
           name="treated_diseases"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Enfermedades tratadas</FormLabel>
+              <FormLabel>{t("profile.treatedDiseases")}</FormLabel>
               <div className="flex flex-wrap gap-2 mb-2">
                 {field.value.map((disease: { disease_id: string; comments?: string }, index: number) => (
                   <div key={disease.disease_id} className="flex flex-col gap-2">
@@ -825,7 +827,7 @@ export function GeneralProfileForm() {
                     </Button>
                     <FormControl>
                       <Textarea
-                        placeholder="Agregue comentarios sobre esta enfermedad"
+                        placeholder={t("profile.diseaseCommentsPlaceholder")}
                         value={disease.comments || ""} // Usar el valor actual de los comentarios
                         onChange={(e) => {
                           // Actualizar los comentarios en el formulario
@@ -846,7 +848,7 @@ export function GeneralProfileForm() {
               </div>
               <FormControl>
                 <MultiSelect
-                  placeholder="Seleccione las enfermedades que trata"
+                  placeholder={t("profile.diseasesPlaceholder")}
                   options={diseases.map((disease) => ({
                     value: disease.disease_id,
                     label: disease.name,
@@ -878,7 +880,7 @@ export function GeneralProfileForm() {
           name="services"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Servicios</FormLabel>
+              <FormLabel>{t("profile.services")}</FormLabel>
               <div className="flex flex-wrap gap-2 mb-2">
                 {field.value.map((svc: { service_id: string }) => (
                   <Button
@@ -898,7 +900,7 @@ export function GeneralProfileForm() {
               </div>
               <FormControl>
                 <MultiSelect
-                  placeholder="Seleccione los servicios que ofrece"
+                  placeholder={t("profile.servicesPlaceholder")}
                   options={services.map((s) => ({ value: s.id, label: s.name }))}
                   selected={field.value.map((item: { service_id: string }) => ({
                     value: item.service_id,
@@ -927,7 +929,7 @@ export function GeneralProfileForm() {
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Guardando...
+              {t("ui.saving")}
             </>
           ) : (
             "Guardar Cambios"

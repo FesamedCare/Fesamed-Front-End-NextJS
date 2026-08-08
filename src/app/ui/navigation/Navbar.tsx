@@ -9,6 +9,14 @@ import CloseMenu from "./closeMenu";
 import { useState, Fragment, useEffect } from "react";
 import "../../globals.css";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useTranslation, type TranslationKey } from "@/i18n/LocaleProvider";
+import { LOCALES, type Locale } from "@/i18n/config";
+
+interface NavItem {
+  key: TranslationKey;
+  descKey: TranslationKey;
+  href: string;
+}
 
 // Menú para usuarios no autenticados
   // El Blog está fuera de la navegación a propósito: el frontend está hecho pero
@@ -16,83 +24,54 @@ import { useAuthContext } from "@/contexts/AuthContext";
   // de escribir uno, así que /blog solo muestra "No hay publicaciones
   // disponibles". El código del front queda intacto: para reponerlo alcanza con
   // devolver este enlace, una vez que existan GET /posts y GET /categories.
-const publicLinks = [
-  {
-    name: "Buscar Doctor",
-    description: "Busca un doctor especializado",
-    href: "/buscar-doctor",
-  },
-  {
-    name: "Nosotros",
-    description: "Aprende más sobre nosotros",
-    href: "/about",
-  },
-  {
-    name: "Contacto",
-    description: "Contáctanos",
-    href: "/contact",
-  },
-  {
-    name: "Iniciar Sesión",
-    description: "Inicia sesión en tu cuenta",
-    href: "/login",
-  },
-  {
-    name: "Registrarse",
-    description: "Crea una cuenta nueva",
-    href: "/register",
-  }
+const publicLinks: NavItem[] = [
+  { key: "nav.searchDoctor", descKey: "nav.searchDoctorDesc", href: "/buscar-doctor" },
+  { key: "nav.about", descKey: "nav.aboutDesc", href: "/about" },
+  { key: "nav.contact", descKey: "nav.contactDesc", href: "/contact" },
+  { key: "nav.login", descKey: "nav.loginDesc", href: "/login" },
+  { key: "nav.register", descKey: "nav.registerDesc", href: "/register" },
 ];
 
 // Menú para usuarios autenticados
-const userLinks = [
-  {
-    name: "Buscar Doctor",
-    description: "Busca un doctor especializado",
-    href: "/buscar-doctor",
-  },
-  {
-    name: "Nosotros",
-    description: "Aprende más sobre nosotros",
-    href: "/about",
-  },
-  {
-    name: "Contacto",
-    description: "Contáctanos",
-    href: "/contact",
-  },
-  {
-    name: "Mi Perfil",
-    description: "Ver tu perfil y tus citas",
-    href: "/dashboard",
-  }
+const userLinks: NavItem[] = [
+  { key: "nav.searchDoctor", descKey: "nav.searchDoctorDesc", href: "/buscar-doctor" },
+  { key: "nav.about", descKey: "nav.aboutDesc", href: "/about" },
+  { key: "nav.contact", descKey: "nav.contactDesc", href: "/contact" },
+  { key: "nav.myProfile", descKey: "nav.myProfileDesc", href: "/dashboard" },
 ];
 
-const solutionsDesktop = [
-  {
-    name: "Ver Perfil",
-    description: "Ver tu perfil y tus citas",
-    href: "/dashboard",
-  },
-  {
-    name: "Mis Citas",
-    description: "Gestionar mis citas médicas",
-    href: "/dashboard/appointments",
-  }
+const solutionsDesktop: NavItem[] = [
+  { key: "nav.viewProfile", descKey: "nav.myProfileDesc", href: "/dashboard" },
+  { key: "nav.myAppointments", descKey: "nav.myAppointmentsDesc", href: "/dashboard/appointments" },
 ];
 
-const adminLinks = [
-  {
-    name: "Panel de Administración",
-    description: "Gestionar solicitudes de doctores",
-    href: "/admin/review-queue",
-  }
+const adminLinks: NavItem[] = [
+  { key: "nav.adminPanel", descKey: "nav.adminPanelDesc", href: "/admin/review-queue" },
 ];
+
+// Publicar horarios es la tarea que un doctor repite cada semana. Vivía dentro
+// de Configuración > Perfil y visibilidad, a tres clics y detrás de un acordeón
+// cerrado. Ahora cuelga del menú, al lado de Mis Citas.
+const doctorLink: NavItem = {
+  key: "nav.availability",
+  descKey: "nav.availabilityDesc",
+  href: "/dashboard/availability",
+};
+
+const LOCALE_LABELS: Record<Locale, string> = { es: "Español", en: "English" };
 
 export default function Navbar() {
   const { user, isAuthenticated, loading, logout, refreshUser } = useAuthContext();
+  const { t, locale, setLocale } = useTranslation();
   const userRole = typeof user?.role === "string" ? user.role : (user?.role as { name?: string } | undefined)?.name;
   const isAdmin = userRole === "admin";
+  const isDoctor = userRole === "doctor";
+  const desktopLinks = isAdmin
+    ? adminLinks
+    : isDoctor
+    ? [...solutionsDesktop, doctorLink]
+    : solutionsDesktop;
+  const mobileLinks = isDoctor ? [...userLinks, doctorLink] : userLinks;
   const [navbarShadow, setNavbarShadow] = useState(false);
 
   // Detectar cambios de autenticación
@@ -144,10 +123,38 @@ export default function Navbar() {
     };
   }, []);
 
+  // La detección por navegador es una suposición, no un veredicto. Sin una
+  // forma de corregirla, alguien con el navegador en inglés que prefiere
+  // español queda atrapado.
+  const LanguagePicker = ({ className = "" }: { className?: string }) => (
+    <div className={className}>
+      <p className="text-xs uppercase tracking-wide text-gray-400 mb-1.5">
+        {t("nav.languageLabel")}
+      </p>
+      <div className="flex gap-2">
+        {LOCALES.map((code) => (
+          <button
+            key={code}
+            type="button"
+            onClick={() => setLocale(code)}
+            aria-current={locale === code}
+            className={`text-sm px-2.5 py-1 rounded-full border transition-colors ${
+              locale === code
+                ? "border-blue-500 text-blue-600 font-medium"
+                : "border-gray-200 text-gray-500 hover:border-gray-300"
+            }`}
+          >
+            {LOCALE_LABELS[code]}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   const WelcomeButton = ({ open }: { open: boolean }) => (
     <div className="flex items-center border border-blue-500 py-1 px-4 rounded-full">
       <p className={`text-base font-medium ${open ? 'text-blue-500' : 'text-gray-900 hover:text-blue-500'} transition duration-200 ease-in-out`}>
-        ¡Bienvenid@ {user?.name || 'Usuario'}! 👋
+        {t("nav.welcome")} {user?.name || ""}! 👋
       </p>
       {open ? (
         <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -170,7 +177,7 @@ export default function Navbar() {
                 src="/media/logo-nav.png"
                 width={200}
                 height={56}
-                alt="FesaMedCare Logo"
+                alt={t("ui.altLogo")}
                 priority
                 style={{ width: "auto", height: "auto" }}
               />
@@ -180,19 +187,19 @@ export default function Navbar() {
                 href="/buscar-doctor"
                 className="4xl:text-lg text-base inline-flex font-medium leading-6 text-blue-700 border-b-2 border-white transition duration-300 ease-in-out hover:border-blue-700 mx-4"
               >
-                Buscar un Doctor
+                {t("nav.searchDoctor")}
               </Link>
               <Link
                 href="/about"
                 className="4xl:text-lg text-base inline-flex font-medium leading-6 text-blue-700 border-b-2 border-white transition duration-300 ease-in-out hover:border-blue-700 mx-4"
               >
-                Nosotros
+                {t("nav.about")}
               </Link>
               <Link
                 href="/contact"
                 className="4xl:text-lg text-base inline-flex font-medium leading-6 text-blue-700 border-b-2 border-white transition duration-300 ease-in-out hover:border-blue-700 mx-4"
               >
-                Contacto
+                {t("nav.contact")}
               </Link>
             </div>
           </div>
@@ -202,13 +209,13 @@ export default function Navbar() {
                     href="/login"
                     className="mr-4 text-base font-medium text-blue-700"
                   >
-                    Iniciar sesión
+                    {t("nav.login")}
                   </Link>
                   <Link
                     href="/register"
                     className="bg-blue-900 px-4 py-2 rounded-lg text-white hover:bg-blue-800 transition-all duration-200 ease-in-out text-base"
                   >
-                    ¡Regístrate!
+                    {t("nav.register")}
                   </Link>
                 </div>
               ) : (
@@ -234,22 +241,31 @@ export default function Navbar() {
                           <Popover.Panel className="absolute -right-28 z-10 mt-3 w-60 max-w-sm -translate-x-1/2 transform px-4 sm:px-0 lg:max-w-3xl">
                             <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
                               <div className="relative grid gap-8 bg-white p-7">
-                                {(isAdmin ? adminLinks : solutionsDesktop).map((item) => (
+                                {desktopLinks.map((item) => (
                                   <Link
-                                    key={item.name}
+                                    key={item.key}
                                     href={item.href}
                                     className="-m-3 flex items-center rounded-lg p-2 transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus-visible:ring focus-visible:ring-blue-500 focus-visible:ring-opacity-50"
                                   >
                                     <div className="ml-4">
                                       <p className="text-sm font-medium text-gray-900 hover:text-blue-500 transition duration-200 ease-in-out">
-                                        {item.name}
+                                        {t(item.key)}
                                       </p>
                                       <p className="text-sm text-gray-500">
-                                        {item.description}
+                                        {t(item.descKey)}
                                       </p>
                                     </div>
                                   </Link>
                                 ))}
+                              </div>
+                              {/*
+                                bg-white explícito: este bloque es hermano del
+                                grid de enlaces (que sí lo trae) y de la franja
+                                de cerrar sesión. Sin fondo propio se veía la
+                                página a través del panel.
+                              */}
+                              <div className="border-t bg-white px-7 py-4">
+                                <LanguagePicker />
                               </div>
                               <div className="bg-gray-50 p-4">
                                 <button
@@ -258,11 +274,11 @@ export default function Navbar() {
                                 >
                                   <span className="flex items-center">
                                     <span className="text-sm font-medium text-blue-500">
-                                      Cerrar Sesión
+                                      {t("nav.logout")}
                                     </span>
                                   </span>
                                   <span className="block text-sm text-gray-500 text-left">
-                                    Cerrar sesión en tu cuenta
+                                    {t("nav.logoutDesc")}
                                   </span>
                                 </button>
                               </div>
@@ -284,7 +300,7 @@ export default function Navbar() {
                 src="/media/logo-nav.png"
                 width={200}
                 height={56}
-                alt="FesaMedCare Logo"
+                alt={t("ui.altLogo")}
                 style={{ width: "auto", height: "auto" }}
               />
             </Link>
@@ -309,21 +325,22 @@ export default function Navbar() {
                     <Popover.Panel className="absolute top-10 right-0 w-screen h-screen mt-10 origin-top-right bg-white shadow-lg ring-1 ring-black ring-opacity-5">
                       <div className="flex flex-col p-8 mt-10 gap-4">
                         {/* Mostrar enlaces: cuando está cargando o no autenticado → enlaces públicos (incl. Iniciar sesión, Registrarse) */}
-                        {(loading || !isAuthenticated ? publicLinks : userLinks).map((item) => (
+                        {(loading || !isAuthenticated ? publicLinks : mobileLinks).map((item) => (
                           <Link
-                            key={item.name}
+                            key={item.key}
                             href={item.href}
                             className="text-lg font-medium text-gray-900 hover:text-blue-500 transition duration-200 ease-in-out"
                           >
-                            {item.name}
+                            {t(item.key)}
                           </Link>
                         ))}
+                        <LanguagePicker className="mt-4 border-t pt-4" />
                         {!loading && isAuthenticated && (
                           <button
                             onClick={handleLogout}
                             className="text-lg font-medium text-red-500 hover:text-red-700 transition duration-200 ease-in-out text-left mt-4 border-t pt-4"
                           >
-                            Cerrar Sesión
+                            {t("nav.logout")}
                           </button>
                         )}
                       </div>

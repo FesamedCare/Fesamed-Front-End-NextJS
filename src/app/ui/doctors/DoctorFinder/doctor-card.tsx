@@ -1,5 +1,8 @@
+"use client";
+
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 interface DoctorCardProps {
   name: string
@@ -9,6 +12,7 @@ interface DoctorCardProps {
 }
 
 export function DoctorCard({ name, specialty, clinic, imageUrl }: DoctorCardProps) {
+  const { t } = useTranslation();
   return (
     <Card className="w-full">
       <CardContent className="p-4">
@@ -27,7 +31,7 @@ export function DoctorCard({ name, specialty, clinic, imageUrl }: DoctorCardProp
             <p className="text-blue-600 font-medium">{clinic}</p>
             <h3 className="font-semibold text-lg">{name}</h3>
             <p className="text-gray-500">{specialty}</p>
-            <p className="text-gray-400">Reseñas</p>
+            <p className="text-gray-400">{t("misc.reviews")}</p>
           </div>
         </div>
       </CardContent>

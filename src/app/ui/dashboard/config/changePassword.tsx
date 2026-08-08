@@ -9,8 +9,10 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Eye, EyeOff } from "lucide-react"
 import { apiClient } from "@/lib/api"
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 export function CambiarContrasena() {
+  const { t } = useTranslation();
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -30,7 +32,7 @@ export function CambiarContrasena() {
     setSuccess(null)
 
     if (newPassword !== confirmPassword) {
-      setError("Las contraseñas no coinciden")
+      setError(t("settings.passwordMismatch"))
       return
     }
 
@@ -52,7 +54,7 @@ export function CambiarContrasena() {
     } catch (err) {
       // apiClient ya tradujo el detail del backend, incluidos los 422 de
       // política con la regla que falló.
-      setError(err instanceof Error ? err.message : "No se pudo cambiar la contraseña.")
+      setError(err instanceof Error ? err.message : t("settings.passwordChangeError"))
     } finally {
       setIsLoading(false)
     }
@@ -61,16 +63,15 @@ export function CambiarContrasena() {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-xl">Cambiar contraseña</CardTitle>
+        <CardTitle className="text-xl">{t("settings.changePassword")}</CardTitle>
         <CardDescription className="text-sm md:text-base">
-          Asegúrate de elegir una contraseña segura para proteger tu cuenta. Usa al menos 8 caracteres, incluyendo
-          mayúsculas, minúsculas, números y símbolos especiales.
+          {t("settings.passwordIntro")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="current-password">Ingresa tu Contraseña actual</Label>
+            <Label htmlFor="current-password">{t("settings.currentPassword")}</Label>
             <div className="relative">
               <Input
                 id="current-password"
@@ -95,7 +96,7 @@ export function CambiarContrasena() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="new-password">Contraseña nueva</Label>
+            <Label htmlFor="new-password">{t("settings.newPassword")}</Label>
             <div className="relative">
               <Input
                 id="new-password"
@@ -120,7 +121,7 @@ export function CambiarContrasena() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirmar contraseña</Label>
+            <Label htmlFor="confirm-password">{t("settings.confirmPassword")}</Label>
             <div className="relative">
               <Input
                 id="confirm-password"

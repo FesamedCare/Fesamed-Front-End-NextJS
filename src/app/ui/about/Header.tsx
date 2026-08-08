@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { Typewriter } from "react-simple-typewriter";
 import { useEffect, useRef } from "react";
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 function Header() {
+  const { t } = useTranslation();
     
   const typewriterRef = useRef<HTMLDivElement | null>(null);
 
@@ -39,14 +41,14 @@ function Header() {
             <div className=' flex flex-col items-center'>
               <div className='pb-10 pt-8 md:pt-0 lg:pt-0 text-center'>
               <p className='py-3 text-blue-400 font-semibold text-lg'>
-                FesamedCare | Qué hacemos ? 🧐
+                {t("about.eyebrow")}
               </p>
               <div className="font-semibold text-center xl:block lg:block md:block md:text-7xl text-5xl h-52 lg:text-8xl tracking-tight pb-9">
-                Transformamos la Salud,<br />
-                Mejoramos <span></span>
+                {t("about.titleLine1")}<br />
+                {t("about.titleLine2")} <span></span>
                 <span id='WritingContainer' ref={typewriterRef}>
                   <Typewriter
-                    words={['Sonrisas', 'Bienestar', 'Vidas!']}
+                    words={[t("about.typewriter1"), t("about.typewriter2"), t("about.typewriter3")]}
                     loop={0}
                     cursor
                     cursorStyle='_'
@@ -59,13 +61,13 @@ function Header() {
               </div>
 
               <p className='text-base lg:text-center xl:text-center md:text-center lg:block md:block hidden  text-gray-500'>
-              En FesamedCare, estamos revolucionando la forma en que recibes atención médica. Nuestro objetivo es conectar a los pacientes con especialistas certificados y experimentados en el momento que más lo necesitan. Creemos en brindar un servicio de calidad que sea accesible y eficiente, sin las molestias de las largas esperas y las filas interminables.
+              {t("about.body1")} {t("about.body2")} {t("about.body3")}
               </p>
 
               <article className='text-base sm:block lg:hidden md:hidden  text-gray-500'>
-                <p className="mb-4">En FesamedCare, estamos revolucionando la forma en que recibes atención médica.</p>
-                <p className="mb-4">Nuestro objetivo es conectar a los pacientes con especialistas certificados y experimentados en el momento que más lo necesitan.</p>
-                <p>Creemos en brindar un servicio de calidad que sea accesible y eficiente, sin las molestias de las largas esperas y las filas interminables.</p>
+                <p className="mb-4">{t("about.body1")}</p>
+                <p className="mb-4">{t("about.body2")}</p>
+                <p>{t("about.body3")}</p>
                 
               </article>
 
@@ -74,7 +76,7 @@ function Header() {
                   href="/buscar-doctor"
                   className="inline-block rounded-lg bg-blue-500 px-4 py-1.5 text-base font-semibold leading-7 text-white shadow-sm ring-1 ring-blue-500 hover:bg-blue-500 hover:ring-blue-500"
                 >
-                  Encuentra un doctor
+                  {t("landing.ctaFindDoctor")}
                   <span className="text-indigo-200" aria-hidden="true">
                     &rarr;
                   </span>
@@ -83,7 +85,7 @@ function Header() {
                   href='/about'
                   className="inline-block rounded-lg px-4 py-1.5 text-base font-semibold leading-7 text-gray-900 ring-1 ring-gray-900/10 hover:ring-gray-900/20"
                 >
-                  Nuestro Blog
+                  {t("about.ourBlog")}
                   <span className="text-gray-400" aria-hidden="true">
                     &rarr;
                   </span>

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 export type Option = {
   value: string
@@ -18,6 +19,7 @@ interface MultiSelectProps {
 }
 
 export function MultiSelect({ options, selected = [], onChange, placeholder }: MultiSelectProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = React.useState(false)
 
   return (
@@ -25,16 +27,16 @@ export function MultiSelect({ options, selected = [], onChange, placeholder }: M
       <PopoverTrigger asChild>
         <Button variant="grayblue" role="combobox" aria-expanded={open} className="w-full bg-gray-blue justify-between">
           {selected.length > 0
-            ? `${selected.length} seleccionado${selected.length !== 1 ? "s" : ""}`
-            : placeholder || "Seleccionar..."}
+            ? t("misc.selectedCount", { count: selected.length })
+            : placeholder || t("misc.selectPlaceholder")}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
         <Command>
-          <CommandInput placeholder="Buscar..." />
+          <CommandInput placeholder={t("common.search")} />
           <CommandList>
-            <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+            <CommandEmpty>{t("misc.noResults")}</CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
                 <CommandItem

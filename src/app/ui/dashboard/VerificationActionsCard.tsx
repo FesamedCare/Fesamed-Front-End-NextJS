@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 export function VerificationActionsCard() {
+  const { t } = useTranslation();
   // Estado y aviso salen los dos del contexto, que es la fuente única.
   // Antes llegaban por props que cada pantalla cableaba a mano, y eso ya causó
   // dos bugs: el porcentaje que no se refrescaba al verificar, y una página que
@@ -34,9 +36,9 @@ export function VerificationActionsCard() {
     setEmailMsg(null);
     try {
       await apiClient("/api/v1/resend-verification-email/", { method: "POST" });
-      setEmailMsg({ type: "success", text: "Correo enviado. Revisa tu bandeja (o MailHog en local)." });
+      setEmailMsg({ type: "success", text: t("verification.emailSent") });
     } catch (e) {
-      setEmailMsg({ type: "error", text: e instanceof Error ? e.message : "Error al enviar el correo." });
+      setEmailMsg({ type: "error", text: e instanceof Error ? e.message : t("verification.emailError") });
     } finally {
       setEmailLoading(false);
     }
@@ -44,7 +46,7 @@ export function VerificationActionsCard() {
 
   async function handleSendOtp() {
     if (!phone.trim()) {
-      setPhoneMsg({ type: "error", text: "Ingresa tu número de teléfono." });
+      setPhoneMsg({ type: "error", text: t("verification.enterPhone") });
       return;
     }
     setPhoneLoading(true);
@@ -52,9 +54,9 @@ export function VerificationActionsCard() {
     try {
       await apiClient("/api/v1/send-otp", { method: "POST", body: { phone_number: phone.trim() } });
       setOtpSent(true);
-      setPhoneMsg({ type: "success", text: "Código enviado. En local, revisa los logs del backend (docker logs web)." });
+      setPhoneMsg({ type: "success", text: t("verification.codeSent") });
     } catch (e) {
-      setPhoneMsg({ type: "error", text: e instanceof Error ? e.message : "Error al enviar el código." });
+      setPhoneMsg({ type: "error", text: e instanceof Error ? e.message : t("verification.codeError") });
     } finally {
       setPhoneLoading(false);
     }
@@ -62,7 +64,7 @@ export function VerificationActionsCard() {
 
   async function handleVerifyOtp() {
     if (!otpCode.trim()) {
-      setPhoneMsg({ type: "error", text: "Ingresa el código recibido." });
+      setPhoneMsg({ type: "error", text: t("verification.enterCode") });
       return;
     }
     setPhoneLoading(true);
@@ -73,13 +75,13 @@ export function VerificationActionsCard() {
         body: { phone_number: phone.trim(), code: otpCode.trim() },
       });
       if (res.ok) {
-        setPhoneMsg({ type: "success", text: "¡Teléfono verificado correctamente!" });
+        setPhoneMsg({ type: "success", text: t("verification.phoneVerified") });
         notifyProfileChanged();
       } else {
-        setPhoneMsg({ type: "error", text: "Código incorrecto o expirado. Intenta de nuevo." });
+        setPhoneMsg({ type: "error", text: t("verification.codeIncorrect") });
       }
     } catch (e) {
-      setPhoneMsg({ type: "error", text: e instanceof Error ? e.message : "Error al verificar el código." });
+      setPhoneMsg({ type: "error", text: e instanceof Error ? e.message : t("verification.verifyCodeError") });
     } finally {
       setPhoneLoading(false);
     }
@@ -88,7 +90,7 @@ export function VerificationActionsCard() {
   return (
     <Card className="border-blue-100 shadow-none mb-4">
       <CardHeader className="pb-2 pt-4 px-4">
-        <CardTitle className="text-sm font-semibold text-gray-700">Verificación de cuenta</CardTitle>
+        <CardTitle className="text-sm font-semibold text-gray-700">{t("misc.accountVerification")}</CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-4 space-y-5">
 
@@ -97,10 +99,10 @@ export function VerificationActionsCard() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
               <Mail className="h-4 w-4 text-blue-500 shrink-0" />
-              Correo electrónico
+              {t("verification.email")}
             </div>
             <p className="text-xs text-muted-foreground">
-              Recibirás un enlace en tu correo. En entorno local ábrelo en{" "}
+              {t("misc.emailLinkHint")}{" "}
               <span className="font-mono">localhost:8025</span> (MailHog).
             </p>
             <Button
@@ -111,9 +113,9 @@ export function VerificationActionsCard() {
               disabled={emailLoading}
             >
               {emailLoading ? (
-                <><Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />Enviando...</>
+                <><Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />{t("ui.sending")}</>
               ) : (
-                "Reenviar correo de verificación"
+                t("verification.resendVerification")
               )}
             </Button>
             {emailMsg && (
@@ -132,34 +134,34 @@ export function VerificationActionsCard() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
               <Phone className="h-4 w-4 text-blue-500 shrink-0" />
-              Número de teléfono
+              {t("verification.phone")}
             </div>
             {!otpSent ? (
               <>
                 <p className="text-xs text-muted-foreground">
-                  Ingresa tu número con código de país (ej. <span className="font-mono">+573001234567</span>).
-                  En local el código aparece en los logs del backend.
+                  {t("misc.phoneCountryHint")} <span className="font-mono">+573001234567</span>).
+                  {t("verification.phoneHint")}
                 </p>
                 <div className="flex gap-2 items-center">
                   <Input
-                    placeholder="+573001234567"
+                    placeholder={t("verification.phonePlaceholder")}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="max-w-[220px] h-8 text-sm"
                   />
                   <Button size="sm" variant="outline" onClick={handleSendOtp} disabled={phoneLoading}>
-                    {phoneLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Enviar código"}
+                    {phoneLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t("misc.sendCode")}
                   </Button>
                 </div>
               </>
             ) : (
               <>
                 <p className="text-xs text-muted-foreground">
-                  Ingresa el código de 6 dígitos.
+                  {t("verification.codeHint")}
                 </p>
                 <div className="flex gap-2 items-center">
                   <Input
-                    placeholder="000000"
+                    placeholder={t("verification.codePlaceholder")}
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value)}
                     maxLength={6}
@@ -172,7 +174,7 @@ export function VerificationActionsCard() {
                     className="text-xs text-blue-600 underline hover:text-blue-800"
                     onClick={() => { setOtpSent(false); setOtpCode(""); setPhoneMsg(null); }}
                   >
-                    Cambiar número
+                    {t("verification.changeNumber")}
                   </button>
                 </div>
               </>

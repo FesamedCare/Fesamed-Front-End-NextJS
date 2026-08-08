@@ -27,6 +27,7 @@ import { apiClient } from "@/lib/api";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { esFutura, hoyISO } from "@/lib/birthDate";
 import type { UserMe, UserGender } from "@/app/types/types";
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 // Sin la regla de edad mínima: esa es solo para profesionales. Un paciente
 // puede ser menor de edad. Ver src/app/api/v1/users/birth_date.py.
@@ -46,6 +47,7 @@ const patientProfileSchema = z.object({
 type PatientProfileValues = z.infer<typeof patientProfileSchema>;
 
 export function PatientProfileForm() {
+  const { t } = useTranslation();
   const { notifyProfileChanged } = useAuthContext();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,7 +124,7 @@ export function PatientProfileForm() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12 text-gray-500">
-        <Loader2 className="h-6 w-6 animate-spin mr-2" /> Cargando tus datos...
+        <Loader2 className="h-6 w-6 animate-spin mr-2" /> {t("ui.loadingYourData")}
       </div>
     );
   }
@@ -131,7 +133,7 @@ export function PatientProfileForm() {
     return (
       <div className="py-8 text-center">
         <p className="text-red-500 text-sm mb-4">{loadError}</p>
-        <Button variant="outline" onClick={cargar}>Reintentar</Button>
+        <Button variant="outline" onClick={cargar}>{t("common.retry")}</Button>
       </div>
     );
   }
@@ -145,7 +147,7 @@ export function PatientProfileForm() {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nombre</FormLabel>
+                <FormLabel>{t("profile.firstName")}</FormLabel>
                 <FormControl>
                   <Input {...field} disabled={isSubmitting} />
                 </FormControl>
@@ -158,7 +160,7 @@ export function PatientProfileForm() {
             name="lastname"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Apellido</FormLabel>
+                <FormLabel>{t("profile.lastName")}</FormLabel>
                 <FormControl>
                   <Input {...field} disabled={isSubmitting} />
                 </FormControl>
@@ -171,7 +173,7 @@ export function PatientProfileForm() {
             name="birth_date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Fecha de nacimiento</FormLabel>
+                <FormLabel>{t("profile.birthDate")}</FormLabel>
                 <FormControl>
                   <Input
                     type="date"
@@ -190,7 +192,7 @@ export function PatientProfileForm() {
             name="gender"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Género</FormLabel>
+                <FormLabel>{t("profile.gender")}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value ?? undefined}
@@ -198,13 +200,13 @@ export function PatientProfileForm() {
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecciona una opción" />
+                      <SelectValue placeholder={t("profile.pickOption")} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="MASCULINO">Masculino</SelectItem>
-                    <SelectItem value="FEMENINO">Femenino</SelectItem>
-                    <SelectItem value="OTRO">Otro</SelectItem>
+                    <SelectItem value="MASCULINO">{t("profile.male")}</SelectItem>
+                    <SelectItem value="FEMENINO">{t("profile.female")}</SelectItem>
+                    <SelectItem value="OTRO">{t("profile.other")}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -216,7 +218,7 @@ export function PatientProfileForm() {
             name="id_card"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Documento de identidad</FormLabel>
+                <FormLabel>{t("profile.idDocumentShort")}</FormLabel>
                 <FormControl>
                   <Input {...field} value={field.value ?? ""} disabled={isSubmitting} />
                 </FormControl>

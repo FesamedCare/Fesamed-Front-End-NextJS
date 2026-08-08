@@ -2,13 +2,23 @@
 
 import { useState, useEffect, type ReactNode } from "react";
 import Link from "next/link";
-import { AlertCircle, CheckCircle2, Loader2, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, ChevronRight, ChevronDown, ChevronUp, X } from "lucide-react";
 import { get } from "@/lib/api";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 const STORAGE_KEY = "doctor-verification-banner-collapsed";
+/**
+ * Sólo se descarta el aviso "aprobado": es informativo y no hay nada que hacer
+ * con él. Los otros estados piden una acción del doctor (completar, corregir,
+ * esperar revisión), así que se pueden plegar pero no cerrar.
+ *
+ * Se guarda junto con el estado descartado: si el perfil vuelve a cambiar
+ * —lo rechazan, manda cambios nuevos— el aviso reaparece solo.
+ */
+const DISMISS_KEY = "doctor-verification-banner-dismissed";
 
 export interface VerificationMissingItem {
   key: string;
@@ -28,6 +38,7 @@ export interface VerificationStatusCardProps {
 }
 
 export function VerificationStatusCard({ collapsible = false }: VerificationStatusCardProps) {
+  const { t } = useTranslation();
   // Se relee sola en cada cambio de perfil. Antes dependía de una prop
   // refreshTrigger que cada pantalla tenía que acordarse de pasar, y las que se
   // olvidaban mostraban el porcentaje viejo hasta recargar la página.
@@ -36,6 +47,7 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
+  const [dismissedFor, setDismissedFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (!collapsible || typeof window === "undefined") return;
@@ -45,7 +57,21 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
     } catch {
       // ignore
     }
+    try {
+      setDismissedFor(localStorage.getItem(DISMISS_KEY));
+    } catch {
+      // ignore
+    }
   }, [collapsible]);
+
+  const dismiss = (forState: string) => {
+    setDismissedFor(forState);
+    try {
+      localStorage.setItem(DISMISS_KEY, forState);
+    } catch {
+      // ignore
+    }
+  };
 
   const toggleCollapsed = () => {
     setCollapsed((c) => {
@@ -69,7 +95,7 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
       })
       .catch((e) => {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Error al cargar");
+          setError(e instanceof Error ? e.message : t("verification.loadError"));
           setStatus(null);
         }
       })
@@ -79,14 +105,14 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
     return () => {
       cancelled = true;
     };
-  }, [profileVersion]);
+  }, [profileVersion, t]);
 
   if (loading) {
     const loadingCard = (
       <Card className="border-amber-200 bg-amber-50/50">
         <CardContent className="p-4 flex items-center gap-3">
           <Loader2 className="h-5 w-5 animate-spin text-amber-600" />
-          <span className="text-sm text-amber-800">Cargando estado de verificación…</span>
+          <span className="text-sm text-amber-800">{t("misc.loadingVerification")}</span>
         </CardContent>
       </Card>
     );
@@ -106,14 +132,14 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
 
   const summary =
     hasPendingChanges
-      ? "Cambios pendientes de aprobación"
+      ? t("verification.pendingChangesTitle")
       : isApproved
-        ? "Perfil verificado"
+        ? t("verification.verifiedTitle")
         : isUnderReview
-          ? "Perfil en revisión"
+          ? t("verification.underReviewTitle")
           : isRejected
-            ? "Perfil rechazado"
-            : `Completa tu perfil para verificación (${completion_percentage}%)`;
+            ? t("verification.rejectedTitle")
+            : t("misc.completeForVerification", { pct: completion_percentage });
 
   const collapsedBarClass =
     hasPendingChanges
@@ -125,6 +151,8 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
           : isRejected
             ? "border-red-200 bg-red-50/50 text-red-800"
             : "border-amber-200 bg-amber-50/50 text-amber-800";
+
+  if (isApproved && dismissedFor === "APPROVED") return null;
 
   if (collapsible && collapsed) {
     return (
@@ -154,7 +182,7 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
       type="button"
       onClick={toggleCollapsed}
       className="shrink-0 rounded p-1 text-muted-foreground hover:bg-black/5 hover:text-foreground"
-      aria-label="Contraer aviso"
+      aria-label={t("verification.collapseLabel")}
     >
       <ChevronUp className="h-4 w-4" />
     </button>
@@ -177,13 +205,12 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
             <div className="text-sm text-amber-800">
-              <p className="font-medium">Cambios pendientes de aprobación</p>
+              <p className="font-medium">{t("verification.pendingChangesTitle")}</p>
               <p className="text-amber-700 mt-1">
-                Realizaste cambios en tu perfil y están siendo revisados por el equipo de Fesamed.
-                Tu perfil aprobado anterior sigue visible para los pacientes mientras tanto.
+                {t("verification.pendingChangesBody")}
               </p>
               <Button asChild variant="outline" size="sm" className="mt-2 border-amber-400 text-amber-800 hover:bg-amber-100">
-                <Link href="/dashboard/edit-doctor-profile">Ver mis cambios</Link>
+                <Link href="/dashboard/edit-doctor-profile">{t("verification.viewMyChanges")}</Link>
               </Button>
             </div>
           </div>
@@ -193,14 +220,25 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
   }
 
   if (isApproved) {
+    // Ya lo cerró y el perfil sigue aprobado: no vuelve a aparecer.
+    if (dismissedFor === "APPROVED") return null;
+
     return wrap(
       <Card className="border-green-200 bg-green-50/50">
         <CardContent className="p-4 flex items-center gap-3">
           <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
-          <div className="text-sm text-green-800">
-            <p className="font-medium">Perfil verificado</p>
-            <p className="text-green-700">Tu perfil está aprobado y visible en la búsqueda de doctores.</p>
+          <div className="min-w-0 flex-1 text-sm text-green-800">
+            <p className="font-medium">{t("verification.verifiedTitle")}</p>
+            <p className="text-green-700">{t("misc.approvedVisible")}</p>
           </div>
+          <button
+            type="button"
+            onClick={() => dismiss("APPROVED")}
+            aria-label={t("verification.dismiss")}
+            className="shrink-0 rounded-md p-1.5 text-green-700 transition-colors hover:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </CardContent>
       </Card>
     );
@@ -213,13 +251,12 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
             <div className="text-sm text-blue-800">
-              <p className="font-medium">Perfil en revisión</p>
+              <p className="font-medium">{t("verification.underReviewTitle")}</p>
               <p className="text-blue-700 mt-1">
-                Tu perfil ya alcanzó el 100% y está en cola de revisión. Un administrador de Fesamed lo revisará pronto;
-                cuando lo aprueben, aparecerás en la búsqueda de doctores.
+                {t("misc.underReviewFull")}
               </p>
               <p className="text-blue-600 mt-2 text-xs">
-                La revisión se hace en el panel de administración de Fesamed.
+                {t("verification.underReviewNote")}
               </p>
             </div>
           </div>
@@ -235,12 +272,12 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
             <div className="text-sm text-red-800">
-              <p className="font-medium">Perfil rechazado</p>
+              <p className="font-medium">{t("verification.rejectedTitle")}</p>
               <p className="text-red-700 mt-1">
-                Revisa tu correo y los comentarios del revisor. Corrige lo indicado y guarda de nuevo para volver a enviar.
+                {t("verification.rejectedBody")}
               </p>
               <Button asChild variant="outline" size="sm" className="mt-2">
-                <Link href="/dashboard/edit-doctor-profile">Editar perfil</Link>
+                <Link href="/dashboard/edit-doctor-profile">{t("verification.editProfile")}</Link>
               </Button>
             </div>
           </div>
@@ -255,10 +292,9 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
         <div className="flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="min-w-0 flex-1">
-            <p className="font-medium text-amber-900">Completa tu perfil para solicitar verificación</p>
+            <p className="font-medium text-amber-900">{t("misc.completeToRequest")}</p>
             <p className="text-amber-800 text-sm mt-1">
-              Para aparecer en la búsqueda de doctores, tu perfil debe estar al 100%. Cuando lo completes,
-              se enviará a revisión y un administrador lo aprobará desde el panel de Fesamed.
+              {t("misc.incompleteFull")}
             </p>
             <div className="mt-3 flex items-center gap-2">
               <div className="h-2 flex-1 rounded-full bg-amber-200 overflow-hidden">
@@ -279,7 +315,7 @@ export function VerificationStatusCard({ collapsible = false }: VerificationStat
                 </ul>
                 <Button asChild size="sm" className="mt-3 bg-amber-600 hover:bg-amber-700">
                   <Link href="/dashboard/edit-doctor-profile" className="inline-flex items-center gap-1">
-                    Ir a editar perfil <ChevronRight className="h-3.5 w-3.5" />
+                    {t("ui.goEditProfile")} <ChevronRight className="h-3.5 w-3.5" />
                   </Link>
                 </Button>
               </div>

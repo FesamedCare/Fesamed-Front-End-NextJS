@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/input"
+import { useTranslation } from "@/i18n/LocaleProvider";
 import {
   Select,
   SelectContent,
@@ -8,13 +9,14 @@ import {
 } from "@/components/ui/select"
 
 export function SearchSection() {
+  const { t } = useTranslation();
   return (
     <div className="w-full max-w-4xl mx-auto px-4">
-      <h1 className="text-4xl font-medium text-center mb-8">Encuentra un Doctor</h1>
+      <h1 className="text-4xl font-medium text-center mb-8">{t("misc.findADoctor")}</h1>
       <div className="flex flex-col gap-4 md:flex-row md:items-end">
         <Select>
           <SelectTrigger className="w-full md:w-[200px] bg-white rounded-full border-blue-500 text-blue-500 focus:ring-0">
-            <SelectValue placeholder="Selecciona tu locación" />
+            <SelectValue placeholder={t("misc.pickLocation")} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="cali">Cali</SelectItem>
@@ -25,7 +27,7 @@ export function SearchSection() {
         <div className="flex-1 relative">
           <Input
             type="text"
-            placeholder="Buscar por nombre / especialización"
+            placeholder={t("misc.searchByNamePlaceholder")}
             className="w-full bg-gray-50 rounded-full pl-10" // Añadimos padding-left para que el ícono no tape el texto
           />
           <svg

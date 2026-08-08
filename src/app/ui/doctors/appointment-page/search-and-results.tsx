@@ -13,6 +13,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Search, Loader2, MapPin, Stethoscope, Info } from "lucide-react";
+import { useTranslation } from "@/i18n/LocaleProvider";
 import {
   searchDoctors,
   getCities,
@@ -32,6 +33,7 @@ interface SearchAndResultsProps {
 }
 
 export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
+  const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [cityId, setCityId] = useState<string>("");
   const [departmentId, setDepartmentId] = useState<string>("");
@@ -129,10 +131,10 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
     <div className="container mx-auto xl:px-16 px-6 2xl:px-0 sm:px-16 py-4 md:py-6 lg:pb-32">
       <form onSubmit={handleSubmit} className="mb-6">
         <h1 className="text-3xl font-semibold text-center mb-2 text-gray-900">
-          Busca un doctor y agenda tu cita
+          {t("search.title")}
         </h1>
         <p className="text-center text-muted-foreground text-sm mb-6">
-          Solo se muestran doctores con perfil verificado por Fesamed.
+          {t("search.subtitle")}
         </p>
         {/*
             Cinco controles en una línea necesitan ~774px de mínimo: tres
@@ -145,10 +147,10 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
           <div className="max-w-4xl mx-auto flex flex-col gap-4 lg:flex-row lg:items-end lg:flex-wrap">
           <Select value={departmentId} onValueChange={(v) => setDepartmentId(v === "all" ? "" : v)}>
             <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[130px] bg-white rounded-full border-blue-500 text-blue-600 data-[placeholder]:text-blue-600/60">
-              <SelectValue placeholder="Departamento" />
+              <SelectValue placeholder={t("search.department")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los departamentos</SelectItem>
+              <SelectItem value="all">{t("search.allDepartments")}</SelectItem>
               {departments.map((d) => (
                 <SelectItem key={d.id} value={d.id}>
                   {d.name}
@@ -158,10 +160,10 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
           </Select>
           <Select value={cityId} onValueChange={(v) => setCityId(v === "all" ? "" : v)}>
             <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[130px] bg-white rounded-full border-blue-500 text-blue-600 data-[placeholder]:text-blue-600/60">
-              <SelectValue placeholder="Ciudad" />
+              <SelectValue placeholder={t("search.city")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas las ciudades</SelectItem>
+              <SelectItem value="all">{t("search.allCities")}</SelectItem>
               {cities.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.name}
@@ -171,10 +173,10 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
           </Select>
           <Select value={specialtyId} onValueChange={(v) => setSpecialtyId(v === "all" ? "" : v)}>
             <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[130px] bg-white rounded-full border-blue-500 text-blue-600 data-[placeholder]:text-blue-600/60">
-              <SelectValue placeholder="Especialidad" />
+              <SelectValue placeholder={t("search.specialty")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas las especialidades</SelectItem>
+              <SelectItem value="all">{t("search.allSpecialties")}</SelectItem>
               {specialties.map((s) => (
                 <SelectItem key={s.id} value={s.id}>
                   {s.name}
@@ -186,7 +188,7 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Nombre o especialización"
+              placeholder={t("search.queryPlaceholder")}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               className="pl-9 rounded-full bg-gray-50 border-blue-500/30"
@@ -196,10 +198,10 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Buscando...
+                {t("search.searching")}
               </>
             ) : (
-              "Buscar"
+              t("common.search")
             )}
           </Button>
         </div>
@@ -213,16 +215,18 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
         ) : doctors.length === 0 ? (
           <div className="text-center py-12 space-y-4">
             <p className="text-muted-foreground">
-              No hay doctores disponibles para mostrar.
+              {t("search.emptyTitle")}
             </p>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Solo aparecen perfiles de doctores que han sido aprobados por Fesamed. Si aplicaste filtros, prueba sin ellos para ver todos. Si eres doctor y no te ves, revisa que tu perfil esté enviado a verificación y aprobado.
+              {t("search.emptyBody")}
             </p>
           </div>
         ) : (
             <>
               <p className="text-muted-foreground mb-4">
-                {total} doctor{total !== 1 ? "es" : ""} encontrado{total !== 1 ? "s" : ""}
+                {total === 1
+                  ? t("search.resultsOne", { count: total })
+                  : t("search.resultsMany", { count: total })}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {doctors.map((doc) => (
@@ -266,7 +270,7 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
                               onSelectDoctor(doc.doctor_id);
                             }}
                           >
-                            Ver perfil y agendar
+                            {t("search.viewAndBook")}
                           </Button>
                         </div>
                       </div>
@@ -282,11 +286,11 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
         <div className="flex gap-2 items-start rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground">
           <Info className="h-5 w-5 shrink-0 mt-0.5" />
           <div>
-            <span className="font-medium text-foreground">Requisitos para aparecer en la búsqueda:</span>
+            <span className="font-medium text-foreground">{t("search.requirementsTitle")}</span>
             <ul className="mt-2 list-disc list-inside space-y-1">
-              <li>Cuenta con rol de doctor en Fesamed.</li>
-              <li>Perfil completado y enviado a verificación.</li>
-              <li>Perfil aprobado por Fesamed (revisión por el equipo).</li>
+              <li>{t("search.requirement1")}</li>
+              <li>{t("search.requirement2")}</li>
+              <li>{t("search.requirement3")}</li>
             </ul>
           </div>
         </div>

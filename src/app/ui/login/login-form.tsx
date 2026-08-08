@@ -5,8 +5,10 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { login } from "@/lib/api";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 function Form() {
+  const { t } = useTranslation();
   const [errorMessage, setErrorMessage] = useState(''); 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +46,7 @@ function Form() {
       if (err instanceof Error) {
         setErrorMessage(err.message);
       } else {
-        setErrorMessage("Error al iniciar sesión");
+        setErrorMessage(t("auth.loginError"));
       }
     } finally {
       setIsLoading(false);
@@ -58,10 +60,10 @@ function Form() {
           <div className="w-full md:mt-0 sm:max-w-md xl:p-0">
             <div className="p-6 sm:p-8">
               <h1 className="text-xl text-center font-bold leading-tight tracking-tight text-gray-900 md:text-2xl ">
-                Hola, Bienvenid@ 👋
+                {t("auth.loginGreeting")}
               </h1>
               <p className="text-gray-500 text-center mb-6">
-                Esperamos que estés bien!
+                {t("auth.loginSubtitle")}
               </p>
               <div className="flex flex-col items-center">
                 <form onSubmit={onSubmit} className="flex flex-col gap-6 w-80" action="#">
@@ -73,7 +75,7 @@ function Form() {
                       onChange={e => {onChange(e)}}
                       id="email"
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 "
-                      placeholder="Correo"
+                      placeholder={t("auth.emailPlaceholder")}
                       required
                       disabled={isLoading}
                     />
@@ -84,7 +86,7 @@ function Form() {
                       name="password"
                       value={password}
                       onChange={onChange}
-                      placeholder="Contraseña"
+                      placeholder={t("auth.passwordPlaceholder")}
                       className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10"
                       required
                       disabled={isLoading}
@@ -116,12 +118,12 @@ function Form() {
                   </button>
                   <div className="">
                     <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-                      Aún no tienes una cuenta?{" "}
+                      {t("misc.noAccountYet")}{" "}
                       <Link
                         href="/register"
                         className="font-medium text-primary-600 text-blue-500 hover:underline dark:text-primary-500"
                       >
-                        Registrarme
+                        {t("auth.signUpLink")}
                       </Link>
                     </p>
                     <p>
@@ -129,7 +131,7 @@ function Form() {
                         href="/forgot-password"
                         className="font-medium text-sm text-primary-600 text-blue-500 hover:underline dark:text-primary-500"
                       >
-                        Olvidaste tu contraseña?
+                        {t("auth.forgotPasswordLink")}
                       </Link>
                     </p>
                   </div>
@@ -138,7 +140,7 @@ function Form() {
                 <div className="flex flex-col gap-3">
                   <div>
                     <p className="w-full text-sm text-gray-500 text-center pt-5 ">
-                      Tambien puedes ingresar con:
+                      {t("auth.orContinueWith")}
                     </p>
                   </div>
                   <div className="flex justify-center gap-4">

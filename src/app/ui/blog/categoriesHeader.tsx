@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 interface Category {
   category_id: string;
@@ -24,6 +25,7 @@ interface BlogSearchProps {
 }
 
 export default function BlogSearch({ selectedCategory }: BlogSearchProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -88,10 +90,10 @@ export default function BlogSearch({ selectedCategory }: BlogSearchProps) {
         <div className="w-full sm:w-48">
           <Select onValueChange={handleCategoryChange} value={selectedCategory}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecciona una categoría" />
+              <SelectValue placeholder={t("misc.pickCategory")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="All">Todas</SelectItem>
+              <SelectItem value="All">{t("misc.allCategories")}</SelectItem>
               {categories.map((category) => (
                 <SelectItem key={category.category_id} value={category.slug}>
                   {category.name}
@@ -104,7 +106,7 @@ export default function BlogSearch({ selectedCategory }: BlogSearchProps) {
         <div className="relative flex-grow">
           <input
             type="text"
-            placeholder="Buscar Artículos..."
+            placeholder={t("misc.searchArticles")}
             className="w-full border border-gray-300 rounded-md py-2 pl-3 pr-10 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             onChange={handleSearchChange}
           />

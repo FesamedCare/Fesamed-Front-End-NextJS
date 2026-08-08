@@ -6,6 +6,7 @@ import './index.css';
 import DOMPurify from "isomorphic-dompurify";
 import Footer from "@/app/ui/navigation/footer";
 import { inter } from "@/app/layout";
+import { getTranslations } from "@/i18n/server";
 
 // Fetch individual post data
 async function fetchPost(slug: string): Promise<Post | null> {
@@ -37,12 +38,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return {
     title: post ? post.title : "Post no encontrado",
-    description: post ? post.description : "No hay descripción disponible.",
+    description: post ? post.description : "No description available.",
   };
 }
 
 // Página principal del Post
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { t } = await getTranslations();
   const { slug } = await params;
   const post = await fetchPost(slug);
 
@@ -71,7 +73,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 {publishedDate.toLocaleDateString()}
               </time>
             ) : (
-              <span>Fecha no disponible</span>
+              <span>{t("misc.dateUnavailable")}</span>
             )}
             {" · "}
             {post.time_read} min read
@@ -93,7 +95,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
           {/* Categoría */}
           <p className="text-sm text-gray-500 mb-2">
-            Categoría: <span className="font-semibold">{post.category?.name || "Sin categoría"}</span>
+            {t("misc.categoryLabel")} <span className="font-semibold">{post.category?.name || t("misc.uncategorized")}</span>
           </p>
 
           {/* Descripción */}

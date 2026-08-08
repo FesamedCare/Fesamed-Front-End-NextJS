@@ -9,8 +9,10 @@ import { Specialty, MedicalInsurance } from "@/app/types/types";
 import "./style.css";
 import { getRoles } from "@/lib/api";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 function Form() {
+  const { t } = useTranslation();
   const [enabled, setEnabled] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [errorAuth, setErrorAuth] = useState("");
@@ -196,13 +198,13 @@ function Form() {
 
     if (!validatePassword(password)) {
       setErrorMessage(
-        "Por favor, asegúrate de cumplir todos los requisitos de la contraseña"
+        t("register.passwordRequirementsError")
       );
       return;
     }
 
     if (!enabled) {
-      setErrorMessage("Debes aceptar los términos y condiciones");
+      setErrorMessage(t("register.mustAcceptTerms"));
       return;
     }
 
@@ -218,13 +220,13 @@ function Form() {
 
     const phone = (formData.phone_number || "").replace(/\D/g, "");
     if (phone.length < 10) {
-      setErrorMessage("Por favor, ingresa un número de teléfono válido");
+      setErrorMessage(t("register.invalidPhone"));
       return;
     }
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     if (!apiUrl) {
-      setErrorAuth("Error de configuración: falta la URL de la API");
+      setErrorAuth(t("register.missingApiUrl"));
       return;
     }
 
@@ -359,12 +361,12 @@ function Form() {
             </div>
           </div>
 
-          <h2 className="text-xl font-semibold text-gray-900 mb-1">¡Registro exitoso!</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-1">{t("register.successTitle")}</h2>
           <p className="text-sm text-gray-500 mb-4">
-            Tu cuenta ha sido creada. Te redirigiremos al inicio de sesión automáticamente.
+            {t("register.successBody")}
           </p>
           <p className="text-xs text-gray-400 mb-5">
-            Redirigiendo en <span className="font-medium text-gray-600">{countdown}s</span>…
+            {t("ui.redirectingIn")} <span className="font-medium text-gray-600">{countdown}s</span>…
           </p>
 
           <button
@@ -374,7 +376,7 @@ function Form() {
             }}
             className="w-full text-white bg-blue-950 hover:bg-blue-900 font-medium rounded-full text-sm px-5 py-2 transition-colors"
           >
-            Ir a iniciar sesión ahora
+            {t("register.goToLoginNow")}
           </button>
         </DialogContent>
       </Dialog>
@@ -387,7 +389,7 @@ function Form() {
                 Registro de Doctor 👨‍⚕️
               </h1>
               <p className="text-gray-500 text-center mb-4">
-                ¡Únete a nuestra red de profesionales!
+                {t("register.doctorTagline")}
               </p>
               <div className="flex flex-col items-center gap-1">
                 <form onSubmit={onSubmit} className="flex flex-col gap-5 w-80">
@@ -398,7 +400,7 @@ function Form() {
                       value={name}
                       onChange={onChange}
                       className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full px-2.5"
-                      placeholder="Nombre"
+                      placeholder={t("register.firstName")}
                       required
                     />
                   </div>
@@ -409,7 +411,7 @@ function Form() {
                       value={lastname}
                       onChange={onChange}
                       className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full px-2.5"
-                      placeholder="Apellido"
+                      placeholder={t("register.lastName")}
                       required
                     />
                   </div>
@@ -420,7 +422,7 @@ function Form() {
                       value={email}
                       onChange={onChange}
                       className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-                      placeholder="Correo"
+                      placeholder={t("register.email")}
                       required
                     />
                   </div>
@@ -432,7 +434,7 @@ function Form() {
                         onChange={(e) => handleSpecialtySearch(e.target.value)}
                         onFocus={() => setShowSpecialties(true)}
                         className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full px-2.5"
-                        placeholder="Buscar especialidad"
+                        placeholder={t("register.searchSpecialty")}
                         required
                       />
                       {showSpecialties && searchTerm && (
@@ -448,7 +450,7 @@ function Form() {
                           ))}
                           {filteredSpecialties.length === 0 && (
                             <div className="px-4 py-2 text-gray-500">
-                              No se encontraron especialidades
+                              {t("ui.noSpecialtiesFound")}
                             </div>
                           )}
                         </div>
@@ -457,7 +459,7 @@ function Form() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Seguros Médicos (Opcional)
+                      {t("register.insurancesOptional")}
                     </label>
                     <div className="relative insurance-dropdown">
                       <input
@@ -469,7 +471,7 @@ function Form() {
                         }}
                         onFocus={() => setShowInsurances(true)}
                         className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full px-2.5"
-                        placeholder="Buscar seguros médicos"
+                        placeholder={t("register.searchInsurances")}
                       />
                       {showInsurances && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -496,7 +498,7 @@ function Form() {
                             ))
                           ) : (
                             <div className="px-4 py-2 text-gray-500">
-                              No se encontraron seguros médicos
+                              {t("register.noInsurancesFound")}
                             </div>
                           )}
                         </div>
@@ -543,7 +545,7 @@ function Form() {
                       name="password"
                       value={password}
                       onChange={onChange}
-                      placeholder="Contraseña"
+                      placeholder={t("register.password")}
                       className="py-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10"
                       required
                     />
@@ -597,27 +599,27 @@ function Form() {
                       <div className="grid grid-cols-1 gap-2">
                         <PasswordRequirement
                           met={passwordRequirements.length}
-                          text="Mínimo 8 caracteres"
+                          text={t("register.ruleMinLength")}
                         />
                         <PasswordRequirement
                           met={passwordRequirements.uppercase}
-                          text="Al menos una mayúscula"
+                          text={t("register.ruleUppercase")}
                         />
                         <PasswordRequirement
                           met={passwordRequirements.lowercase}
-                          text="Al menos una minúscula"
+                          text={t("register.ruleLowercase")}
                         />
                         <PasswordRequirement
                           met={passwordRequirements.number}
-                          text="Al menos un número"
+                          text={t("register.ruleNumber")}
                         />
                         <PasswordRequirement
                           met={passwordRequirements.special}
-                          text="Al menos un carácter especial"
+                          text={t("register.ruleSpecial")}
                         />
                         <PasswordRequirement
                           met={passwordRequirements.notCommon}
-                          text="No usar contraseñas comunes"
+                          text={t("register.ruleNotCommon")}
                         />
                       </div>
                     </div>
@@ -636,7 +638,7 @@ function Form() {
                           />
                         </svg>
                         <span className="text-green-700 text-sm">
-                          ¡Contraseña segura! Puedes continuar.
+                          {t("register.passwordStrong")}
                         </span>
                       </div>
                     </div>
@@ -644,7 +646,7 @@ function Form() {
 
                   <div>
                     <label htmlFor="phone" className="sr-only">
-                      Teléfono
+                      {t("register.phone")}
                     </label>
                     <div className="relative mt-1 rounded-md shadow-sm">
                       <PhoneInput
@@ -682,13 +684,13 @@ function Form() {
                         htmlFor="terms"
                         className="font-light text-gray-500"
                       >
-                        Acepto
+                        {t("ui.accept")}
                         <Link
                           href="/terms"
                           className="font-medium text-primary-600 text-blue-500 hover:underline"
                         >
                           {" "}
-                          Términos y condiciones
+                          {t("register.termsLabel")}
                         </Link>
                       </label>
                     </div>
@@ -701,17 +703,17 @@ function Form() {
                     type="submit"
                     className="w-full text-white bg-blue-950 hover:bg-primary-700 focus:ring-2 focus:outline-none focus:ring-blue-300 focus:text-blue-500 focus:bg-white font-medium rounded-full text-lg px-5 py-1.5 text-center"
                   >
-                    Crear cuenta
+                    {t("ui.createAccount")}
                   </button>
                 </form>
                 <div className="pt-4 flex flex-col gap-7">
                   <p className="text-sm font-light text-gray-500">
-                    ¿Ya tienes una cuenta?{" "}
+                    {t("misc.alreadyHaveAccount")}{" "}
                     <Link
                       href="/login"
                       className="font-medium text-primary-600 text-blue-500 hover:underline"
                     >
-                      Iniciar Sesión
+                      {t("auth.alreadyHaveAccount")}
                     </Link>
                   </p>
                 </div>

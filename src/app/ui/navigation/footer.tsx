@@ -1,5 +1,8 @@
+"use client"
+
 import Link from "next/link"
 import Image from "next/image"
+import { useTranslation, type TranslationKey } from "@/i18n/LocaleProvider"
 
 // El Blog está fuera de la navegación a propósito: el frontend está hecho pero
 // el backend nunca se construyó. No hay tabla de posts, ni endpoint, ni forma de
@@ -7,25 +10,25 @@ import Image from "next/image"
 // existan GET /posts y GET /categories.
 const navigation = {
     clientes: [
-      { name: 'Pregunta Gratis a un Doctor', href: '#' },
-      { name: 'Buscar un Doctor', href: '/buscar-doctor' },
+      { key: 'footer.askFree' as TranslationKey, href: '#' },
+      { key: 'footer.findDoctor' as TranslationKey, href: '/buscar-doctor' },
     ],
     doctores: [
-      { name: 'FesamedCare Perfil', href: '/contact' },
+      { key: 'footer.doctorProfile' as TranslationKey, href: '/contact' },
       // Decía Agenda y apuntaba a /blog, que no tiene nada que ver. Ahora va a
       // la pantalla donde el doctor configura sus horarios.
-      { name: 'Agenda', href: '/dashboard/settings/availability' }
+      { key: 'footer.schedule' as TranslationKey, href: '/dashboard/availability' }
     ],
     trabaja: [
-      { name: 'Nosotros', href: '/about' },
-      { name: 'Contacto', href: '/contact' },
-      { name: 'Servicios', href: '/careers' },
-      { name: 'Testimonios', href: '/' },
+      { key: 'footer.about' as TranslationKey, href: '/about' },
+      { key: 'footer.contact' as TranslationKey, href: '/contact' },
+      { key: 'footer.services' as TranslationKey, href: '/careers' },
+      { key: 'footer.testimonials' as TranslationKey, href: '/' },
     ],
     legal: [
-      { name: 'Reclamos', href: '/contact' },
-      { name: 'Privacidad', href: '/terms' },
-      { name: 'Términos', href: '/terms' },
+      { key: 'footer.claims' as TranslationKey, href: '/contact' },
+      { key: 'footer.privacy' as TranslationKey, href: '/terms' },
+      { key: 'footer.terms' as TranslationKey, href: '/terms' },
     ],
     social: [
       {
@@ -85,10 +88,12 @@ const navigation = {
   }
 
 export default function Footer () {
+    const { t } = useTranslation()
+
     return (
         <footer className="bg-blue-800" aria-labelledby="footer-heading">
         <h2 id="footer-heading" className="sr-only">
-          Footer
+          {t("footer.heading")}
         </h2>
         <div className="mx-auto max-w-full py-12 px-4 sm:px-6 lg:py-16 lg:px-28">
           <div className="xl:grid xl:grid-cols-3 xl:gap-8">
@@ -100,7 +105,7 @@ export default function Footer () {
                 alt="Company"
               />
               <p className="text-base text-white">
-                Trabaja con nosotros para mejorar la calidad de vida de las personas.
+                {t("footer.tagline")}
               </p>
               <div className="flex space-x-6">
                 {navigation.social.map((item) => (
@@ -114,24 +119,24 @@ export default function Footer () {
             <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
               <div className="md:grid md:grid-cols-2 md:gap-8">
                 <div>
-                  <h3 className="text-base font-medium text-white">Pacientes</h3>
+                  <h3 className="text-base font-medium text-white">{t("footer.patients")}</h3>
                   <ul className="mt-4 space-y-4">
                     {navigation.clientes.map((item) => (
-                      <li key={item.name}>
+                      <li key={item.key}>
                         <Link href={item.href} className="text-base font-light text-white hover:text-white">
-                          {item.name}
+                          {t(item.key)}
                         </Link>
                       </li>
                     ))}
                   </ul>
                 </div>
                 <div className="mt-12 md:mt-0">
-                  <h3 className="text-base font-medium text-white">Especialistas</h3>
+                  <h3 className="text-base font-medium text-white">{t("footer.specialists")}</h3>
                   <ul className="mt-4 space-y-4">
                     {navigation.doctores.map((item) => (
-                      <li key={item.name}>
+                      <li key={item.key}>
                         <Link href={item.href} className="text-base font-light text-white hover:text-white">
-                          {item.name}
+                          {t(item.key)}
                         </Link>
                       </li>
                     ))}
@@ -140,24 +145,24 @@ export default function Footer () {
               </div>
               <div className="md:grid md:grid-cols-2 md:gap-8">
               <div className="mt-12 md:mt-0">
-                  <h3 className="text-base font-medium text-white">Más</h3>
+                  <h3 className="text-base font-medium text-white">{t("footer.more")}</h3>
                   <ul className="mt-4 space-y-4">
                     {navigation.legal.map((item) => (
-                      <li key={item.name}>
+                      <li key={item.key}>
                         <Link href={item.href} className="text-base font-light text-white hover:text-white">
-                          {item.name}
+                          {t(item.key)}
                         </Link>
                       </li>
                     ))}
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-base font-medium text-white">Trabaja con nosotros</h3>
+                  <h3 className="text-base font-medium text-white">{t("footer.workWithUs")}</h3>
                   <ul className="mt-4 space-y-4">
                     {navigation.trabaja.map((item) => (
-                      <li key={item.name}>
+                      <li key={item.key}>
                         <Link href={item.href} className="text-base font-light text-white hover:text-white">
-                          {item.name}
+                          {t(item.key)}
                         </Link>
                       </li>
                     ))}
@@ -167,7 +172,7 @@ export default function Footer () {
             </div>
           </div>
           <div className="mt-12 border-t border-gray-200 pt-8">
-            <p className="text-base text-white xl:text-center">&copy; www.fesamedcare.com | Todos los derechos reservados <span className="text-blue-400">2026</span></p>
+            <p className="text-base text-white xl:text-center">&copy; www.fesamedcare.com | {t("footer.rights")} <span className="text-blue-400">2026</span></p>
           </div>
         </div>
       </footer>

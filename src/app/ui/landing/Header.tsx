@@ -2,8 +2,12 @@ import Link from "next/link";
 import Image from "next/image";
 import Spline from "@splinetool/react-spline/next";
 import "./header.css";
+import { getTranslations } from "@/i18n/server";
+import { Multiline, flatten } from "@/i18n/Multiline";
 
-function Header() {
+async function Header() {
+  const { t } = await getTranslations();
+
   return (
     <main className="relative pt-5 lg:h-[90vh] md:h-[90vh] xl:lg:h-[90vh] h-auto transition-all duration-300 ease-in-out">
       {/* Spline background for large screens */}
@@ -16,27 +20,26 @@ function Header() {
           <div className="flex justify-between items-center">
             <div className="lg:mt-5 z-10 transition-all duration-300">
               <p className="text-center md:text-left lg:text-left xl:text-left 2xl:text-xl pb-3 text-blue-400 text-lg font-semibold transform transition-all duration-300">
-                Bienvenid@ a FesamedCare 👋
+                {t("landing.welcome")}
               </p>
               <p className="4xl:text-5xl header opacity-0 md:opacity-100 transform translate-y-4 md:translate-y-0 transition-all duration-500 ease-in-out font-semibold xl:block lg:block md:block md:text-4xl lg:text-4xl xl:text-4xl text-3xl tracking-tight pb-9 hidden">
-                Cambiando la forma en que <br /> recibes atención médica
+                <Multiline text={t("landing.headline")} />
               </p>
 
               {/* Mobile text with fade transition */}
               <p className="font-semibold header leading-4 opacity-100 md:opacity-0 transform transition-all duration-500 ease-in-out xl:hidden md:hidden lg:hidden headertext text-center tracking-tight pb-5">
-                Cambiando la forma en que recibes atención médica
+                {flatten(t("landing.headline"))}
               </p>
 
               <p className="text-lg text-gray-500 md:mb-8 lg:mb-8 xl:mb-8 mb-0 pt-8 md:pt-0 transform transition-all duration-300">
-                Aquí tu eliges especialistas certificados y con experiencia{" "}
-                <br /> en el momento que lo necesitas.
+                <Multiline text={t("landing.subhead")} />
               </p>
 
               <ul className="flex flex-col gap-4 py-10 sm:flex-row transition-all duration-300">
                 {[
-                  { href: "/services/service1", text: "Carillas de porcelana" },
-                  { href: "/services/service2", text: "Cirugias Plásticas" },
-                  { href: "/services/service3", text: "Implantes Dentales" },
+                  { href: "/services/service1", text: t("landing.serviceVeneers") },
+                  { href: "/services/service2", text: t("landing.serviceSurgery") },
+                  { href: "/services/service3", text: t("landing.serviceImplants") },
                 ].map((item, index) => (
                   <li
                     key={index}
@@ -69,7 +72,7 @@ function Header() {
                   href="/buscar-doctor"
                   className="inline-block rounded-lg bg-blue-500 px-4 py-1.5 text-base font-semibold leading-7 text-white shadow-sm ring-1 ring-blue-500 hover:bg-blue-500 hover:ring-blue-500 transform transition-all duration-300 hover:scale-105"
                 >
-                  Encuentra un doctor
+                  {t("landing.ctaFindDoctor")}
                   <span
                     className="text-indigo-200 transition-transform duration-300 group-hover:translate-x-1"
                     aria-hidden="true"
@@ -81,7 +84,7 @@ function Header() {
                   href="/about"
                   className="inline-block rounded-lg px-4 py-1.5 text-base font-semibold leading-7 text-gray-900 ring-1 ring-gray-900/10 hover:ring-gray-900/20 transform transition-all duration-300 hover:scale-105"
                 >
-                  Sobre nosotros
+                  {t("landing.ctaAbout")}
                   <span
                     className="text-gray-400 transition-transform duration-300 group-hover:translate-x-1"
                     aria-hidden="true"

@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { Loader2, ShieldAlert } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const { user, loading } = useAuthContext();
   const router = useRouter();
 
@@ -33,9 +35,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4">
         <ShieldAlert className="h-12 w-12 text-red-500" />
-        <h1 className="text-xl font-semibold text-gray-800">Acceso denegado</h1>
-        <p className="text-gray-500 text-sm">No tienes permisos para acceder al panel de administración.</p>
-        <Link href="/dashboard" className="text-blue-600 underline text-sm">Ir al dashboard</Link>
+        <h1 className="text-xl font-semibold text-gray-800">{t("ui.accessDenied")}</h1>
+        <p className="text-gray-500 text-sm">{t("admin.noPermission")}</p>
+        <Link href="/dashboard" className="text-blue-600 underline text-sm">{t("ui.goToDashboard")}</Link>
       </div>
     );
   }
@@ -44,11 +46,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b px-8 sm:px-20 xl:px-24 2xl:px-40 py-3 flex items-center gap-6">
         <Link href="/admin/review-queue" className="text-sm font-semibold text-blue-700 hover:underline">
-          Panel de Administración
+          {t("admin.panelTitle")}
         </Link>
         <span className="text-gray-300">|</span>
         <Link href="/admin/review-queue" className="text-sm text-gray-600 hover:text-blue-600">
-          Cola de revisión
+          {t("admin.reviewQueue")}
         </Link>
       </div>
       <div className="px-8 sm:px-20 xl:px-24 2xl:px-40 py-8">

@@ -1,18 +1,22 @@
+"use client";
+
 import { FC } from 'react';
 import { Post } from '../../types/types';
 import Link from 'next/link'; 
 import Image from 'next/image';
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 interface BlogCardHorizontalProps {
   posts: Post[];
 }
 
 export const BlogCardHorizontal: FC<BlogCardHorizontalProps> = ({ posts }) => {
+  const { t } = useTranslation();
   // Verificar si no hay posts
   if (!posts || posts.length === 0) {
     return (
       <div className='flex items-center justify-center text-gray-400 min-h-96'>
-        No hay publicaciones disponibles
+        {t("misc.noPosts")}
       </div>
     );
   }
@@ -40,7 +44,7 @@ export const BlogCardHorizontal: FC<BlogCardHorizontalProps> = ({ posts }) => {
                   <div className="flex-1">
                     <p className="text-sm font-medium text-blue-600">
                       <Link href={`blog/category/${post.category?.slug}`} className="hover:underline">
-                        {post.category?.name || "Sin categoría"}
+                        {post.category?.name || t("misc.uncategorized")}
                       </Link>
                     </p>
                     <Link href={`blog/${post.slug}`} className="mt-2 block">

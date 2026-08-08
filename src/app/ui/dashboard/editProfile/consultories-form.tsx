@@ -16,6 +16,7 @@ import { Pencil, Trash2, Upload, Plus, MapPin, Phone, Globe } from "lucide-react
 import ImagePreviewModal from "./image-preview-modal"
 import { MultiSelect, type Option } from "./multi-select"
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? ""
 const MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -59,6 +60,7 @@ const emptyForm: OfficeFormData = {
 }
 
 export default function ConsultoriesForm() {
+  const { t } = useTranslation();
   const { notifyProfileChanged } = useAuthContext();
   const [userId, setUserId] = useState<string | null>(null)
   const [offices, setOffices] = useState<ConsultingOffice[]>([])
@@ -181,7 +183,7 @@ export default function ConsultoriesForm() {
       !formData.postal_code
     ) {
       alert(
-        "Por favor completa los campos obligatorios: nombre, dirección, ciudad, teléfono y código postal."
+        t("profile.requiredFields")
       )
       return
     }
@@ -233,7 +235,7 @@ export default function ConsultoriesForm() {
   }
 
   const handleDeleteOffice = async (officeId: string) => {
-    if (!confirm("¿Estás seguro de que deseas eliminar este consultorio?")) return
+    if (!confirm(t("profile.confirmDeleteOffice"))) return
     setDeletingOfficeId(officeId)
     try {
       const res = await fetch(`${apiBase}/api/v1/me/consulting_office/${officeId}/`, {
@@ -259,7 +261,7 @@ export default function ConsultoriesForm() {
     if (!files || !userId) return
     const validFiles = Array.from(files).filter((f) => {
       if (f.size > MAX_FILE_SIZE) {
-        alert(`El archivo "${f.name}" excede el límite de 10 MB.`)
+        alert(t("profile.fileTooLarge", { name: f.name }))
         return false
       }
       return true
@@ -329,7 +331,7 @@ export default function ConsultoriesForm() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center p-12 text-gray-500">Cargando consultorios...</div>
+      <div className="flex justify-center p-12 text-gray-500">{t("ui.loadingOffices")}</div>
     )
   }
 
@@ -337,11 +339,11 @@ export default function ConsultoriesForm() {
     <div className="space-y-6 mt-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Mis consultorios</h3>
+        <h3 className="text-lg font-semibold">{t("profile.myOffices")}</h3>
         {formMode === "none" && (
           <Button onClick={openCreateForm} className="bg-blue-700 hover:bg-blue-800 gap-2">
             <Plus className="w-4 h-4" />
-            Agregar consultorio
+            {t("ui.addOffice")}
           </Button>
         )}
       </div>
@@ -355,20 +357,20 @@ export default function ConsultoriesForm() {
 
           {/* Office info */}
           <div className="border border-blue-100 rounded-lg p-4 space-y-3 bg-white">
-            <h5 className="font-medium text-sm text-gray-700">Información del consultorio</h5>
+            <h5 className="font-medium text-sm text-gray-700">{t("profile.officeInfo")}</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label>Nombre *</Label>
                 <Input
-                  placeholder="Ej. Consultorio Central"
+                  placeholder={t("profile.officeNamePlaceholder")}
                   value={formData.name}
                   onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
                 />
               </div>
               <div className="space-y-1">
-                <Label>Dirección *</Label>
+                <Label>{t("profile.address")}</Label>
                 <Input
-                  placeholder="Ej. Calle 123 # 45-67"
+                  placeholder={t("profile.addressPlaceholder")}
                   value={formData.address}
                   onChange={(e) => setFormData((p) => ({ ...p, address: e.target.value }))}
                 />
@@ -380,7 +382,7 @@ export default function ConsultoriesForm() {
                   onValueChange={(v) => setFormData((p) => ({ ...p, city_id: v }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona una ciudad" />
+                    <SelectValue placeholder={t("profile.pickCity")} />
                   </SelectTrigger>
                   <SelectContent>
                     {cities.map((city) => (
@@ -392,9 +394,9 @@ export default function ConsultoriesForm() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label>Código Postal *</Label>
+                <Label>{t("profile.postalCode")}</Label>
                 <Input
-                  placeholder="Ej. 110111"
+                  placeholder={t("profile.postalPlaceholder")}
                   value={formData.postal_code}
                   onChange={(e) => setFormData((p) => ({ ...p, postal_code: e.target.value }))}
                 />
@@ -404,20 +406,20 @@ export default function ConsultoriesForm() {
 
           {/* Contact info */}
           <div className="border border-blue-100 rounded-lg p-4 space-y-3 bg-white">
-            <h5 className="font-medium text-sm text-gray-700">Información de Contacto</h5>
+            <h5 className="font-medium text-sm text-gray-700">{t("profile.contactInfo")}</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label>Teléfono primario *</Label>
+                <Label>{t("profile.primaryPhone")}</Label>
                 <Input
-                  placeholder="Ej. +57 300 123 4567"
+                  placeholder={t("profile.phonePlaceholder")}
                   value={formData.phone_primary}
                   onChange={(e) => setFormData((p) => ({ ...p, phone_primary: e.target.value }))}
                 />
               </div>
               <div className="space-y-1">
-                <Label>Teléfono secundario</Label>
+                <Label>{t("profile.secondaryPhone")}</Label>
                 <Input
-                  placeholder="Número adicional (opcional)"
+                  placeholder={t("profile.secondaryPhonePlaceholder")}
                   value={formData.phone_secondary}
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, phone_secondary: e.target.value }))
@@ -425,7 +427,7 @@ export default function ConsultoriesForm() {
                 />
               </div>
               <div className="space-y-1 md:col-span-2">
-                <Label>Sitio web o link de Google Maps</Label>
+                <Label>{t("profile.website")}</Label>
                 <Input
                   placeholder="https://..."
                   value={formData.website_url}
@@ -437,12 +439,12 @@ export default function ConsultoriesForm() {
 
           {/* Payment methods */}
           <div className="border border-blue-100 rounded-lg p-4 space-y-3 bg-white">
-            <h5 className="font-medium text-sm text-gray-700">Métodos de Pago</h5>
+            <h5 className="font-medium text-sm text-gray-700">{t("profile.paymentMethods")}</h5>
             <MultiSelect
               options={paymentMethodOptions}
               selected={formData.payment_methods}
               onChange={(selected) => setFormData((p) => ({ ...p, payment_methods: selected }))}
-              placeholder="Selecciona métodos de pago"
+              placeholder={t("profile.paymentPlaceholder")}
             />
             {formData.payment_methods.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
@@ -492,7 +494,7 @@ export default function ConsultoriesForm() {
 
                 {photos.length === 0 ? (
                   <p className="text-sm text-gray-400 text-center py-6">
-                    Sin fotos. Sube imágenes de este consultorio.
+                    {t("profile.noPhotos")}
                   </p>
                 ) : (
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
@@ -515,7 +517,7 @@ export default function ConsultoriesForm() {
                             handleDeletePhoto(editingOfficeId, photo)
                           }}
                           disabled={deletingPhotoId === photo.id}
-                          aria-label="Eliminar foto"
+                          aria-label={t("profile.removePhoto")}
                         >
                           ×
                         </button>
@@ -529,13 +531,13 @@ export default function ConsultoriesForm() {
 
           {formMode === "create" && (
             <p className="text-xs text-gray-400 text-center">
-                Podrás subir fotos del consultorio después de guardarlo.
+                {t("profile.photosAfterSave")}
             </p>
           )}
 
           <div className="flex gap-3 justify-end">
             <Button variant="outline" onClick={cancelForm} disabled={isSaving}>
-              Cancelar
+              {t("common.cancel")}
             </Button>
             <Button
               className="bg-blue-700 hover:bg-blue-800"
@@ -551,10 +553,10 @@ export default function ConsultoriesForm() {
       {/* Empty state */}
       {offices.length === 0 && formMode === "none" && (
         <div className="text-center py-12 border-2 border-dashed border-blue-100 rounded-lg text-gray-500">
-          <p className="mb-3">No tienes consultorios registrados.</p>
+          <p className="mb-3">{t("ui.noOffices")}</p>
           <Button onClick={openCreateForm} variant="outline" className="gap-2">
             <Plus className="w-4 h-4" />
-            Agregar tu primer consultorio
+            {t("ui.addFirstOffice")}
           </Button>
         </div>
       )}
@@ -582,7 +584,7 @@ export default function ConsultoriesForm() {
                   className="gap-1 text-xs"
                 >
                   <Pencil className="w-3 h-3" />
-                  Editar
+                  {t("ui.edit")}
                 </Button>
                 <Button
                   variant="delete"
@@ -596,7 +598,7 @@ export default function ConsultoriesForm() {
                   ) : (
                     <>
                       <Trash2 className="w-3 h-3 mr-1" />
-                      Eliminar
+                      {t("ui.remove")}
                     </>
                   )}
                 </Button>
@@ -624,7 +626,7 @@ export default function ConsultoriesForm() {
                     className="flex items-center gap-1 text-blue-600 hover:underline"
                   >
                     <Globe className="w-3 h-3 shrink-0" />
-                    Sitio web
+                    {t("ui.website")}
                   </a>
                 )}
               </div>
@@ -674,7 +676,7 @@ export default function ConsultoriesForm() {
 
               {photos.length === 0 ? (
                 <p className="text-sm text-gray-400 text-center py-4">
-                  Sin fotos. Sube imágenes de este consultorio.
+                  {t("profile.noPhotos")}
                 </p>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
@@ -697,7 +699,7 @@ export default function ConsultoriesForm() {
                           handleDeletePhoto(office.id, photo)
                         }}
                         disabled={deletingPhotoId === photo.id}
-                        aria-label="Eliminar foto"
+                        aria-label={t("profile.removePhoto")}
                       >
                         ×
                       </button>

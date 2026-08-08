@@ -8,6 +8,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import ImagePreviewModal from "./image-preview-modal"
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 interface FileWithPreview extends File {
   preview?: string;
@@ -22,6 +23,7 @@ const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export default function UploadForm() {
+  const { t } = useTranslation();
   const [files, setFiles] = useState<FileWithPreview[]>([])
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewIndex, setPreviewIndex] = useState(0)
@@ -70,13 +72,13 @@ export default function UploadForm() {
   }, [])
 
   // Función para validar el tamaño del archivo
-  const validateFileSize = (file: File): boolean => {
+  const validateFileSize = useCallback((file: File): boolean => {
     if (file.size > MAX_FILE_SIZE) {
-      alert(`El archivo "${file.name}" excede el límite de 10 MB.`);
+      alert(t("profile.fileTooLarge", { name: file.name }));
       return false;
     }
     return true;
-  }
+  }, [t]);
 
   const onDrop = useCallback((acceptedFiles: FileWithPreview[]) => {
     // Filtra los archivos que exceden el tamaño máximo
@@ -90,7 +92,7 @@ export default function UploadForm() {
       )
       return [...prevFiles, ...newFiles]
     })
-  }, [])
+  }, [validateFileSize])
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -201,7 +203,7 @@ export default function UploadForm() {
     <div className="flex justify-center items-center w-full">
     <div className="w-full min-h-[70vh] space-y-4">
       <div className="border px-4 pt-4 pb-8 mt-8 border-blue-200 rounded-lg">
-      <h1 className="text-lg font-bold pt-4 pl-6 pb-8">Sube fotos de tus consultorios</h1>
+      <h1 className="text-lg font-bold pt-4 pl-6 pb-8">{t("profile.uploadOfficePhotos")}</h1>
       <div className="flex items-center justify-center">
       <div
         onDragOver={handleDragOver}
@@ -211,8 +213,8 @@ export default function UploadForm() {
         <div className="flex flex-col items-center gap-4">
           <ImageIcon className="w-12 h-12 text-blue-500" />
           <div>
-            <p className="text-lg mb-2">Haga clic o arrastre para cargar su archivo</p>
-            <p className="text-sm text-gray-500">PNG, JPG, SVG (Máximo 10 MB)</p>
+            <p className="text-lg mb-2">{t("profile.dropzoneHint")}</p>
+            <p className="text-sm text-gray-500">{t("profile.fileTypes")}</p>
           </div>
           <input
             type="file"
@@ -226,7 +228,7 @@ export default function UploadForm() {
             onClick={() => document.getElementById("file-upload")?.click()}
             className="bg-blue-500 hover:bg-blue-600"
           >
-            Seleccionar Archivos
+            {t("ui.selectFiles")}
           </Button>
         </div>
       </div>
@@ -235,7 +237,7 @@ export default function UploadForm() {
 
       {isLoading ? (
         <div className="flex justify-center p-8">
-          <p>Cargando imágenes...</p>
+          <p>{t("profile.loadingImages")}</p>
         </div>
       ) : (
         <>
@@ -258,7 +260,7 @@ export default function UploadForm() {
                       <p className="text-sm text-gray-500">{(file.size / (1024 * 1024)).toFixed(1)}MB</p>
                     )}
                     {file.isExisting && (
-                      <p className="text-sm text-gray-500">Imagen existente</p>
+                      <p className="text-sm text-gray-500">{t("profile.existingImage")}</p>
                     )}
                   </div>
                   <div className="flex gap-2">
@@ -272,7 +274,7 @@ export default function UploadForm() {
                           }
                         }}
                       >
-                        Vista previa
+                        {t("ui.preview")}
                       </Button>
                     )}
                     <Button 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { apiClient } from "@/lib/api";
 import { Loader2, Search, ChevronLeft, ChevronRight, User, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 interface ReviewItem {
   profile_version_id: string;
@@ -26,6 +27,7 @@ interface PageResponse {
 }
 
 export default function ReviewQueuePage() {
+  const { t } = useTranslation();
   const [data, setData] = useState<PageResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,9 +61,9 @@ export default function ReviewQueuePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Cola de revisión</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("admin.reviewQueue")}</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Perfiles de doctores con 100% de completitud pendientes de aprobación.
+          {t("admin.queueSubtitle")}
         </p>
       </div>
 
@@ -70,7 +72,7 @@ export default function ReviewQueuePage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Buscar por nombre o correo..."
+            placeholder={t("admin.searchPlaceholder")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
             className="pl-9"
@@ -80,7 +82,7 @@ export default function ReviewQueuePage() {
           type="submit"
           className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
         >
-          Buscar
+          {t("common.search")}
         </button>
       </form>
 
@@ -92,23 +94,23 @@ export default function ReviewQueuePage() {
       ) : error ? (
         <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-red-700 text-sm">
           {error}
-          <button onClick={load} className="ml-3 underline">Reintentar</button>
+          <button onClick={load} className="ml-3 underline">{t("common.retry")}</button>
         </div>
       ) : data?.items.length === 0 ? (
         <div className="text-center py-16 text-gray-500">
           <User className="h-10 w-10 mx-auto mb-3 text-gray-300" />
-          <p className="font-medium">No hay perfiles en cola de revisión</p>
-          {search && <p className="text-sm mt-1">No se encontraron resultados para "{search}"</p>}
+          <p className="font-medium">{t("admin.queueEmpty")}</p>
+          {search && <p className="text-sm mt-1">{t("admin.noSearchResults", { query: search })}</p>}
         </div>
       ) : (
         <div className="bg-white rounded-xl border overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">Doctor</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600 hidden md:table-cell">Correo</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600 hidden sm:table-cell">Completitud</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">Estado</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-600">{t("admin.colDoctor")}</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-600 hidden md:table-cell">{t("admin.colEmail")}</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-600 hidden sm:table-cell">{t("admin.colCompletion")}</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-600">{t("admin.colStatus")}</th>
                 <th className="px-5 py-3" />
               </tr>
             </thead>
@@ -134,7 +136,7 @@ export default function ReviewQueuePage() {
                   <td className="px-5 py-4">
                     <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 text-amber-700 text-xs px-2.5 py-1 font-medium">
                       <Clock className="h-3 w-3" />
-                      En revisión
+                      {t("admin.statusUnderReview")}
                     </span>
                   </td>
                   <td className="px-5 py-4 text-right">
@@ -154,7 +156,7 @@ export default function ReviewQueuePage() {
           {data && data.pages > 1 && (
             <div className="flex items-center justify-between px-5 py-3 border-t bg-gray-50 text-sm text-gray-600">
               <span>
-                Página {data.page} de {data.pages} · {data.total} solicitudes
+                {t("admin.pagination", { page: data.page, pages: data.pages, total: data.total })}
               </span>
               <div className="flex gap-1">
                 <button

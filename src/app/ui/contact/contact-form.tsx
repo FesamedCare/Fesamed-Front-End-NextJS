@@ -8,6 +8,7 @@ import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
 import '../../globals.css';
 import { useState } from 'react';
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 interface FormData {
   name: string;
@@ -19,6 +20,7 @@ interface FormData {
 }
 
 export default function Form() {
+  const { t } = useTranslation();
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -47,7 +49,7 @@ export default function Form() {
     e.preventDefault();
 
     if (!enabled) {
-      alert('Por favor, acepta los términos y condiciones.');
+      alert(t("misc.acceptTermsAlert"));
       return;
     }
 
@@ -70,13 +72,13 @@ export default function Form() {
           message: '',
           budget: '',
         });
-        alert('¡Mensaje enviado exitosamente!');
+        alert(t("misc.messageSent"));
       } else {
         throw new Error('Error al enviar el mensaje.');
       }
     } catch (error) {
       setLoading(false);
-      alert('Ocurrió un error. Inténtalo nuevamente.');
+      alert(t("misc.messageError"));
     }
   };
 
@@ -89,28 +91,28 @@ export default function Form() {
         <div className="bg-gray-50 py-16 px-4 sm:px-6 lg:col-span-2 lg:px-8 lg:py-14 xl:pr-12">
           <div className="mx-auto max-w-lg">
             <h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-              Contáctanos
+              {t("contact.title")}
             </h2>
             <p className="mt-3 text-lg leading-6 text-gray-500">
-              ¿Tienes alguna pregunta o comentario? ¡Estamos aquí para ayudarte!
+              {t("contact.subtitle")}
             </p>
             <dl className="mt-8 text-base text-gray-500">
               <div>
                 <dt className="sr-only">FesamedCare</dt>
                 <dd>
-                  <p>Health Services Company</p>
+                  <p>{t("contact.company")}</p>
                   <p>@FesamedCare</p>
                 </dd>
               </div>
               <div className="mt-6">
-                <dt className="sr-only">Phone number</dt>
+                <dt className="sr-only">{t("ui.srPhone")}</dt>
                 <dd className="flex">
                   <PhoneIcon className="h-6 w-6 flex-shrink-0 text-gray-400" aria-hidden="true" />
                   <span className="ml-3">+57 3207263798</span>
                 </dd>
               </div>
               <div className="mt-3">
-                <dt className="sr-only">Email</dt>
+                <dt className="sr-only">{t("ui.srEmail")}</dt>
                 <dd className="flex">
                   <EnvelopeIcon className="h-6 w-6 flex-shrink-0 text-gray-400" aria-hidden="true" />
                   <span className="ml-3">admin@fesamedcare.com</span>
@@ -118,9 +120,9 @@ export default function Form() {
               </div>
             </dl>
             <p className="mt-6 text-base text-gray-500">
-              Necesitas algún especialista?{' '}
+              {t("misc.needSpecialist")}{' '}
               <Link href="/buscar-doctor" className="font-medium text-gray-700 underline">
-                Ver especialistas disponibles
+                {t("contact.seeSpecialists")}
               </Link>
               .
             </p>
@@ -136,7 +138,7 @@ export default function Form() {
               value={name}
               onChange={onChange}
               required
-              placeholder="Nombre Completo"
+              placeholder={t("contact.fullName")}
               className="block w-full rounded-md border-gray-300 border py-3 px-4 shadow-sm focus:ring-indigo-500"
             />
             <input
@@ -145,7 +147,7 @@ export default function Form() {
               value={email}
               onChange={onChange}
               required
-              placeholder="Correo Electrónico"
+              placeholder={t("contact.email")}
               className="block w-full rounded-md border-gray-300 border py-3 px-4 shadow-sm focus:ring-indigo-500"
             />
             <PhoneInput
@@ -160,7 +162,7 @@ export default function Form() {
               value={subject}
               onChange={onChange}
               required
-              placeholder="Asunto / Motivo"
+              placeholder={t("contact.subject")}
               className="block w-full rounded-md border-gray-300 border py-3 px-4 shadow-sm focus:ring-indigo-500"
             />
             <textarea
@@ -169,7 +171,7 @@ export default function Form() {
               onChange={onChange}
               rows={4}
               required
-              placeholder="Descripción"
+              placeholder={t("contact.description")}
               className="block w-full rounded-md border-gray-300 border py-3 px-4 shadow-sm focus:ring-indigo-500"
             />
             <select
@@ -178,7 +180,7 @@ export default function Form() {
               onChange={onChange}
               className="block w-full rounded-md border-gray-300 border py-2 pl-3 pr-10"
             >
-              <option value="">Selecciona un presupuesto (Opcional)</option>
+              <option value="">{t("contact.budgetPlaceholder")}</option>
               <option value="0-5k">$0 - 5000</option>
               <option value="5-10k">$5,000 - 10,000</option>
               <option value="10-25k">$10,000 - 25,000</option>
@@ -200,11 +202,11 @@ export default function Form() {
               <span className="ml-4 text-gray-500">
                 Acepto los{' '}
                 <Link href="/terms" className="font-medium text-blue-600">
-                  términos y condiciones
+                  {t("misc.termsAndConditions")}
                 </Link>{' '}
                 y{' '}
                 <Link href="/privacy" className="font-medium text-blue-600">
-                  políticas de privacidad
+                  {t("misc.privacyPolicy")}
                 </Link>
                 .
               </span>

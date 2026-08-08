@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { format, addMonths, startOfToday, parseISO, isBefore, isAfter } from "date-fns";
-import { es } from "date-fns/locale";
+import { es, enUS } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { UserAvatar } from "@/components/UserAvatar";
+import { useTranslation, type TranslationKey } from "@/i18n/LocaleProvider";
 import Link from "next/link";
 import { getDoctorProfile, getDoctorAvailability, createAppointment } from "@/lib/doctors-api";
 import type { DoctorFullProfile, AvailabilitySlot, OfficeFull, CertificatePublic } from "@/app/types/types";
@@ -75,7 +76,7 @@ function PhotoCarousel({ photos, officeName }: { photos: string[]; officeName: s
 }
 
 // ─── Office card ──────────────────────────────────────────────────────────────
-function OfficeCard({ office }: { office: OfficeFull }) {
+function OfficeCard({ office, t }: { office: OfficeFull; t: (k: TranslationKey) => string }) {
   return (
     <div className="rounded-xl border bg-gray-50 p-4 space-y-3">
       <PhotoCarousel photos={office.photos} officeName={office.name} />
@@ -115,7 +116,7 @@ function OfficeCard({ office }: { office: OfficeFull }) {
       {office.payment_methods.length > 0 && (
         <div>
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1 mb-1.5">
-            <CreditCard className="h-3.5 w-3.5" /> Métodos de pago
+            <CreditCard className="h-3.5 w-3.5" /> {t("booking.paymentMethods")}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {office.payment_methods.map((pm) => (
@@ -131,12 +132,12 @@ function OfficeCard({ office }: { office: OfficeFull }) {
 }
 
 // ─── Certificates ─────────────────────────────────────────────────────────────
-function CertificatesSection({ certificates }: { certificates: CertificatePublic[] }) {
+function CertificatesSection({ certificates, t }: { certificates: CertificatePublic[]; t: (k: TranslationKey, v?: Record<string, string | number>) => string }) {
   if (!certificates.length) return null;
   return (
     <div className="mb-5">
       <h3 className="font-semibold mb-2.5 flex items-center gap-2 text-sm">
-        <Award className="h-4 w-4 text-blue-500" /> Certificados y títulos
+        <Award className="h-4 w-4 text-blue-500" /> {t("booking.certificates")}
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {certificates.map((cert, i) => (
@@ -148,7 +149,7 @@ function CertificatesSection({ certificates }: { certificates: CertificatePublic
             className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-gray-50 hover:bg-blue-50 hover:border-blue-200 transition-colors group"
           >
             <FileText className="h-8 w-8 text-gray-400 group-hover:text-blue-500 transition-colors" />
-            <span className="text-xs text-muted-foreground text-center">Certificado {i + 1}</span>
+            <span className="text-xs text-muted-foreground text-center">{t("booking.certificateLabel", { n: i + 1 })}</span>
           </a>
         ))}
       </div>
@@ -172,6 +173,8 @@ function ChipList({ items }: { items: string[] }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) {
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "en" ? enUS : es;
   const [profile, setProfile] = useState<DoctorFullProfile | null>(null);
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -193,11 +196,11 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
       const p = await getDoctorProfile(doctorId);
       setProfile(p);
     } catch {
-      setError("No se pudo cargar el perfil. Intenta de nuevo.");
+      setError(t("booking.profileLoadError"));
     } finally {
       setLoadingProfile(false);
     }
-  }, [doctorId]);
+  }, [doctorId, t]);
 
   const loadSlots = useCallback(async () => {
     setLoadingSlots(true);
@@ -231,9 +234,9 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
       await createAppointment(selectedSlot.id, profile.doctor_id);
       setSuccess(true);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "No se pudo agendar. Intenta de nuevo.";
+      const msg = e instanceof Error ? e.message : t("booking.bookError");
       if (msg.includes("401") || msg.includes("Session") || msg.includes("expired")) {
-        setError("Inicia sesión como paciente para agendar.");
+        setError(t("booking.loginAsPatient"));
       } else {
         setError(msg);
       }
@@ -248,8 +251,8 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
         {loadingProfile
           ? <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
           : <div className="text-center">
-              <p className="text-muted-foreground mb-4">{error || "Perfil no encontrado."}</p>
-              <Button variant="outline" onClick={onBack}>Volver a búsqueda</Button>
+              <p className="text-muted-foreground mb-4">{error || t("booking.profileNotFound")}</p>
+              <Button variant="outline" onClick={onBack}>{t("booking.backToSearch")}</Button>
             </div>
         }
       </div>
@@ -260,13 +263,13 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
     return (
       <div className="container max-w-lg mx-auto xl:px-16 px-6 py-12 text-center">
         <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-semibold mb-2">Cita agendada</h2>
+        <h2 className="text-2xl font-semibold mb-2">{t("booking.successTitle")}</h2>
         <p className="text-muted-foreground mb-6">
-          Tu cita con {profile.name} {profile.lastname} ha sido registrada. Revisa tu correo para más detalles.
+          {t("booking.successBody", { doctor: `${profile.name} ${profile.lastname}` })}
         </p>
         <div className="flex gap-2 justify-center flex-wrap">
-          <Button asChild><Link href="/dashboard/appointments">Ver mis citas</Link></Button>
-          <Button variant="outline" onClick={onBack}>Agendar otra cita</Button>
+          <Button asChild><Link href="/dashboard/appointments">{t("booking.viewMyAppointments")}</Link></Button>
+          <Button variant="outline" onClick={onBack}>{t("booking.bookAnother")}</Button>
         </div>
       </div>
     );
@@ -277,7 +280,7 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
   return (
     <div className="container mx-auto xl:px-16 px-6 2xl:px-0 sm:px-16 py-4 md:py-6 lg:py-5 lg:pb-32">
       <Button variant="ghost" onClick={onBack} className="mb-4 -ml-2">
-        <ArrowLeft className="h-4 w-4 mr-2" /> Volver a búsqueda
+        <ArrowLeft className="h-4 w-4 mr-2" /> {t("booking.backToSearch")}
       </Button>
 
       <div className="grid gap-8 lg:grid-cols-[3fr_2fr]">
@@ -287,7 +290,7 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
             <CardContent className="p-6">
               {/* Header row */}
               <div className="flex justify-between items-start mb-6">
-                <h1 className="text-2xl font-bold">Perfil del doctor</h1>
+                <h1 className="text-2xl font-bold">{t("booking.doctorProfileTitle")}</h1>
                 <Button variant="ghost" size="icon" onClick={() => setIsLiked(!isLiked)}>
                   <Heart className={cn("h-5 w-5", isLiked && "fill-blue-500 text-blue-500")} />
                 </Button>
@@ -317,7 +320,7 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
                   )}
                   {profile.professional_card_number && (
                     <p className="text-xs text-gray-400 mt-1">
-                      Tarjeta profesional: <span className="font-mono">{profile.professional_card_number}</span>
+                      {t("booking.professionalCard")} <span className="font-mono">{profile.professional_card_number}</span>
                     </p>
                   )}
                 </div>
@@ -329,7 +332,7 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
                   <div className="text-center p-3 bg-blue-50 rounded-lg">
                     <Clock className="h-4 w-4 mx-auto mb-1 text-blue-500" />
                     <div className="font-semibold text-sm">{profile.work_experience.length}+</div>
-                    <div className="text-xs text-muted-foreground">años exp.</div>
+                    <div className="text-xs text-muted-foreground">{t("booking.yearsExperience")}</div>
                   </div>
                 </div>
               )}
@@ -337,7 +340,7 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
               {/* Description */}
               {profile.description && (
                 <div className="mb-5">
-                  <h3 className="font-semibold mb-1.5">Sobre mí</h3>
+                  <h3 className="font-semibold mb-1.5">{t("booking.aboutMe")}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{profile.description}</p>
                 </div>
               )}
@@ -346,13 +349,13 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
               <div className="grid sm:grid-cols-2 gap-4 mb-5">
                 {profile.specialties?.length > 0 && (
                   <div>
-                    <h3 className="font-semibold mb-1.5 text-sm">Especialidades</h3>
+                    <h3 className="font-semibold mb-1.5 text-sm">{t("booking.specialties")}</h3>
                     <ChipList items={profile.specialties} />
                   </div>
                 )}
                 {profile.languages?.length > 0 && (
                   <div>
-                    <h3 className="font-semibold mb-1.5 text-sm">Idiomas</h3>
+                    <h3 className="font-semibold mb-1.5 text-sm">{t("booking.languages")}</h3>
                     <ChipList items={profile.languages} />
                   </div>
                 )}
@@ -361,7 +364,7 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
               {/* Universities */}
               {profile.universities?.length > 0 && (
                 <div className="mb-5">
-                  <h3 className="font-semibold mb-1.5 text-sm">Formación académica</h3>
+                  <h3 className="font-semibold mb-1.5 text-sm">{t("booking.education")}</h3>
                   <ChipList items={profile.universities} />
                 </div>
               )}
@@ -369,7 +372,7 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
               {/* Services */}
               {profile.services?.length > 0 && (
                 <div className="mb-5">
-                  <h3 className="font-semibold mb-1.5 text-sm">Servicios</h3>
+                  <h3 className="font-semibold mb-1.5 text-sm">{t("booking.services")}</h3>
                   <ChipList items={profile.services} />
                 </div>
               )}
@@ -377,7 +380,7 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
               {/* Treated diseases */}
               {profile.treated_diseases?.length > 0 && (
                 <div className="mb-5">
-                  <h3 className="font-semibold mb-1.5 text-sm">Enfermedades tratadas</h3>
+                  <h3 className="font-semibold mb-1.5 text-sm">{t("booking.treatedDiseases")}</h3>
                   <ChipList items={profile.treated_diseases} />
                 </div>
               )}
@@ -385,13 +388,13 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
               {/* Insurances */}
               {profile.insurances?.length > 0 && (
                 <div className="mb-5">
-                  <h3 className="font-semibold mb-1.5 text-sm">Aseguradoras aceptadas</h3>
+                  <h3 className="font-semibold mb-1.5 text-sm">{t("booking.insurances")}</h3>
                   <ChipList items={profile.insurances} />
                 </div>
               )}
 
               {/* Certificates */}
-              <CertificatesSection certificates={profile.certificates ?? []} />
+              <CertificatesSection certificates={profile.certificates ?? []} t={t} />
             </CardContent>
           </Card>
 
@@ -400,11 +403,11 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
             <div>
               <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-blue-500" />
-                Consultorios ({profile.offices.length})
+                {t("booking.officesTitle", { count: profile.offices.length })}
               </h2>
               <div className="space-y-4">
                 {profile.offices.map((office) => (
-                  <OfficeCard key={office.id} office={office} />
+                  <OfficeCard key={office.id} office={office} t={t} />
                 ))}
               </div>
             </div>
@@ -415,26 +418,26 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
         <div className="lg:sticky lg:top-24 h-fit">
           <Card>
             <CardContent className="p-6">
-              <h2 className="text-xl font-bold mb-5">Agendar cita</h2>
+              <h2 className="text-xl font-bold mb-5">{t("booking.bookTitle")}</h2>
 
               {error && (
                 <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
                   {error}
                   {error.includes("sesión") && (
                     <span className="block mt-2">
-                      <Link href="/login" className="underline font-medium">Iniciar sesión</Link>
+                      <Link href="/login" className="underline font-medium">{t("booking.signInLink")}</Link>
                     </span>
                   )}
                 </div>
               )}
 
               <div className="mb-5 flex flex-col items-center">
-                <h3 className="font-semibold mb-3 self-start text-sm">Selecciona la fecha</h3>
+                <h3 className="font-semibold mb-3 self-start text-sm">{t("booking.pickDate")}</h3>
                 <Calendar
                   mode="single"
                   selected={selectedDate}
                   onSelect={(d) => { setSelectedDate(d); setSelectedSlot(null); }}
-                  locale={es}
+                  locale={dateLocale}
                   disabled={(date) => isBefore(date, today) || isAfter(date, maxDate)}
                   className="rounded-md border"
                 />
@@ -442,11 +445,11 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
 
               {selectedDate && (
                 <div className="mb-5">
-                  <h3 className="font-semibold mb-3 text-sm">Horarios disponibles</h3>
+                  <h3 className="font-semibold mb-3 text-sm">{t("booking.availableSlots")}</h3>
                   {loadingSlots
                     ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                     : availableSlotsByDate.length === 0
-                      ? <p className="text-sm text-muted-foreground">No hay turnos para esta fecha. Elige otra.</p>
+                      ? <p className="text-sm text-muted-foreground">{t("booking.noSlots")}</p>
                       : (
                         <div className="grid grid-cols-2 gap-2">
                           {availableSlotsByDate.map((slot) => (
@@ -471,8 +474,8 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
                 onClick={handleConfirm}
               >
                 {submitting
-                  ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Confirmando...</>
-                  : "Confirmar cita"
+                  ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />{t("booking.confirming")}</>
+                  : t("booking.confirmBooking")
                 }
               </Button>
             </CardContent>

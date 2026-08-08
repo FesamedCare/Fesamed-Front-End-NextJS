@@ -10,6 +10,7 @@ import {
   ImageIcon, FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation, type TranslationKey } from "@/i18n/LocaleProvider";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ function ScalarField({ label, diff }: { label: string; diff: ScalarDiff }) {
   );
 }
 
-function CollectionField({ label, diff }: { label: string; diff: CollDiff }) {
+function CollectionField({ label, diff, t }: { label: string; diff: CollDiff; t: (k: TranslationKey) => string }) {
   const hasChanges = diff.added.length > 0 || diff.removed.length > 0;
 
   return (
@@ -116,30 +117,30 @@ function CollectionField({ label, diff }: { label: string; diff: CollDiff }) {
           </span>
         ))}
         {!hasChanges && diff.unchanged.length === 0 && (
-          <span className="text-xs text-gray-400 italic">Sin datos</span>
+          <span className="text-xs text-gray-400 italic">{t("ui.noData")}</span>
         )}
       </div>
     </div>
   );
 }
 
-function CertificatesField({ diff }: { diff: CertDiff }) {
+function CertificatesField({ diff, t }: { diff: CertDiff; t: (k: TranslationKey) => string }) {
   if (diff.added.length === 0 && diff.removed.length === 0) return null;
 
   return (
     <div className="rounded-lg border p-4 space-y-2">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Certificados</p>
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t("ui.certificates")}</p>
       <div className="flex flex-wrap gap-3">
         {diff.added.map((c) => (
           <a key={c.id} href={c.url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs bg-green-50 border border-green-200 text-green-700 rounded px-2.5 py-1.5 hover:bg-green-100">
-            <Plus className="h-3 w-3" /><FileText className="h-3 w-3" />Nuevo certificado
+            <Plus className="h-3 w-3" /><FileText className="h-3 w-3" />{t("ui.newCertificate")}
           </a>
         ))}
         {diff.removed.map((c) => (
           <a key={c.id} href={c.url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs bg-red-50 border border-red-200 text-red-700 rounded px-2.5 py-1.5 hover:bg-red-100 line-through">
-            <Minus className="h-3 w-3" /><FileText className="h-3 w-3" />Certificado eliminado
+            <Minus className="h-3 w-3" /><FileText className="h-3 w-3" />{t("ui.removedCertificate")}
           </a>
         ))}
       </div>
@@ -147,7 +148,7 @@ function CertificatesField({ diff }: { diff: CertDiff }) {
   );
 }
 
-function ProfilePictureDiff({ diff }: { diff: ScalarDiff }) {
+function ProfilePictureDiff({ diff, t }: { diff: ScalarDiff; t: (k: TranslationKey) => string }) {
   const currentUrl = diff.to ?? diff.value ?? null;
   const previousUrl = diff.from ?? null;
   const isNew = diff.status === "added";
@@ -156,13 +157,13 @@ function ProfilePictureDiff({ diff }: { diff: ScalarDiff }) {
 
   return (
     <div className="rounded-lg border p-4 space-y-2">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Foto de perfil</p>
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t("ui.profilePhoto")}</p>
       <div className="flex gap-6 flex-wrap items-start">
         {/* Foto anterior (solo cuando hay cambio) */}
         {isModified && previousUrl && (
           <div className="space-y-1">
-            <p className="text-xs text-red-600 flex items-center gap-1"><Minus className="h-3 w-3" />Anterior</p>
-            <Image src={previousUrl} alt="Foto anterior" width={80} height={80}
+            <p className="text-xs text-red-600 flex items-center gap-1"><Minus className="h-3 w-3" />{t("ui.previous")}</p>
+            <Image src={previousUrl} alt={t("ui.previousPhoto")} width={80} height={80}
               className="rounded-lg object-cover border-2 border-red-200 opacity-60" />
           </div>
         )}
@@ -171,16 +172,16 @@ function ProfilePictureDiff({ diff }: { diff: ScalarDiff }) {
         {currentUrl ? (
           <div className="space-y-1">
             <p className={`text-xs flex items-center gap-1 ${isUnchanged ? "text-gray-500" : "text-green-600"}`}>
-              {isNew && <><Plus className="h-3 w-3" />Primera foto</>}
-              {isModified && <><Plus className="h-3 w-3" />Nueva foto</>}
-              {isUnchanged && <><Equal className="h-3 w-3" />Foto actual</>}
+              {isNew && <><Plus className="h-3 w-3" />{t("ui.firstPhoto")}</>}
+              {isModified && <><Plus className="h-3 w-3" />{t("ui.newPhoto")}</>}
+              {isUnchanged && <><Equal className="h-3 w-3" />{t("ui.currentPhoto")}</>}
             </p>
-            <Image src={currentUrl} alt="Foto de perfil" width={80} height={80}
+            <Image src={currentUrl} alt={t("ui.profilePhoto")} width={80} height={80}
               className={`rounded-lg object-cover border-2 ${isUnchanged ? "border-gray-200" : "border-green-300"}`} />
           </div>
         ) : (
           <div className="flex items-center gap-2 text-xs text-gray-400 italic">
-            <ImageIcon className="h-4 w-4" />Sin foto de perfil
+            <ImageIcon className="h-4 w-4" />{t("ui.noProfilePhoto")}
           </div>
         )}
       </div>
@@ -191,6 +192,7 @@ function ProfilePictureDiff({ diff }: { diff: ScalarDiff }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ReviewDetailPage() {
+  const { t } = useTranslation();
   const { versionId } = useParams<{ versionId: string }>();
   const router = useRouter();
 
@@ -217,7 +219,7 @@ export default function ReviewDetailPage() {
     setActionMsg(null);
     try {
       await apiClient(`/api/v1/admin/review-queue/${versionId}/approve/`, { method: "POST" });
-      setActionMsg({ type: "success", text: "Perfil aprobado exitosamente. El doctor recibirá un correo de notificación." });
+      setActionMsg({ type: "success", text: t("admin.approved") });
       setTimeout(() => router.push("/admin/review-queue"), 2000);
     } catch (e) {
       setActionMsg({ type: "error", text: e instanceof Error ? e.message : "Error al aprobar" });
@@ -235,7 +237,7 @@ export default function ReviewDetailPage() {
         method: "POST",
         body: { reject_reason: rejectReason.trim() },
       });
-      setActionMsg({ type: "success", text: "Perfil rechazado. El doctor recibirá un correo con el motivo." });
+      setActionMsg({ type: "success", text: t("admin.rejected") });
       setTimeout(() => router.push("/admin/review-queue"), 2000);
     } catch (e) {
       setActionMsg({ type: "error", text: e instanceof Error ? e.message : "Error al rechazar" });
@@ -255,8 +257,8 @@ export default function ReviewDetailPage() {
   if (error || !detail) {
     return (
       <div className="rounded-lg bg-red-50 border border-red-200 p-6 text-red-700 text-sm space-y-2">
-        <p>{error ?? "No se encontró el perfil."}</p>
-        <Link href="/admin/review-queue" className="underline">Volver a la cola</Link>
+        <p>{error ?? t("admin.profileNotFound")}</p>
+        <Link href="/admin/review-queue" className="underline">{t("ui.backToQueue")}</Link>
       </div>
     );
   }
@@ -281,7 +283,7 @@ export default function ReviewDetailPage() {
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Revisión de perfil</h1>
+          <h1 className="text-xl font-bold text-gray-900">{t("admin.profileReview")}</h1>
           <p className="text-xs text-gray-400 font-mono mt-0.5">{versionId}</p>
         </div>
       </div>
@@ -289,22 +291,22 @@ export default function ReviewDetailPage() {
       {/* Meta info */}
       <div className="bg-white rounded-xl border p-4 grid grid-cols-2 gap-4 text-sm">
         <div>
-          <p className="text-xs text-gray-400 mb-0.5">Última actualización del borrador</p>
+          <p className="text-xs text-gray-400 mb-0.5">{t("admin.draftUpdated")}</p>
           <p className="font-medium text-gray-800">{fmtDate(meta.draft_updated_at)}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-400 mb-0.5">Versión aprobada anterior</p>
+          <p className="text-xs text-gray-400 mb-0.5">{t("admin.previousApproved")}</p>
           <p className="font-medium text-gray-800">
             {isFirstVersion ? (
-              <span className="text-blue-600 bg-blue-50 rounded px-2 py-0.5 text-xs">Primera versión</span>
+              <span className="text-blue-600 bg-blue-50 rounded px-2 py-0.5 text-xs">{t("admin.firstVersion")}</span>
             ) : fmtDate(meta.approved_updated_at)}
           </p>
         </div>
         <div>
-          <p className="text-xs text-gray-400 mb-0.5">Cambios detectados</p>
+          <p className="text-xs text-gray-400 mb-0.5">{t("ui.changesDetected")}</p>
           <p className="font-medium text-gray-800">
             {totalChanges === 0
-              ? <span className="text-gray-400">Sin cambios respecto a la versión aprobada</span>
+              ? <span className="text-gray-400">{t("admin.noChangesVsApproved")}</span>
               : <span className="text-amber-700">{totalChanges} cambio{totalChanges !== 1 ? "s" : ""}</span>}
           </p>
         </div>
@@ -316,20 +318,20 @@ export default function ReviewDetailPage() {
           {isFirstVersion ? "Contenido del perfil" : "Cambios propuestos"}
         </h2>
 
-        <ProfilePictureDiff diff={diff.profile_picture} />
-        <ScalarField label="Descripción profesional" diff={diff.description} />
-        <ScalarField label="Número de tarjeta profesional" diff={diff.professional_card_number} />
-        <CollectionField label="Especialidades" diff={diff.specialties} />
-        <CollectionField label="Idiomas" diff={diff.languages} />
-        <CollectionField label="Universidades" diff={diff.universities} />
-        <CollectionField label="Enfermedades tratadas" diff={diff.treated_diseases} />
-        <CollectionField label="Servicios" diff={diff.services} />
-        <CollectionField label="Seguros médicos" diff={diff.medical_insurances} />
-        <CertificatesField diff={diff.certificates} />
+        <ProfilePictureDiff diff={diff.profile_picture} t={t} />
+        <ScalarField label={t("admin.fieldDescription")} diff={diff.description} />
+        <ScalarField label={t("admin.fieldCardNumber")} diff={diff.professional_card_number} />
+        <CollectionField label={t("admin.fieldSpecialties")} diff={diff.specialties} t={t} />
+        <CollectionField label={t("admin.fieldLanguages")} diff={diff.languages} t={t} />
+        <CollectionField label={t("admin.fieldUniversities")} diff={diff.universities} t={t} />
+        <CollectionField label={t("admin.fieldDiseases")} diff={diff.treated_diseases} t={t} />
+        <CollectionField label={t("admin.fieldServices")} diff={diff.services} t={t} />
+        <CollectionField label={t("admin.fieldInsurances")} diff={diff.medical_insurances} t={t} />
+        <CertificatesField diff={diff.certificates} t={t} />
 
         {isFirstVersion && totalChanges === 0 && (
           <div className="rounded-lg bg-gray-50 border border-dashed p-8 text-center text-sm text-gray-400">
-            No se detectaron diferencias con la versión aprobada anterior.
+            {t("admin.noDiff")}
           </div>
         )}
       </div>
@@ -351,7 +353,7 @@ export default function ReviewDetailPage() {
       {/* Actions */}
       {!actionMsg && (
         <div className="bg-white rounded-xl border p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-gray-700">Decisión</h2>
+          <h2 className="text-sm font-semibold text-gray-700">{t("admin.decision")}</h2>
 
           {!showRejectForm ? (
             <div className="flex gap-3 flex-wrap">
@@ -361,26 +363,26 @@ export default function ReviewDetailPage() {
                 className="bg-green-600 hover:bg-green-700 text-white gap-2"
               >
                 {approving
-                  ? <><Loader2 className="h-4 w-4 animate-spin" />Aprobando...</>
-                  : <><CheckCircle2 className="h-4 w-4" />Aprobar perfil</>}
+                  ? <><Loader2 className="h-4 w-4 animate-spin" />{t("ui.approving")}</>
+                  : <><CheckCircle2 className="h-4 w-4" />{t("ui.approveProfile")}</>}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowRejectForm(true)}
                 className="border-red-300 text-red-600 hover:bg-red-50 gap-2"
               >
-                <XCircle className="h-4 w-4" />Rechazar perfil
+                <XCircle className="h-4 w-4" />{t("ui.rejectProfile")}
               </Button>
             </div>
           ) : (
             <div className="space-y-3">
               <label className="text-sm text-gray-700 font-medium">
-                Motivo del rechazo <span className="text-red-500">*</span>
+                {t("ui.rejectReason")} <span className="text-red-500">*</span>
               </label>
               <textarea
                 className="w-full border rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300"
                 rows={3}
-                placeholder="Describe claramente el motivo del rechazo para que el doctor pueda corregirlo..."
+                placeholder={t("ui.rejectReasonPlaceholder")}
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
               />
@@ -391,14 +393,14 @@ export default function ReviewDetailPage() {
                   className="bg-red-600 hover:bg-red-700 text-white gap-2"
                 >
                   {rejecting
-                    ? <><Loader2 className="h-4 w-4 animate-spin" />Rechazando...</>
-                    : <><XCircle className="h-4 w-4" />Confirmar rechazo</>}
+                    ? <><Loader2 className="h-4 w-4 animate-spin" />{t("ui.rejecting")}</>
+                    : <><XCircle className="h-4 w-4" />{t("ui.confirmReject")}</>}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => { setShowRejectForm(false); setRejectReason(""); }}
                 >
-                  Cancelar
+                  {t("common.cancel")}
                 </Button>
               </div>
             </div>

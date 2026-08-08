@@ -1,8 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import "@/app/globals.css";
+import { getTranslations } from "@/i18n/server";
+import { Multiline } from "@/i18n/Multiline";
 
-function Incentives() {
+async function Incentives() {
+  const { t } = await getTranslations();
+
   return (
     <div className="faded-div">
       <div className="2xl:mx-44 lg:mx-28 xl:mx-28 sm:mx-16 mx-5 flex justify-center lg:justify-between xl:justify-between md:justify-between">
@@ -20,28 +24,27 @@ function Incentives() {
 
         <div className="flex-col py-20 lg:ml-10 xl:ml-10">
           <p className="font-semibold xl:block lg:block md:block md:text-4xl lg:text-4xl 4xl:text-5xl xl:text-4xl text-3xl tracking-tight pb-9">
-            Miles de especialistas <br /> certificados - Online
+            <Multiline text={t("landing.incentivesTitle")} />
           </p>
 
           <p className="text-lg text-gray-500 mb-8">
-            Programa una cita con un Especialista sin hacer filas, sin largas{" "}
-            <br /> esperas durante una llamada.{" "}
+            <Multiline text={t("landing.incentivesBody")} />{" "}
             <span className="text-blue-400 font-semibold">
-              Agenda tu cita en un click! ✅
+              {t("landing.incentivesHighlight")}
             </span>
           </p>
 
           <p className="text-md font-semibold pt-12">
-            +25 especialidades médicas a tu disposición.
+            {t("landing.specialtiesCount")}
           </p>
 
           <ul className="flex flex-wrap gap-2 py-5 sm:flex-row items-center">
             {[
-              "Doctor General",
-              "Embarazo",
-              "Oftalmología",
-              "Psiquiatría",
-              "Otros",
+              t("landing.specialtyGeneral"),
+              t("landing.specialtyPregnancy"),
+              t("landing.specialtyOphthalmology"),
+              t("landing.specialtyPsychiatry"),
+              t("landing.specialtyOther"),
             ].map((service, index) => (
               <li
                 key={index}
@@ -75,7 +78,7 @@ function Incentives() {
               href="/register"
               className="inline-block rounded-lg bg-blue-500 px-4 py-1.5 text-base font-semibold leading-7 text-white shadow-sm ring-1 ring-blue-500 hover:bg-blue-500 hover:ring-blue-500 hover:scale-105 ease-in-out transition duration-300"
             >
-              Crear cuenta
+              {t("landing.ctaCreateAccount")}
               <span className="text-indigo-200" aria-hidden="true">
                 &rarr;
               </span>
@@ -84,7 +87,7 @@ function Incentives() {
               href="/buscar-doctor"
               className="inline-block rounded-lg px-4 py-1.5 text-base font-semibold leading-7 text-gray-900 ring-1 ring-gray-900/10 hover:ring-gray-900/20 hover:scale-105 ease-in-out transition duration-300" 
             >
-              Buscar especialista
+              {t("landing.ctaSearchSpecialist")}
               <span className="text-gray-400" aria-hidden="true">
                 &rarr;
               </span>
