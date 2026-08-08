@@ -28,12 +28,12 @@ import {
   countSlots,
   leftoverMinutes,
   matchesPreset,
+  weekdayFromISO,
   type PatternBlock,
   type PresetName,
 } from "@/lib/schedulePattern";
 import {
   bulkCreateSchedules,
-  createSchedule,
   type BulkScheduleResult,
   type DoctorOfficeBasic,
 } from "@/lib/schedule-api";
@@ -98,23 +98,52 @@ export function SchedulePlannerDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const perDay = countSlots(blocks, slotMinutes);
-  const leftover = leftoverMinutes(blocks, slotMinutes);
+  const activeBlocks =
+    mode === "single"
+      ? [{ start: singleStart, end: singleEnd }]
+      : blocks;
 
-  const blocksValid = blocks.every((b) => b.start < b.end);
+  const perDay = countSlots(activeBlocks, slotMinutes);
+  const leftover = leftoverMinutes(activeBlocks, slotMinutes);
+
+  const blocksValid = activeBlocks.every((b) => b.start < b.end);
   const canReview =
-    weekdays.length > 0 && blocksValid && perDay > 0 && !!officeId && dateFrom <= dateTo;
+    blocksValid &&
+    perDay > 0 &&
+    !!officeId &&
+    (mode === "single"
+      ? !!singleDate
+      : weekdays.length > 0 && dateFrom <= dateTo);
 
+  /**
+   * Los dos modos mandan el mismo cuerpo; solo cambian los días y el rango.
+   *
+   * "Un día" es un patrón de un solo día, no otra operación. Antes usaba el
+   * endpoint de turno suelto y las mismas horas significaban cosas opuestas:
+   * 8:00–17:00 era **una** cita de nueve horas en un modo y nueve horas
+   * partidas en turnos en el otro, con campos idénticos. Un paciente podía
+   * reservar la jornada completa del doctor sin que nada lo advirtiera.
+   */
   const payload = useMemo(
-    () => ({
-      weekdays: [...weekdays].sort((a, b) => a - b),
-      blocks: blocks.map((b) => ({ start_time: b.start, end_time: b.end })),
-      slot_minutes: slotMinutes,
-      date_from: dateFrom,
-      date_to: dateTo,
-      office_id: officeId,
-    }),
-    [weekdays, blocks, slotMinutes, dateFrom, dateTo, officeId]
+    () =>
+      mode === "single"
+        ? {
+            weekdays: [weekdayFromISO(singleDate)],
+            blocks: [{ start_time: singleStart, end_time: singleEnd }],
+            slot_minutes: slotMinutes,
+            date_from: singleDate,
+            date_to: singleDate,
+            office_id: officeId,
+          }
+        : {
+            weekdays: [...weekdays].sort((a, b) => a - b),
+            blocks: blocks.map((b) => ({ start_time: b.start, end_time: b.end })),
+            slot_minutes: slotMinutes,
+            date_from: dateFrom,
+            date_to: dateTo,
+            office_id: officeId,
+          },
+    [mode, singleDate, singleStart, singleEnd, weekdays, blocks, slotMinutes, dateFrom, dateTo, officeId]
   );
 
   const toggleDay = (day: number) =>
@@ -126,29 +155,6 @@ export function SchedulePlannerDialog({
     setPreview(null);
     setShowDetail(false);
     setError(null);
-  };
-
-  const singleValid =
-    singleStart < singleEnd && !!officeId && !!singleDate;
-
-  const addSingle = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      await createSchedule({
-        date_of_service: singleDate,
-        start_time: singleStart,
-        end_time: singleEnd,
-        office_id: officeId,
-      });
-      onPublished(1);
-      onOpenChange(false);
-      reset();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("availability.createError"));
-    } finally {
-      setLoading(false);
-    }
   };
 
   const run = async (dryRun: boolean) => {
@@ -246,13 +252,24 @@ export function SchedulePlannerDialog({
               onEnd={setSingleEnd}
             />
 
+            <DurationField value={slotMinutes} onChange={setSlotMinutes} />
+
             <OfficeField value={officeId} onChange={setOfficeId} offices={offices} />
 
-            {!singleValid && singleStart >= singleEnd && (
+            {!blocksValid && (
               <p className="text-xs text-destructive">
                 {t("pattern.invalidBlock")}
               </p>
             )}
+
+            {/* La cuenta va también aquí: es lo que impide creer que
+                8:00–17:00 es una sola cita de nueve horas. */}
+            {perDay > 0 && (
+              <p className="text-sm text-muted-foreground">
+                {t("pattern.summaryPerDay", { perDay })}
+              </p>
+            )}
+
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
         ) : preview === null ? (
@@ -362,28 +379,7 @@ export function SchedulePlannerDialog({
               )}
             </div>
 
-            {/* ── Duración ── */}
-            <div>
-              <Label className="mb-2 block">{t("pattern.duration")}</Label>
-              <div className="inline-flex flex-wrap gap-1 rounded-full bg-gray-100 p-1">
-                {SLOT_OPTIONS.map((min) => (
-                  <button
-                    key={min}
-                    type="button"
-                    onClick={() => setSlotMinutes(min)}
-                    aria-pressed={slotMinutes === min}
-                    className={cn(
-                      PILL,
-                      slotMinutes === min
-                        ? "bg-white font-semibold text-blue-700 shadow-sm"
-                        : "text-gray-500 hover:text-gray-800"
-                    )}
-                  >
-                    {min} {t("pattern.minutesShort")}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <DurationField value={slotMinutes} onChange={setSlotMinutes} />
 
             {/* ── Rango y consultorio ── */}
             <div className="grid gap-3 sm:grid-cols-2">
@@ -441,16 +437,7 @@ export function SchedulePlannerDialog({
         )}
 
         <DialogFooter>
-          {preview === null && mode === "single" ? (
-            <Button
-              onClick={addSingle}
-              disabled={!singleValid || loading}
-              className="rounded-full"
-            >
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading ? t("pattern.adding") : t("pattern.addSlot")}
-            </Button>
-          ) : preview === null ? (
+          {preview === null ? (
             <Button
               onClick={() => run(true)}
               disabled={!canReview || loading}
@@ -524,6 +511,39 @@ function TimeRange({
         <div className="min-w-0 flex-1">
           <TimePicker value={end} onChange={onEnd} />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function DurationField({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div>
+      <Label className="mb-2 block">{t("pattern.duration")}</Label>
+      <div className="inline-flex flex-wrap gap-1 rounded-full bg-gray-100 p-1">
+        {SLOT_OPTIONS.map((min) => (
+          <button
+            key={min}
+            type="button"
+            onClick={() => onChange(min)}
+            aria-pressed={value === min}
+            className={cn(
+              PILL,
+              value === min
+                ? "bg-white font-semibold text-blue-700 shadow-sm"
+                : "text-gray-500 hover:text-gray-800"
+            )}
+          >
+            {min} {t("pattern.minutesShort")}
+          </button>
+        ))}
       </div>
     </div>
   );

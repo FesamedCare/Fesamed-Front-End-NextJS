@@ -78,3 +78,22 @@ export function matchesPreset(weekdays: number[], preset: PresetName): boolean {
   const elegidos = new Set(weekdays);
   return objetivo.every((d) => elegidos.has(d));
 }
+
+
+/**
+ * Día de la semana de una fecha "yyyy-MM-dd", en la convención del backend
+ * (0 = lunes … 6 = domingo).
+ *
+ * Dos trampas juntas:
+ *
+ * 1. `new Date("2026-08-12")` se interpreta como medianoche **UTC**. En
+ *    Bogotá (UTC-5) eso cae el día anterior a las 19:00, así que `getDay()`
+ *    devolvería el día equivocado. Se construye la fecha por partes, que es
+ *    hora local.
+ * 2. `getDay()` cuenta desde domingo y el backend desde lunes.
+ */
+export function weekdayFromISO(iso: string): number {
+  const [y, m, d] = iso.split("-").map(Number);
+  const local = new Date(y, m - 1, d);
+  return (local.getDay() + 6) % 7;
+}

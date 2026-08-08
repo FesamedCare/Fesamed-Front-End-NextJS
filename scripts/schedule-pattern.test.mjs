@@ -14,6 +14,7 @@ import {
   countSlots,
   leftoverMinutes,
   matchesPreset,
+  weekdayFromISO,
 } from '../src/lib/schedulePattern.ts';
 
 describe('countSlots', () => {
@@ -98,5 +99,29 @@ describe('matchesPreset', () => {
 
   test('no confunde días de más', () => {
     assert.equal(matchesPreset([0, 1, 2, 3, 4, 5], 'weekdays'), false);
+  });
+});
+
+
+describe('weekdayFromISO', () => {
+  test('lunes es 0, como en el backend', () => {
+    // 2026-08-10 es lunes
+    assert.equal(weekdayFromISO('2026-08-10'), 0);
+  });
+
+  test('domingo es 6, no 0', () => {
+    assert.equal(weekdayFromISO('2026-08-16'), 6);
+  });
+
+  test('cubre la semana entera', () => {
+    const dias = ['2026-08-10','2026-08-11','2026-08-12','2026-08-13',
+                  '2026-08-14','2026-08-15','2026-08-16'];
+    assert.deepEqual(dias.map(weekdayFromISO), [0, 1, 2, 3, 4, 5, 6]);
+  });
+
+  test('no se corre un dia por la zona horaria', () => {
+    // new Date("2026-08-10") es medianoche UTC: en Bogota cae el domingo 9.
+    // Si el calculo usara eso, esto daria 6 en vez de 0.
+    assert.notEqual(weekdayFromISO('2026-08-10'), 6);
   });
 });
