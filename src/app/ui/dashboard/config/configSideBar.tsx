@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ChevronRight, Lock, User, History, Clock, Bell, Trash2 } from "lucide-react"
+import { ChevronRight, Lock, User, History, Bell, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePathname, useRouter } from "next/navigation"
 
@@ -14,11 +14,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useTranslation } from "@/i18n/LocaleProvider"
 
 // Estado global para mantener las secciones expandidas entre navegaciones
 let activeDropdownSections = new Set<string>()
 
 export function ConfigSidebar() {
+  const { t } = useTranslation();
   const pathname = usePathname()
   const router = useRouter()
   const [activeSections, setActiveSections] = useState<Set<string>>(activeDropdownSections)
@@ -33,9 +35,8 @@ export function ConfigSidebar() {
         sectionsToActivate.add("cuenta")
       }
       
-      if (pathname.includes("perfil") || 
-          pathname.includes("historial") || 
-          pathname.includes("disponibilidad") || 
+      if (pathname.includes("perfil") ||
+          pathname.includes("historial") ||
           pathname.includes("notificaciones")) {
         sectionsToActivate.add("perfil")
       }
@@ -82,7 +83,7 @@ export function ConfigSidebar() {
                 >
                   <div className="flex items-center gap-3 pr-2 max-w-[80%]">
                     <Lock className="h-5 w-5 text-gray-700 flex-shrink-0" />
-                    <span className="font-medium">Cuenta y seguridad</span>
+                    <span className="font-medium">{t("settings.accountSecurity")}</span>
                   </div>
                   <ChevronRight
                     className={cn(
@@ -103,7 +104,7 @@ export function ConfigSidebar() {
                     >
                       <button onClick={() => navigateTo("/dashboard/settings/change-password")}
                         className="flex items-center w-full px-2">
-                        <span>Cambiar contraseña</span>
+                        <span>{t("settings.changePassword")}</span>
                       </button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -116,7 +117,7 @@ export function ConfigSidebar() {
                       <button onClick={() => navigateTo("/dashboard/settings/delete-account")}
                         className="flex items-center w-full px-2">
                         <Trash2 className="h-4 w-4 flex-shrink-0 mr-2" />
-                        <span>Borrar cuenta</span>
+                        <span>{t("settings.deleteAccount")}</span>
                       </button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -134,7 +135,7 @@ export function ConfigSidebar() {
                 >
                   <div className="flex items-center gap-3 pr-2 max-w-[80%]">
                     <User className="h-5 w-5 text-gray-700 flex-shrink-0" />
-                    <span className="font-medium">Perfil y visibilidad</span>
+                    <span className="font-medium">{t("settings.profileVisibility")}</span>
                   </div>
                   <ChevronRight
                     className={cn(
@@ -156,20 +157,7 @@ export function ConfigSidebar() {
                       <button onClick={() => navigateTo("/dashboard/settings/search-history")}
                         className="flex items-center w-full px-2">
                         <History className="h-4 w-4 flex-shrink-0 mr-2" />
-                        <span>Historial de búsqueda</span>
-                      </button>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive("/dashboard/settings/availability")}
-                      className="ml-6 md:ml-8 text-sm py-2 rounded-md w-[calc(100%-2rem)]"
-                    >
-                      <button onClick={() => navigateTo("/dashboard/settings/availability")}
-                        className="flex items-center w-full px-2">
-                        <Clock className="h-4 w-4 flex-shrink-0 mr-2" />
-                        <span>Disponibilidad</span>
+                        <span>{t("settings.searchHistory")}</span>
                       </button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -182,7 +170,7 @@ export function ConfigSidebar() {
                       <button onClick={() => navigateTo("/dashboard/settings/notifications")}
                         className="flex items-center w-full px-2">
                         <Bell className="h-4 w-4 flex-shrink-0 mr-2" />
-                        <span>Notificaciones</span>
+                        <span>{t("settings.notifications")}</span>
                       </button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

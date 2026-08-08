@@ -4,11 +4,12 @@ import { usePathname } from "next/navigation"
 import { CambiarContrasena } from "./changePassword"
 import { BorrarCuenta } from "./deleteAccount"
 import { HistorialBusqueda } from "./searchHistory"
-import { Disponibilidad } from "./availability"
 import { Notificaciones } from "./notifications"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useTranslation } from "@/i18n/LocaleProvider";
 
 export function ConfigContent() {
+  const { t } = useTranslation();
   const pathname = usePathname()
 
   // Renderizar el contenido basado en la ruta actual
@@ -19,8 +20,6 @@ export function ConfigContent() {
       return <BorrarCuenta />
     } else if (pathname.includes("historial-busqueda")) {
       return <HistorialBusqueda />
-    } else if (pathname.includes("disponibilidad")) {
-      return <Disponibilidad />
     } else if (pathname.includes("notificaciones")) {
       return <Notificaciones />
     } else {
@@ -28,13 +27,13 @@ export function ConfigContent() {
       return (
         <Card>
           <CardHeader>
-            <CardTitle>Configuración</CardTitle>
+            <CardTitle>{t("settings.title")}</CardTitle>
             <CardDescription>
-              Selecciona una opción del menú lateral para configurar tu cuenta y perfil.
+              {t("settings.intro")}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p>Puedes administrar tu cuenta, cambiar tu contraseña, y personalizar tu perfil desde aquí.</p>
+            <p>{t("settings.introBody")}</p>
           </CardContent>
         </Card>
       )

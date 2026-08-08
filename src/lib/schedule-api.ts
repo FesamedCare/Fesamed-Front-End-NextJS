@@ -50,3 +50,18 @@ export async function deleteSchedule(id: string): Promise<void> {
 export async function getMyOffices(): Promise<DoctorOfficeBasic[]> {
   return get<DoctorOfficeBasic[]>(`${BASE}/me/consulting_office/`);
 }
+
+export interface DoctorVerificationStatus {
+  is_profile_approved: boolean;
+}
+
+/**
+ * Crear un horario exige perfil aprobado. El backend lo valida en
+ * POST /me/schedule/, pero recién al enviar el formulario. Esto permite
+ * avisarlo antes de que el doctor lo llene.
+ */
+export async function getMyVerificationStatus(): Promise<DoctorVerificationStatus> {
+  return get<DoctorVerificationStatus>(
+    `${BASE}/me/profile-draft/verification-status/`
+  );
+}

@@ -1,5 +1,7 @@
-import { Disponibilidad } from "@/app/ui/dashboard/config/availability"
+import { redirect } from "next/navigation";
 
-export default function DisponibilidadPage() {
-  return <Disponibilidad />
+// La disponibilidad salió de Configuración: es una tarea frecuente del doctor,
+// no un ajuste de cuenta. Esta ruta queda sólo para no romper enlaces viejos.
+export default function DisponibilidadRedirectPage() {
+  redirect("/dashboard/availability");
 }
