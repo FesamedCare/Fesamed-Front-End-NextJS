@@ -1,19 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { UserAvatar } from "@/components/UserAvatar";
-import { Search, Loader2, MapPin, Stethoscope, Info } from "lucide-react";
+import { Loader2, MapPin, Stethoscope, Info } from "lucide-react";
 import { useTranslation } from "@/i18n/LocaleProvider";
+import { DoctorSearchBar } from "./doctor-search-bar";
 import {
   searchDoctors,
   getCities,
@@ -21,12 +16,16 @@ import {
   getSpecialties,
   type SearchDoctorsParams,
 } from "@/lib/doctors-api";
+import { SPECIALTY_PARAM, findSpecialtyByName } from "@/lib/specialtySearchUrl";
 import type {
   DoctorSearchResult,
   CatalogCity,
   CatalogDepartment,
   CatalogSpecialty,
 } from "@/app/types/types";
+
+/** Píxeles que el título sube mientras se desvanece. */
+const HEADING_LIFT = 10;
 
 interface SearchAndResultsProps {
   onSelectDoctor: (doctorId: string) => void;
@@ -36,7 +35,6 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
   const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [cityId, setCityId] = useState<string>("");
-  const [departmentId, setDepartmentId] = useState<string>("");
   const [specialtyId, setSpecialtyId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [searchRan, setSearchRan] = useState(true);
@@ -46,6 +44,34 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
   const [departments, setDepartments] = useState<CatalogDepartment[]>([]);
   const [specialties, setSpecialties] = useState<CatalogSpecialty[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
+  // Especialidad que llega desde los accesos del inicio (?especialidad=Odontólogo).
+  const specialtyParam = useSearchParams().get(SPECIALTY_PARAM);
+  // Evita repetir la carga inicial cuando el catálogo termina de llegar.
+  const initialLoadFor = useRef<string | null | undefined>(undefined);
+
+  // El título se desvanece con el scroll y llega a 0 justo cuando su borde
+  // toca la navbar: antes, el fondo blanco de la navbar lo cortaba a la mitad.
+  // Se mide la navbar real porque en celular es más baja que en escritorio.
+  const headingRef = useRef<HTMLDivElement>(null);
+  const [headingFadeEnd, setHeadingFadeEnd] = useState(80);
+  useEffect(() => {
+    const measure = () => {
+      const heading = headingRef.current;
+      if (!heading) return;
+      const navHeight = document.getElementById("navbar")?.getBoundingClientRect().height ?? 96;
+      const top = heading.getBoundingClientRect().top + window.scrollY;
+      // Se descuenta lo que el título sube por su cuenta (HEADING_LIFT) y un
+      // margen, para que ya sea invisible antes de tocar la navbar.
+      setHeadingFadeEnd(Math.max(16, top - navHeight - HEADING_LIFT - 6));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+  const { scrollY } = useScroll();
+  const headingOpacity = useTransform(scrollY, [0, headingFadeEnd], [1, 0]);
+  const headingLift = useTransform(scrollY, [0, headingFadeEnd], [0, -HEADING_LIFT]);
+  const headingScale = useTransform(scrollY, [0, headingFadeEnd], [1, 0.97]);
 
   const loadCatalogs = useCallback(async () => {
     setCatalogLoading(true);
@@ -69,13 +95,32 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
     loadCatalogs();
   }, [loadCatalogs]);
 
-  // Al entrar, cargar todos los doctores disponibles (sin filtros)
+  // Al entrar, cargar los doctores: todos, o los de la especialidad de la URL.
   useEffect(() => {
-    let cancelled = false;
+    // Con especialidad en la URL hay que esperar el catálogo para pasar el
+    // nombre a su id; sin ella se carga de una vez.
+    if (specialtyParam && catalogLoading) return;
+    if (initialLoadFor.current === specialtyParam) return;
+    initialLoadFor.current = specialtyParam;
+
+    const params: SearchDoctorsParams = { page: 1, size: 100 };
+    if (specialtyParam) {
+      const match = findSpecialtyByName(specialties, specialtyParam);
+      if (match) {
+        params.specialty_id = match.id;
+        setSpecialtyId(match.id);
+      }
+    }
+
+    // No se cancela al volver a ejecutarse el efecto (pasa cuando llega el
+    // catálogo): eso descartaría esta carga y la siguiente ejecución no busca.
+    // Solo se ignora la respuesta si ya hay una carga inicial más reciente.
+    const requestFor = specialtyParam;
+    const isCurrent = () => initialLoadFor.current === requestFor;
     setLoading(true);
-    searchDoctors({ page: 1, size: 100 })
+    searchDoctors(params)
       .then((data) => {
-        if (cancelled) return;
+        if (!isCurrent()) return;
         const list = Array.isArray(data.items)
           ? data.items
           : (data as { results?: DoctorSearchResult[] }).results ?? [];
@@ -83,19 +128,16 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
         setTotal(typeof data.total === "number" ? data.total : 0);
       })
       .catch((e) => {
-        if (!cancelled) {
+        if (isCurrent()) {
           setDoctors([]);
           setTotal(0);
         }
         console.error("Error cargando doctores:", e);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (isCurrent()) setLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [specialtyParam, catalogLoading, specialties]);
 
   const runSearch = useCallback(async () => {
     setLoading(true);
@@ -107,7 +149,6 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
       };
       if (q.trim()) params.q = q.trim();
       if (cityId) params.city_id = cityId;
-      if (departmentId) params.department_id = departmentId;
       if (specialtyId) params.specialty_id = specialtyId;
       const data = await searchDoctors(params);
       const list = Array.isArray(data.items) ? data.items : (data as { results?: DoctorSearchResult[] }).results ?? [];
@@ -120,92 +161,37 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
     } finally {
       setLoading(false);
     }
-  }, [q, cityId, departmentId, specialtyId]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    runSearch();
-  };
+  }, [q, cityId, specialtyId]);
 
   return (
     <div className="container mx-auto xl:px-16 px-6 2xl:px-0 sm:px-16 py-4 md:py-6 lg:pb-32">
-      <form onSubmit={handleSubmit} className="mb-6">
-        <h1 className="text-3xl font-semibold text-center mb-2 text-gray-900">
-          {t("search.title")}
-        </h1>
-        <p className="text-center text-muted-foreground text-sm mb-6">
-          {t("search.subtitle")}
-        </p>
-        {/*
-            Cinco controles en una línea necesitan ~774px de mínimo: tres
-            selects de 150, el campo de texto de 170, el botón y los gaps. A
-            partir de lg quedan ~896px útiles y entran con holgura; en md solo
-            hay ~640 y el botón se caía solo a una segunda fila. Por eso la
-            fila horizontal arranca en lg y no antes: abajo se apila a
-            propósito, en vez de dejar un botón huérfano.
-          */}
-          <div className="max-w-4xl mx-auto flex flex-col gap-4 lg:flex-row lg:items-end lg:flex-wrap">
-          <Select value={departmentId} onValueChange={(v) => setDepartmentId(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[130px] bg-white rounded-full border-blue-500 text-blue-600 data-[placeholder]:text-blue-600/60">
-              <SelectValue placeholder={t("search.department")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("search.allDepartments")}</SelectItem>
-              {departments.map((d) => (
-                <SelectItem key={d.id} value={d.id}>
-                  {d.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={cityId} onValueChange={(v) => setCityId(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[130px] bg-white rounded-full border-blue-500 text-blue-600 data-[placeholder]:text-blue-600/60">
-              <SelectValue placeholder={t("search.city")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("search.allCities")}</SelectItem>
-              {cities.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={specialtyId} onValueChange={(v) => setSpecialtyId(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-full lg:w-auto lg:flex-1 lg:min-w-[130px] bg-white rounded-full border-blue-500 text-blue-600 data-[placeholder]:text-blue-600/60">
-              <SelectValue placeholder={t("search.specialty")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("search.allSpecialties")}</SelectItem>
-              {specialties.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="w-full lg:flex-[2] lg:min-w-[200px] relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder={t("search.queryPlaceholder")}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              className="pl-9 rounded-full bg-gray-50 border-blue-500/30"
-            />
-          </div>
-          <Button type="submit" className="rounded-full shrink-0 whitespace-nowrap" disabled={catalogLoading || loading}>
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                {t("search.searching")}
-              </>
-            ) : (
-              t("common.search")
-            )}
-          </Button>
-        </div>
-      </form>
+      <div className="mb-10">
+        <motion.div
+          ref={headingRef}
+          style={{ opacity: headingOpacity, y: headingLift, scale: headingScale }}
+        >
+          <h1 className="text-3xl font-semibold text-center mb-2 text-gray-900">
+            {t("search.title")}
+          </h1>
+          <p className="text-center text-muted-foreground text-sm mb-6">
+            {t("search.subtitle")}
+          </p>
+        </motion.div>
+        <DoctorSearchBar
+          cities={cities}
+          departments={departments}
+          specialties={specialties}
+          cityId={cityId}
+          specialtyId={specialtyId}
+          q={q}
+          onCityChange={setCityId}
+          onSpecialtyChange={setSpecialtyId}
+          onQueryChange={setQ}
+          onSubmit={runSearch}
+          loading={loading}
+          disabled={catalogLoading}
+        />
+      </div>
 
       <div className="max-w-6xl mx-auto">
         {loading ? (

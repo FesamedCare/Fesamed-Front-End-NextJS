@@ -7,6 +7,9 @@ import Image from "next/image";
 import Menu from "./menu";
 import CloseMenu from "./closeMenu";
 import { useState, Fragment, useEffect } from "react";
+import { motion, useTransform } from "framer-motion";
+import { useSearchDock } from "@/contexts/SearchDockContext";
+import { SearchDockPill } from "@/components/SearchDockPill";
 import "../../globals.css";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useTranslation, type TranslationKey } from "@/i18n/LocaleProvider";
@@ -60,6 +63,15 @@ const doctorLink: NavItem = {
 
 const LOCALE_LABELS: Record<Locale, string> = { es: "Español", en: "English" };
 
+/**
+ * La sombra `shadow-navbar` de Tailwind con una intensidad de 0 a 1, para
+ * poder mezclarla con el scroll en la página de búsqueda.
+ */
+function navbarShadowCss(intensity: number): string {
+  const a = (0.03 * intensity).toFixed(4);
+  return `0px 10px 8px 0px rgba(3,3,4,${a}), 0 1px 2px -1px rgba(3,3,4,${a})`;
+}
+
 export default function Navbar() {
   const { user, isAuthenticated, loading, logout, refreshUser } = useAuthContext();
   const { t, locale, setLocale } = useTranslation();
@@ -73,6 +85,18 @@ export default function Navbar() {
     : solutionsDesktop;
   const mobileLinks = isDoctor ? [...userLinks, doctorLink] : userLinks;
   const [navbarShadow, setNavbarShadow] = useState(false);
+  const searchDock = useSearchDock();
+  // Barra de búsqueda acoplada: los enlaces ceden el centro a la píldora.
+  const showPill = searchDock.available && searchDock.docked;
+  // Los enlaces se van con el scroll y ya no se ven a mitad del recorrido de
+  // la barra: así el centro está libre cuando llega la píldora.
+  const linksOpacity = useTransform(searchDock.dockProgress, [0, 0.5], [1, 0]);
+  const linksY = useTransform(searchDock.dockProgress, [0, 0.5], [0, -14]);
+  // Con barra acoplable, la sombra vuelve cuando el título y los enlaces ya se
+  // fueron (entre el 50 % y el 80 % del recorrido): separa la navbar de las
+  // tarjetas sin aparecer de golpe ni competir con la transición.
+  const dockShadow = useTransform(searchDock.dockProgress, [0.5, 0.8], [0, 1], { clamp: true });
+  const dockShadowCss = useTransform(dockShadow, navbarShadowCss);
 
   // Detectar cambios de autenticación
   useEffect(() => {
@@ -164,13 +188,18 @@ export default function Navbar() {
     </div>
   );
   return (
-    <nav
+    <motion.nav
       id="navbar"
-      className={`transition duration-300 ease-in-out w-full z-40 top-0 py-.5 fixed ${navbarShadow ? 'shadow-navbar bg-white' : ''}`}
+      className={`transition-shadow duration-300 ease-in-out w-full z-40 top-0 py-.5 fixed ${
+        navbarShadow || showPill ? "bg-white" : ""
+      }`}
+      style={{
+        boxShadow: searchDock.available ? dockShadowCss : navbarShadowCss(navbarShadow ? 1 : 0),
+      }}
     >
       <div className="xl:px-16 px-6 2xl:px-32 sm:px-16">
         {/* Desktop Navigation */}
-        <div className="-ml-4 -mt-2 hidden lg:flex flex-wrap items-center justify-between sm:flex-nowrap md:px-14 px-2">
+        <div className="relative -ml-4 -mt-2 hidden lg:flex flex-wrap items-center justify-between sm:flex-nowrap md:px-14 px-2">
           <div className="flex">
             <Link href="/" className="mb-4 mt-6 h-14 w-48">
               <Image
@@ -182,7 +211,13 @@ export default function Navbar() {
                 style={{ width: "auto", height: "auto" }}
               />
             </Link>
-            <div className="ml-10 mt-11">
+            {/* Como las pestañas de la referencia: suben y se desvanecen al
+                aparecer la píldora, y vuelven al desacoplar. */}
+            <motion.div
+              className="ml-10 mt-11"
+              style={{ opacity: linksOpacity, y: linksY, pointerEvents: showPill ? "none" : "auto" }}
+              aria-hidden={showPill}
+            >
               <Link
                 href="/buscar-doctor"
                 className="4xl:text-lg text-base inline-flex font-medium leading-6 text-blue-700 border-b-2 border-white transition duration-300 ease-in-out hover:border-blue-700 mx-4"
@@ -201,7 +236,13 @@ export default function Navbar() {
               >
                 {t("nav.contact")}
               </Link>
-            </div>
+            </motion.div>
+          </div>
+
+          {/* Píldora compacta de búsqueda: la barra de la página se transforma
+              en ella al bajar y vuelve a crecer al subir (ver morphFrom). */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            {showPill && <SearchDockPill />}
           </div>
           {(loading || !isAuthenticated) ? (
                 <div className="ml-4 mt-4 flex-shrink-0">
@@ -352,6 +393,6 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }

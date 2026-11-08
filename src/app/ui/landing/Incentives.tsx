@@ -3,6 +3,7 @@ import Image from "next/image";
 import "@/app/globals.css";
 import { getTranslations } from "@/i18n/server";
 import { Multiline } from "@/i18n/Multiline";
+import { specialtySearchUrl } from "@/lib/specialtySearchUrl";
 
 async function Incentives() {
   const { t } = await getTranslations();
@@ -40,21 +41,21 @@ async function Incentives() {
 
           <ul className="flex flex-wrap gap-2 py-5 sm:flex-row items-center">
             {[
-              t("landing.specialtyGeneral"),
-              t("landing.specialtyPregnancy"),
-              t("landing.specialtyOphthalmology"),
-              t("landing.specialtyPsychiatry"),
-              t("landing.specialtyOther"),
+              { label: t("landing.specialtyGeneral"), href: specialtySearchUrl("Médico general") },
+              { label: t("landing.specialtyPregnancy"), href: specialtySearchUrl("Ginecólogo") },
+              { label: t("landing.specialtyOphthalmology"), href: specialtySearchUrl("Oftalmólogo") },
+              { label: t("landing.specialtyPsychiatry"), href: specialtySearchUrl("Psiquiatra") },
+              { label: t("landing.specialtyOther"), href: "/buscar-doctor" },
             ].map((service, index) => (
               <li
                 key={index}
                 className="group w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base transition duration-300 ease-in-out focus:outline-none hover:scale-105"
               >
                 <Link
-                  href={`/services/service${index + 1}`}
+                  href={service.href}
                   className="leading-8 flex justify-center items-center gap-2 text-gray-500 sm:text-center"
                 >
-                  {service}
+                  {service.label}
                   <svg
                     className="arrow-icon transition-transform duration-300 ease-in-out"
                     width="9"
