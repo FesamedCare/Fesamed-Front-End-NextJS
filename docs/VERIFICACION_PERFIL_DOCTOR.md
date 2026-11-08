@@ -25,7 +25,13 @@ Los ítems que se tienen en cuenta para el 100% son (misma lógica que el backen
 | Teléfono verificado | 5 | Configuración / teléfono |
 | Al menos un consultorio | 10 | Pestaña Consultorios |
 
-**Total: 100 puntos.** Cuando el borrador llega al 100%, el backend marca esa versión como **UNDER_REVIEW** y entra en la cola de revisión. No hace falta que el doctor pulse “Enviar”: se considera enviado al completar el 100%.
+**Total: 100 puntos.** Un borrador entra en la cola de revisión (**UNDER_REVIEW**) cuando está al 100% **y** su contenido es distinto de la versión aprobada. No hace falta que el doctor pulse “Enviar”: se considera enviado al guardar.
+
+- **Doctor nuevo** (sin versión aprobada): entra a revisión al llegar al 100%.
+- **Doctor aprobado que edita su perfil**: se crea un borrador al primer cambio y entra a revisión; mientras tanto, los pacientes siguen viendo la versión aprobada. Si deshace el cambio, el borrador sale de la cola.
+- **Doctor rechazado**: al corregir algo vuelve a la cola, aunque el perfil ya estuviera al 100%.
+- **Lo que no se versiona** (consultorios, verificación del celular) se aplica de inmediato y **no** genera revisión.
+- Consultar el perfil no crea borradores: sin cambios en curso, el doctor ve su versión aprobada.
 
 ---
 
