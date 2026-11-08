@@ -112,6 +112,9 @@ export interface DoctorSearchResult {
   specialties: string[];
   cities: string[];
   offices: OfficeMinimal[];
+  /** Reseñas publicadas. Sin reseñas: null y 0. */
+  rating_average?: number | null;
+  rating_count?: number;
 }
 
 export interface DoctorSearchPage {
@@ -138,6 +141,8 @@ export interface DoctorFullProfile {
   work_experience: string[];
   insurances: string[];
   certificates: CertificatePublic[];
+  rating_average?: number | null;
+  rating_count?: number;
 }
 
 export interface AvailabilitySlot {
@@ -274,6 +279,41 @@ export interface AppointmentReview {
   rating: number;
   comment: string | null;
   created_at: string;
+  /** PENDING (en revisión), APPROVED (publicada) o REJECTED (con motivo). */
+  moderation_status?: "PENDING" | "APPROVED" | "REJECTED" | null;
+  reject_reason?: string | null;
+}
+
+export interface PublicReview {
+  id: string;
+  rating: number;
+  comment: string | null;
+  author: string;
+  created_at: string;
+}
+
+export interface DoctorReviewsPage {
+  rating_average: number | null;
+  rating_count: number;
+  items: PublicReview[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+export interface AdminReview {
+  id: string;
+  rating: number;
+  comment: string | null;
+  moderation_status: "PENDING" | "APPROVED" | "REJECTED";
+  reject_reason: string | null;
+  created_at: string;
+  updated_at: string | null;
+  moderated_at: string | null;
+  doctor_id: string | null;
+  doctor_name: string | null;
+  patient_name: string | null;
+  appointment_date: string | null;
 }
 
 export interface Appointment {

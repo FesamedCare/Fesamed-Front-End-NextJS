@@ -9,6 +9,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { Loader2, MapPin, Stethoscope, Info } from "lucide-react";
 import { useTranslation } from "@/i18n/LocaleProvider";
 import { DoctorSearchBar } from "./doctor-search-bar";
+import { RatingSummary } from "@/components/RatingStars";
 import {
   searchDoctors,
   getCities,
@@ -32,7 +33,7 @@ interface SearchAndResultsProps {
 }
 
 export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [q, setQ] = useState("");
   const [cityId, setCityId] = useState<string>("");
   const [specialtyId, setSpecialtyId] = useState<string>("");
@@ -234,6 +235,14 @@ export function SearchAndResults({ onSelectDoctor }: SearchAndResultsProps) {
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold text-gray-900 truncate">{doc.full_name}</h3>
+                          {(doc.rating_count ?? 0) > 0 && doc.rating_average != null && (
+                            <RatingSummary
+                              average={doc.rating_average}
+                              count={doc.rating_count ?? 0}
+                              locale={locale}
+                              countLabel={String(doc.rating_count)}
+                            />
+                          )}
                           <div className="flex items-center gap-1 text-sm text-blue-600 mt-0.5">
                             <Stethoscope className="h-3.5 w-3.5 shrink-0" />
                             <span className="truncate">

@@ -5,6 +5,7 @@
 
 import { get, post } from "@/lib/api";
 import type {
+  DoctorReviewsPage,
   DoctorSearchPage,
   DoctorFullProfile,
   DoctorAvailability,
@@ -45,6 +46,13 @@ export async function searchDoctors(
 
 export async function getDoctorProfile(doctorId: string): Promise<DoctorFullProfile> {
   return get<DoctorFullProfile>(`${BASE}/doctors/${doctorId}/profile/`, {
+    noCredentials: true,
+  });
+}
+
+/** Reseñas publicadas de un especialista (públicas, sin sesión). */
+export async function getDoctorReviews(doctorId: string, page = 1, size = 5): Promise<DoctorReviewsPage> {
+  return get<DoctorReviewsPage>(`${BASE}/doctors/${doctorId}/reviews/?page=${page}&size=${size}`, {
     noCredentials: true,
   });
 }

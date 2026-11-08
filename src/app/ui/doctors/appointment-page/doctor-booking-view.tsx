@@ -14,6 +14,8 @@ import {
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { UserAvatar } from "@/components/UserAvatar";
+import { RatingSummary } from "@/components/RatingStars";
+import { DoctorReviews } from "./doctor-reviews";
 import { useTranslation, type TranslationKey } from "@/i18n/LocaleProvider";
 import Link from "next/link";
 import { getDoctorProfile, getDoctorAvailability, createAppointment } from "@/lib/doctors-api";
@@ -392,6 +394,16 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-2xl font-semibold">{profile.name} {profile.lastname}</h2>
+                  {(profile.rating_count ?? 0) > 0 && profile.rating_average != null && (
+                    <div className="mt-0.5">
+                      <RatingSummary
+                        average={profile.rating_average}
+                        count={profile.rating_count ?? 0}
+                        locale={locale}
+                        countLabel={t("reviews.count", { count: profile.rating_count ?? 0 })}
+                      />
+                    </div>
+                  )}
                   <p className="text-sm text-muted-foreground">
                     {profile.specialties?.length ? profile.specialties.join(" · ") : "—"}
                   </p>
@@ -478,6 +490,8 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
 
               {/* Certificates */}
               <CertificatesSection certificates={profile.certificates ?? []} t={t} />
+
+              <DoctorReviews doctorId={profile.doctor_id} />
             </CardContent>
           </Card>
 
