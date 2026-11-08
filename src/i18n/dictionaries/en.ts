@@ -561,6 +561,45 @@ export const en: Dictionary = {
     savePassword: "Save password",
   },
 
+  consent: {
+    acceptPrefix: "I accept the",
+    terms: "Terms and conditions",
+    and: "and the",
+    privacy: "Privacy policy",
+    dataAuthorization: "I authorize FesamedCare to process my personal data to provide the service.",
+    readMore: "Read authorization",
+    mustAcceptData: "You must authorize the processing of your personal data",
+    gateTitle: "Before you continue",
+    gateBody: "To keep using FesamedCare, please accept our documents. We keep the date and the version you accept.",
+    acceptAndContinue: "Accept and continue",
+    saveError: "We couldn't save your acceptance. Please try again.",
+  },
+
+  account: {
+    noticeReactivated: "Your account was deactivated and has been reactivated. Welcome back!",
+    noticeDeactivated: "Your account has been deactivated. You can reactivate it by signing in within the next 30 days.",
+    noticeDeleted: "Your account and your data have been deleted.",
+    close: "Close",
+    deactivateTitle: "Deactivate account",
+    deactivateBody: "Your account stops working and, if you are a specialist, your profile is removed from search. Your pending appointments are cancelled and the other person is notified. If you sign in again within 30 days, your account is reactivated; after that it is deleted.",
+    deactivateButton: "Deactivate my account",
+    deactivateConfirm: "Yes, deactivate",
+    cancel: "Cancel",
+    deleteBody: "This is permanent: your profile, data, reviews and files are deleted. Your pending appointments are cancelled and the other person is notified. It cannot be undone.",
+    deleteConfirmPrompt: "To confirm, type your account email",
+    error: "We couldn't complete the action. Please try again.",
+  },
+
+  legal: {
+    termsTitle: "Terms and conditions",
+    privacyTitle: "Privacy policy",
+    inPreparation: "This document is being prepared with our legal advisors. The final version will be published here.",
+    placeholderBody: "FesamedCare is a platform that connects patients with healthcare specialists. It does not provide medical services or replace emergency care: in an emergency, call 123.",
+    authorizationTitle: "Authorization for the processing of personal data",
+    authorizationBody: "By signing up you authorize FesamedCare to process your personal data to create and manage your account, handle your appointments and send you service communications, in accordance with Colombian Law 1581 of 2012. The full text will be published with the final policy.",
+    contact: "Questions? Write to info@fesamedcare.com.",
+  },
+
   roles: {
     accountType: "Account type",
     doctor: "Specialist",

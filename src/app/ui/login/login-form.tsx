@@ -42,13 +42,15 @@ function Form() {
     setIsLoading(true);
     
     try {
-      await login(email, password);
+      const res = (await login(email, password)) as { reactivated?: boolean } | undefined;
       const me = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/me/`, { credentials: 'include' }).then(r => r.json());
       await refreshUser();
       localStorage.setItem('auth_event', Date.now().toString());
       const roleName = (me?.role?.name ?? me?.role ?? '').toLowerCase();
       const destination = roleName === 'admin' ? '/admin/review-queue' : redirectPath;
-      router.push(destination);
+      // Si la cuenta estaba desactivada, entrar la reactivó: se avisa al llegar.
+      const notice = res?.reactivated ? `${destination.includes('?') ? '&' : '?'}cuenta=reactivada` : '';
+      router.push(destination + notice);
     } catch (err) {
       console.error("Error de login:", err);
       if (err instanceof Error) {

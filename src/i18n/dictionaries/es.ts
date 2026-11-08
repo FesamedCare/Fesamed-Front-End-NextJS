@@ -571,6 +571,45 @@ export const es = {
     savePassword: "Guardar contraseña",
   },
 
+  consent: {
+    acceptPrefix: "Acepto los",
+    terms: "Términos y condiciones",
+    and: "y la",
+    privacy: "Política de privacidad",
+    dataAuthorization: "Autorizo a FesamedCare a tratar mis datos personales para prestarme el servicio.",
+    readMore: "Ver autorización",
+    mustAcceptData: "Debes autorizar el tratamiento de tus datos personales",
+    gateTitle: "Antes de continuar",
+    gateBody: "Para seguir usando FesamedCare necesitamos que aceptes nuestros documentos. Guardamos la fecha y la versión que aceptas.",
+    acceptAndContinue: "Aceptar y continuar",
+    saveError: "No pudimos guardar tu aceptación. Inténtalo de nuevo.",
+  },
+
+  account: {
+    noticeReactivated: "Tu cuenta estaba desactivada y se reactivó. ¡Qué bueno tenerte de vuelta!",
+    noticeDeactivated: "Tu cuenta quedó desactivada. Puedes reactivarla iniciando sesión en los próximos 30 días.",
+    noticeDeleted: "Tu cuenta y tus datos fueron eliminados.",
+    close: "Cerrar",
+    deactivateTitle: "Desactivar cuenta",
+    deactivateBody: "Tu cuenta deja de funcionar y, si eres especialista, tu perfil sale de la búsqueda. Se cancelan tus citas pendientes y avisamos a la otra persona. Si vuelves a iniciar sesión en los próximos 30 días, tu cuenta se reactiva; después se elimina.",
+    deactivateButton: "Desactivar mi cuenta",
+    deactivateConfirm: "Sí, desactivar",
+    cancel: "Cancelar",
+    deleteBody: "Es definitivo: se borran tu perfil, tus datos, tus reseñas y tus archivos. Se cancelan tus citas pendientes y avisamos a la otra persona. No se puede deshacer.",
+    deleteConfirmPrompt: "Para confirmar, escribe el correo de tu cuenta",
+    error: "No pudimos completar la acción. Inténtalo de nuevo.",
+  },
+
+  legal: {
+    termsTitle: "Términos y condiciones",
+    privacyTitle: "Política de privacidad",
+    inPreparation: "Este documento está en preparación con nuestra asesoría legal. Publicaremos aquí la versión definitiva.",
+    placeholderBody: "FesamedCare es una plataforma que conecta pacientes con especialistas de la salud. No presta servicios médicos ni reemplaza la atención de urgencias: en caso de emergencia, llama a la línea 123.",
+    authorizationTitle: "Autorización para el tratamiento de datos personales",
+    authorizationBody: "Al registrarte autorizas a FesamedCare a tratar tus datos personales para crear y administrar tu cuenta, gestionar tus citas y enviarte las comunicaciones del servicio, conforme a la Ley 1581 de 2012. El texto completo de la autorización se publicará con la política definitiva.",
+    contact: "¿Preguntas? Escríbenos a info@fesamedcare.com.",
+  },
+
   roles: {
     accountType: "Tipo de cuenta",
     doctor: "Especialista",

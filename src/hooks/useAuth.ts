@@ -24,6 +24,10 @@ export const PUBLIC_PATHS = [
   '/blog',
   '/contact',
   '/buscar-doctor',
+  // Los documentos legales se leen antes de registrarse (enlaces del registro
+  // y de la pantalla de Google): sin esto un visitante terminaba en el login.
+  '/terms',
+  '/privacy',
 ];
 
 export function useAuth() {
