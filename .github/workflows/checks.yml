@@ -18,10 +18,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Tipos
-        run: npx tsc --noEmit
       # La prueba de layout necesita el servidor corriendo y se salta sola.
       - name: Pruebas
         run: npm test
+      # El build va antes de tsc: genera next-env.d.ts (está en .gitignore), que
+      # trae las declaraciones de imágenes (*.svg, *.png). Sin él, tsc no
+      # encuentra los imports de imágenes en un checkout limpio.
       - name: Build de producción
         run: npm run build
+      - name: Tipos
+        run: npx tsc --noEmit
