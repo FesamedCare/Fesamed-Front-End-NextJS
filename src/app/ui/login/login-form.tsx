@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { login } from "@/lib/api";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useTranslation } from "@/i18n/LocaleProvider";
+import { SOCIAL_LOGIN_ENABLED } from "@/lib/features";
 
 function Form() {
   const { t } = useTranslation();
@@ -136,7 +137,8 @@ function Form() {
                     </p>
                   </div>
                 </form>
-                {/* espacio para poder iniciar sesión con google o facebook */}
+                {/* Ingreso con Google o Facebook: oculto hasta que la API lo soporte (lib/features). */}
+                {SOCIAL_LOGIN_ENABLED && (
                 <div className="flex flex-col gap-3">
                   <div>
                     <p className="w-full text-sm text-gray-500 text-center pt-5 ">
@@ -208,6 +210,7 @@ function Form() {
                     </button>
                   </div>
                 </div>
+                )}
               </div>
             </div>
           </div>

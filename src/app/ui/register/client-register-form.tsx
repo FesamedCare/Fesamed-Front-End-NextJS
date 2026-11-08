@@ -9,6 +9,7 @@ import "./style.css";
 import { getRoles } from "@/lib/api";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useTranslation } from "@/i18n/LocaleProvider";
+import { SOCIAL_LOGIN_ENABLED } from "@/lib/features";
 
 function Form() {
   const { t } = useTranslation();
@@ -494,6 +495,9 @@ function Form() {
                   </button>
                 </form>
                 <div className="flex flex-col gap-7">
+                  {/* Registro con Google o Facebook: oculto hasta que la API lo soporte (lib/features). */}
+                  {SOCIAL_LOGIN_ENABLED && (
+                  <>
                   <div>
                     <p className="w-full text-sm text-gray-500 text-center pt-2">
                       {t("register.orRegisterWith")}
@@ -553,6 +557,8 @@ function Form() {
                       </div>
                     </button>
                   </div>
+                  </>
+                  )}
                   <p className="text-sm font-light text-gray-500">
                     {t("misc.alreadyHaveAccount")}{" "}
                     <Link
