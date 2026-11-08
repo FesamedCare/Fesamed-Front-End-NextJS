@@ -89,6 +89,8 @@ export const es = {
     forgotPasswordLink: "¿Olvidaste tu contraseña?",
     orContinueWith: "También puedes ingresar con:",
     loginError: "Error al iniciar sesión",
+    googleError: "No pudimos iniciar sesión con Google. Inténtalo de nuevo.",
+    googleCancelled: "Cancelaste el inicio de sesión con Google.",
 
     forgotTitle: "¿Olvidaste tu contraseña?",
     forgotSubtitle:

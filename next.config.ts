@@ -27,6 +27,11 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'via.placeholder.com',
       },
+      // Foto de perfil de las cuentas creadas con Google.
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
       // Storage local compatible con S3 (SeaweedFS en el docker-compose del backend).
       {
         protocol: 'http',

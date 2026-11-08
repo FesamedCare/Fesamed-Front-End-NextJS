@@ -87,6 +87,8 @@ export const en: Dictionary = {
     forgotPasswordLink: "Forgot your password?",
     orContinueWith: "You can also log in with:",
     loginError: "Couldn't log you in",
+    googleError: "We couldn't sign you in with Google. Please try again.",
+    googleCancelled: "You cancelled signing in with Google.",
 
     forgotTitle: "Forgot your password?",
     forgotSubtitle: "Enter your email and we'll send you a link to set a new one.",

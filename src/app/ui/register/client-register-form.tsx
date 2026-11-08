@@ -9,7 +9,7 @@ import "./style.css";
 import { getRoles } from "@/lib/api";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useTranslation } from "@/i18n/LocaleProvider";
-import { SOCIAL_LOGIN_ENABLED } from "@/lib/features";
+import { FACEBOOK_LOGIN_ENABLED, GOOGLE_LOGIN_ENABLED, googleLoginUrl } from "@/lib/features";
 
 function Form() {
   const { t } = useTranslation();
@@ -495,8 +495,9 @@ function Form() {
                   </button>
                 </form>
                 <div className="flex flex-col gap-7">
-                  {/* Registro con Google o Facebook: oculto hasta que la API lo soporte (lib/features). */}
-                  {SOCIAL_LOGIN_ENABLED && (
+                  {/* Registro con cuentas de terceros (lib/features): Google activo, Facebook oculto.
+                      Con Google se crea una cuenta de paciente con el correo ya verificado. */}
+                  {(GOOGLE_LOGIN_ENABLED || FACEBOOK_LOGIN_ENABLED) && (
                   <>
                   <div>
                     <p className="w-full text-sm text-gray-500 text-center pt-2">
@@ -504,7 +505,12 @@ function Form() {
                     </p>
                   </div>
                   <div className="flex justify-center gap-4">
-                    <button className="gsi-material-button">
+                    {GOOGLE_LOGIN_ENABLED && (
+                    <button
+                      type="button"
+                      className="gsi-material-button"
+                      onClick={() => { window.location.href = googleLoginUrl("/dashboard"); }}
+                    >
                       <div className="flex items-center justify-center h-4 gap-1">
                         <div className="gsi-material-button-icon">
                           <svg
@@ -535,7 +541,9 @@ function Form() {
                         <span>Google</span>
                       </div>
                     </button>
-                    <button className="gsi-material-button">
+                    )}
+                    {FACEBOOK_LOGIN_ENABLED && (
+                    <button type="button" className="gsi-material-button">
                       <div className="flex items-center justify-center h-4 gap-2">
                         <div>
                           <svg
@@ -556,6 +564,7 @@ function Form() {
                         </div>
                       </div>
                     </button>
+                    )}
                   </div>
                   </>
                   )}
