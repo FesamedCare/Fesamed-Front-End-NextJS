@@ -238,6 +238,8 @@ export interface AppointmentDoctor {
   specialties: string[];
   languages: string[];
   professional_card_number?: string | null;
+  /** Para "Dr." o "Dra."; puede faltar si el doctor no lo indicó. */
+  gender?: "MASCULINO" | "FEMENINO" | "OTRO" | null;
 }
 
 export interface AppointmentOffice {

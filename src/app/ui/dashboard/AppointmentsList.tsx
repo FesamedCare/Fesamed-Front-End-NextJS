@@ -29,6 +29,7 @@ import {
   checkOutAppointment,
   markNoShow,
 } from "@/lib/appointments-api";
+import { doctorTitle } from "@/lib/doctorTitle";
 
 type Tab = "proximas" | "pasadas" | "canceladas";
 
@@ -524,7 +525,7 @@ export function AppointmentsList({ role }: Props) {
                     >
                       <h4 className="font-semibold text-base truncate">
                         {person
-                          ? `${role === "patient" ? "Dr. " : ""}${person.name} ${person.lastname}`
+                          ? `${role === "patient" ? doctorTitle(appt.doctor?.gender) : ""}${person.name} ${person.lastname}`
                           : "—"}
                       </h4>
                     </button>
