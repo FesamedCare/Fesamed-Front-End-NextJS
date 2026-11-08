@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 interface UserAvatarProps {
@@ -41,7 +42,12 @@ export function UserAvatar({
   const initials = getInitials(name, lastname);
   const resolvedAlt = alt ?? (`${name ?? ""} ${lastname ?? ""}`.trim() || initials);
 
-  if (src) {
+  // Si la imagen no carga (archivo borrado, URL vencida, bucket sin acceso)
+  // se muestran las iniciales en vez del ícono roto con el texto alternativo.
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+
+  if (src && !failed) {
     if (fill) {
       return (
         <Image
@@ -51,6 +57,7 @@ export function UserAvatar({
           className={`object-cover ${className}`}
           sizes={sizes}
           unoptimized={!src.startsWith("http")}
+          onError={() => setFailed(true)}
         />
       );
     }
@@ -62,6 +69,7 @@ export function UserAvatar({
         height={height}
         className={className}
         unoptimized={!src.startsWith("http")}
+        onError={() => setFailed(true)}
       />
     );
   }
