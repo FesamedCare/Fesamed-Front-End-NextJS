@@ -10,6 +10,7 @@ import { useState, Fragment, useEffect } from "react";
 import { motion, useTransform } from "framer-motion";
 import { useSearchDock } from "@/contexts/SearchDockContext";
 import { SearchDockPill } from "@/components/SearchDockPill";
+import { RoleBadge } from "@/components/RoleBadge";
 import "../../globals.css";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useTranslation, type TranslationKey } from "@/i18n/LocaleProvider";
@@ -180,6 +181,10 @@ export default function Navbar() {
       <p className={`text-base font-medium ${open ? 'text-blue-500' : 'text-gray-900 hover:text-blue-500'} transition duration-200 ease-in-out`}>
         {t("nav.welcome")} {user?.name || ""}! 👋
       </p>
+      {/* Tipo de cuenta siempre a la vista: doctor y paciente ven paneles distintos. */}
+      <span className="ml-2">
+        <RoleBadge role={userRole} size="sm" />
+      </span>
       {open ? (
         <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
       ) : (
@@ -365,6 +370,12 @@ export default function Navbar() {
                   >
                     <Popover.Panel className="absolute top-10 right-0 w-screen h-screen mt-10 origin-top-right bg-white shadow-lg ring-1 ring-black ring-opacity-5">
                       <div className="flex flex-col p-8 mt-10 gap-4">
+                        {!loading && isAuthenticated && (
+                          <div className="flex items-center gap-2 border-b pb-4">
+                            <span className="text-lg font-medium text-gray-900">{user?.name}</span>
+                            <RoleBadge role={userRole} size="sm" />
+                          </div>
+                        )}
                         {/* Mostrar enlaces: cuando está cargando o no autenticado → enlaces públicos (incl. Iniciar sesión, Registrarse) */}
                         {(loading || !isAuthenticated ? publicLinks : mobileLinks).map((item) => (
                           <Link

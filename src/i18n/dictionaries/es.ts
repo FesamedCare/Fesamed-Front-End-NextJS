@@ -571,6 +571,13 @@ export const es = {
     savePassword: "Guardar contraseña",
   },
 
+  roles: {
+    accountType: "Tipo de cuenta",
+    doctor: "Especialista",
+    patient: "Paciente",
+    admin: "Administrador",
+  },
+
   ui: {
     imagePreview: "Vista previa de imagen",
     indexOf: "{current} de {total}",

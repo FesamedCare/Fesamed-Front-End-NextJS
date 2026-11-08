@@ -561,6 +561,13 @@ export const en: Dictionary = {
     savePassword: "Save password",
   },
 
+  roles: {
+    accountType: "Account type",
+    doctor: "Specialist",
+    patient: "Patient",
+    admin: "Administrator",
+  },
+
   ui: {
     imagePreview: "Image preview",
     indexOf: "{current} of {total}",

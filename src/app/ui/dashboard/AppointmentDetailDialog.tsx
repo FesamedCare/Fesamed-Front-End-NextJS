@@ -27,6 +27,7 @@ import { getAppointmentContext } from "@/lib/appointments-api";
 import type { Appointment, AppointmentContext } from "@/app/types/types";
 import { STATUS_COLORS, STATUS_KEYS } from "./AppointmentsList";
 import { doctorTitle } from "@/lib/doctorTitle";
+import { formatPhone } from "@/lib/roles";
 
 const GENDER_KEYS: Record<string, TranslationKey> = {
   MASCULINO: "detail.genderMale",
@@ -204,7 +205,7 @@ export function AppointmentDetailDialog({
                 {/* En móvil, que es donde el doctor mira esto cinco minutos
                     antes, tocar el número debe llamar. */}
                 <a href={`tel:${patient.phone_number}`} className="hover:underline">
-                  {patient.phone_number}
+                  {formatPhone(patient.phone_number)}
                 </a>
               </Row>
             )}

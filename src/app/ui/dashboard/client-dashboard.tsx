@@ -19,6 +19,8 @@ import { useTranslation } from "@/i18n/LocaleProvider";
 // Tipo para la información del usuario
 interface UserData {
   name: string;
+  /** Viene de /user/me/ como { name }; se muestra con RoleBadge. */
+  role?: { name?: string } | string;
   lastname: string;
   phone_number: string;
   email: string;
@@ -101,6 +103,7 @@ export default function ClientDashboard() {
             lastname={userData?.lastname}
             email={userData?.email}
             phone={userData?.phone_number}
+            role={userData?.role}
             pictureUrl={userData?.profile_picture}
           />
           <DashboardMenu

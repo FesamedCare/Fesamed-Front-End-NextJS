@@ -4,6 +4,8 @@ import { useRef } from "react";
 import { Loader2, Mail, Phone, Camera } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useTranslation } from "@/i18n/LocaleProvider";
+import { RoleBadge } from "@/components/RoleBadge";
+import { formatPhone } from "@/lib/roles";
 
 interface Props {
   name?: string;
@@ -14,6 +16,8 @@ interface Props {
   /** Sólo si se pasa aparece el botón de cambiar foto. Sin handler no hay botón. */
   onPickPhoto?: (file: File) => void;
   uploading?: boolean;
+  /** Rol de la cuenta ("doctor", "patient", "admin" o { name }). */
+  role?: unknown;
 }
 
 export function ProfileCard({
@@ -24,6 +28,7 @@ export function ProfileCard({
   pictureUrl,
   onPickPhoto,
   uploading = false,
+  role,
 }: Props) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -87,6 +92,12 @@ export function ProfileCard({
         <h2 className="text-center text-lg font-semibold text-gray-900">
           {fullName}
         </h2>
+        {/* El tipo de cuenta, para no tener que deducirlo por lo que muestra el panel. */}
+        {role != null && (
+          <div className="mt-2 flex justify-center">
+            <RoleBadge role={role} />
+          </div>
+        )}
 
         {/*
           Antes teléfono y correo eran dos líneas grises idénticas y no se
@@ -101,7 +112,7 @@ export function ProfileCard({
                   <Phone className="h-3.5 w-3.5" />
                   <span className="sr-only">{t("ui.srPhone")}</span>
                 </dt>
-                <dd className="truncate text-gray-600">{phone}</dd>
+                <dd className="truncate text-gray-600">{formatPhone(phone)}</dd>
               </div>
             )}
             {email && (
