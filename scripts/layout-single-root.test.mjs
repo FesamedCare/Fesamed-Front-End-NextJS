@@ -13,6 +13,8 @@
  *
  * Los <script> que inyecta Next también quedan como hijos de body y también se
  * marcan como contenedores, pero eso es inofensivo: nadie puede hacerles clic.
+ * Lo mismo el <div hidden> vacío que Next 15.5 agrega para el streaming de
+ * metadatos: es invisible, así que tampoco recibe clics y se ignora.
  */
 
 import { test, describe, before } from 'node:test';
@@ -20,7 +22,7 @@ import assert from 'node:assert/strict';
 
 const FRONT = process.env.FRONT_URL ?? 'http://localhost:3000';
 
-/** Etiquetas de los hijos directos de <body>, ignorando scripts. */
+/** Etiquetas de los hijos directos de <body>, ignorando scripts y elementos ocultos. */
 function hijosDeBody(html) {
   const cuerpo = html.match(/<body[^>]*>([\s\S]*)<\/body>/);
   if (!cuerpo) return null;
@@ -30,13 +32,13 @@ function hijosDeBody(html) {
   let profundidad = 0;
 
   for (const m of cuerpo[1].matchAll(/<(\/?)([a-zA-Z][\w-]*)([^>]*?)(\/?)>/g)) {
-    const [, cierre, tag, , autocerrado] = m;
+    const [, cierre, tag, atributos, autocerrado] = m;
     if (VACIOS.has(tag.toLowerCase())) continue;
     if (cierre) {
       profundidad -= 1;
       continue;
     }
-    if (profundidad === 0) hijos.push(tag.toLowerCase());
+    if (profundidad === 0 && !/(^|\s)hidden(\s|=|$)/.test(atributos)) hijos.push(tag.toLowerCase());
     if (!autocerrado) profundidad += 1;
   }
 

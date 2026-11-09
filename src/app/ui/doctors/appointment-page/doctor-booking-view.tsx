@@ -9,11 +9,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Heart, MapPin, Clock, ArrowLeft, Loader2, CheckCircle2,
   Phone, Globe, CreditCard, Award, ChevronLeft, ChevronRight,
-  FileText, Building2,
-} from "lucide-react";
+  FileText, Building2, Siren } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { UserAvatar } from "@/components/UserAvatar";
+import { RatingSummary } from "@/components/RatingStars";
+import { DoctorReviews } from "./doctor-reviews";
 import { useTranslation, type TranslationKey } from "@/i18n/LocaleProvider";
 import Link from "next/link";
 import { getDoctorProfile, getDoctorAvailability, createAppointment } from "@/lib/doctors-api";
@@ -392,6 +393,16 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-2xl font-semibold">{profile.name} {profile.lastname}</h2>
+                  {(profile.rating_count ?? 0) > 0 && profile.rating_average != null && (
+                    <div className="mt-0.5">
+                      <RatingSummary
+                        average={profile.rating_average}
+                        count={profile.rating_count ?? 0}
+                        locale={locale}
+                        countLabel={t((profile.rating_count ?? 0) === 1 ? "reviews.countOne" : "reviews.count", { count: profile.rating_count ?? 0 })}
+                      />
+                    </div>
+                  )}
                   <p className="text-sm text-muted-foreground">
                     {profile.specialties?.length ? profile.specialties.join(" · ") : "—"}
                   </p>
@@ -478,6 +489,8 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
 
               {/* Certificates */}
               <CertificatesSection certificates={profile.certificates ?? []} t={t} />
+
+              <DoctorReviews doctorId={profile.doctor_id} />
             </CardContent>
           </Card>
 
@@ -501,7 +514,13 @@ export function DoctorBookingView({ doctorId, onBack }: DoctorBookingViewProps) 
         <div className="lg:sticky lg:top-24 h-fit">
           <Card>
             <CardContent className="p-6">
-              <h2 className="text-xl font-bold mb-5">{t("booking.bookTitle")}</h2>
+              <h2 className="text-xl font-bold mb-3">{t("booking.bookTitle")}</h2>
+              {/* La plataforma no atiende urgencias (cuestionario legal, 6.4): se dice
+                  justo donde el paciente reserva, con la ruta alternativa. */}
+              <p role="note" className="mb-5 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-800">
+                <Siren className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span>{t("booking.emergencyNotice")}</span>
+              </p>
 
               {error && (
                 <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">

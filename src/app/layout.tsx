@@ -4,6 +4,9 @@ import { Metadata } from "next";
 import PageTransitionWrapper from "./Transition";
 import { Inter } from 'next/font/google'
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SearchDockProvider } from "@/contexts/SearchDockContext";
+import { AccountNotice } from "@/components/AccountNotice";
+import { LegalConsentGate } from "@/components/LegalConsentGate";
 import { LocaleProvider } from "@/i18n/LocaleProvider";
 import { getLocale } from "@/i18n/server";
 
@@ -55,10 +58,14 @@ export default async function RootLayout({
           <div id="app-root">
             <LocaleProvider locale={locale}>
               <AuthProvider>
-                <Navbar />
-                <PageTransitionWrapper>
-                  <div className="pt-24">{children}</div>
-                </PageTransitionWrapper>
+                <SearchDockProvider>
+                  <Navbar />
+                  <AccountNotice />
+                  <LegalConsentGate />
+                  <PageTransitionWrapper>
+                    <div className="pt-24">{children}</div>
+                  </PageTransitionWrapper>
+                </SearchDockProvider>
               </AuthProvider>
             </LocaleProvider>
           </div>

@@ -10,10 +10,12 @@ import "./style.css";
 import { getRoles } from "@/lib/api";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useTranslation } from "@/i18n/LocaleProvider";
+import { ConsentCheckboxes } from "./consent-checkboxes";
 
 function Form() {
   const { t } = useTranslation();
   const [enabled, setEnabled] = useState(false);
+  const [dataConsent, setDataConsent] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [errorAuth, setErrorAuth] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -188,9 +190,6 @@ function Form() {
     setFormData({ ...formData, phone_number: formattedPhone });
   };
 
-  const onCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setEnabled(e.target.checked);
-
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -205,6 +204,10 @@ function Form() {
 
     if (!enabled) {
       setErrorMessage(t("register.mustAcceptTerms"));
+      return;
+    }
+    if (!dataConsent) {
+      setErrorMessage(t("consent.mustAcceptData"));
       return;
     }
 
@@ -243,6 +246,8 @@ function Form() {
           email,
           plain_password: password,
           plain_password_confirm: password,
+          accept_terms: enabled,
+          accept_data_processing: dataConsent,
           phone_number: formData.phone_number,
           specialty: formData.specialty_id,
           role_id: roleId,
@@ -669,32 +674,17 @@ function Form() {
                     </div>
                   </div>
 
-                  <div className="flex items-start">
-                    <div className="flex items-center h-5">
-                      <input
-                        type="checkbox"
-                        id="terms"
-                        checked={enabled}
-                        onChange={onCheckboxChange}
-                        className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300"
-                      />
-                    </div>
-                    <div className="ml-3 text-sm">
-                      <label
-                        htmlFor="terms"
-                        className="font-light text-gray-500"
-                      >
-                        {t("ui.accept")}
-                        <Link
-                          href="/terms"
-                          className="font-medium text-primary-600 text-blue-500 hover:underline"
-                        >
-                          {" "}
-                          {t("register.termsLabel")}
-                        </Link>
-                      </label>
-                    </div>
-                  </div>
+                  <ConsentCheckboxes
+
+                    acceptTerms={enabled}
+
+                    onAcceptTerms={setEnabled}
+
+                    acceptData={dataConsent}
+
+                    onAcceptData={setDataConsent}
+
+                  />
                   {errorMessage && (
                     <p style={{ color: "red" }}>{errorMessage}</p>
                   )}

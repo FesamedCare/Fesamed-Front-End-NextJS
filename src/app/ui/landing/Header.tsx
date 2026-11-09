@@ -4,6 +4,7 @@ import Spline from "@splinetool/react-spline/next";
 import "./header.css";
 import { getTranslations } from "@/i18n/server";
 import { Multiline, flatten } from "@/i18n/Multiline";
+import { specialtySearchUrl } from "@/lib/specialtySearchUrl";
 
 async function Header() {
   const { t } = await getTranslations();
@@ -37,9 +38,9 @@ async function Header() {
 
               <ul className="flex flex-col gap-4 py-10 sm:flex-row transition-all duration-300">
                 {[
-                  { href: "/services/service1", text: t("landing.serviceVeneers") },
-                  { href: "/services/service2", text: t("landing.serviceSurgery") },
-                  { href: "/services/service3", text: t("landing.serviceImplants") },
+                  { href: specialtySearchUrl("Odontólogo"), text: t("landing.serviceVeneers") },
+                  { href: specialtySearchUrl("Cirujano plástico"), text: t("landing.serviceSurgery") },
+                  { href: specialtySearchUrl("Odontólogo"), text: t("landing.serviceImplants") },
                 ].map((item, index) => (
                   <li
                     key={index}

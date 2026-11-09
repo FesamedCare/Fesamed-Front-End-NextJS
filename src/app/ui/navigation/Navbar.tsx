@@ -7,6 +7,13 @@ import Image from "next/image";
 import Menu from "./menu";
 import CloseMenu from "./closeMenu";
 import { useState, Fragment, useEffect } from "react";
+import { motion, useTransform } from "framer-motion";
+import { useSearchDock } from "@/contexts/SearchDockContext";
+import { SearchDockPill } from "@/components/SearchDockPill";
+import { RoleBadge } from "@/components/RoleBadge";
+import { UserAvatar } from "@/components/UserAvatar";
+import { usePathname } from "next/navigation";
+import { CalendarDays, Clock, Globe, Inbox, LayoutDashboard, LogOut, MessageSquareQuote, ShieldCheck, type LucideIcon } from "lucide-react";
 import "../../globals.css";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useTranslation, type TranslationKey } from "@/i18n/LocaleProvider";
@@ -47,6 +54,8 @@ const solutionsDesktop: NavItem[] = [
 
 const adminLinks: NavItem[] = [
   { key: "nav.adminPanel", descKey: "nav.adminPanelDesc", href: "/admin/review-queue" },
+  { key: "reviews.adminTitle", descKey: "nav.adminPanelDesc", href: "/admin/reviews" },
+  { key: "contactAdmin.title", descKey: "nav.adminPanelDesc", href: "/admin/messages" },
 ];
 
 // Publicar horarios es la tarea que un doctor repite cada semana. Vivía dentro
@@ -59,6 +68,25 @@ const doctorLink: NavItem = {
 };
 
 const LOCALE_LABELS: Record<Locale, string> = { es: "Español", en: "English" };
+
+/** Ícono de cada opción del menú de la cuenta. */
+const MENU_ICONS: Record<string, LucideIcon> = {
+  "/dashboard": LayoutDashboard,
+  "/dashboard/appointments": CalendarDays,
+  "/dashboard/availability": Clock,
+  "/admin/review-queue": ShieldCheck,
+  "/admin/reviews": MessageSquareQuote,
+  "/admin/messages": Inbox,
+};
+
+/**
+ * La sombra `shadow-navbar` de Tailwind con una intensidad de 0 a 1, para
+ * poder mezclarla con el scroll en la página de búsqueda.
+ */
+function navbarShadowCss(intensity: number): string {
+  const a = (0.03 * intensity).toFixed(4);
+  return `0px 10px 8px 0px rgba(3,3,4,${a}), 0 1px 2px -1px rgba(3,3,4,${a})`;
+}
 
 export default function Navbar() {
   const { user, isAuthenticated, loading, logout, refreshUser } = useAuthContext();
@@ -73,6 +101,19 @@ export default function Navbar() {
     : solutionsDesktop;
   const mobileLinks = isDoctor ? [...userLinks, doctorLink] : userLinks;
   const [navbarShadow, setNavbarShadow] = useState(false);
+  const searchDock = useSearchDock();
+  const pathname = usePathname();
+  // Barra de búsqueda acoplada: los enlaces ceden el centro a la píldora.
+  const showPill = searchDock.available && searchDock.docked;
+  // Los enlaces se van con el scroll y ya no se ven a mitad del recorrido de
+  // la barra: así el centro está libre cuando llega la píldora.
+  const linksOpacity = useTransform(searchDock.dockProgress, [0, 0.5], [1, 0]);
+  const linksY = useTransform(searchDock.dockProgress, [0, 0.5], [0, -14]);
+  // Con barra acoplable, la sombra vuelve cuando el título y los enlaces ya se
+  // fueron (entre el 50 % y el 80 % del recorrido): separa la navbar de las
+  // tarjetas sin aparecer de golpe ni competir con la transición.
+  const dockShadow = useTransform(searchDock.dockProgress, [0.5, 0.8], [0, 1], { clamp: true });
+  const dockShadowCss = useTransform(dockShadow, navbarShadowCss);
 
   // Detectar cambios de autenticación
   useEffect(() => {
@@ -156,6 +197,10 @@ export default function Navbar() {
       <p className={`text-base font-medium ${open ? 'text-blue-500' : 'text-gray-900 hover:text-blue-500'} transition duration-200 ease-in-out`}>
         {t("nav.welcome")} {user?.name || ""}! 👋
       </p>
+      {/* Tipo de cuenta siempre a la vista: doctor y paciente ven paneles distintos. */}
+      <span className="ml-2">
+        <RoleBadge role={userRole} size="sm" />
+      </span>
       {open ? (
         <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
       ) : (
@@ -164,13 +209,18 @@ export default function Navbar() {
     </div>
   );
   return (
-    <nav
+    <motion.nav
       id="navbar"
-      className={`transition duration-300 ease-in-out w-full z-40 top-0 py-.5 fixed ${navbarShadow ? 'shadow-navbar bg-white' : ''}`}
+      className={`transition-shadow duration-300 ease-in-out w-full z-40 top-0 py-.5 fixed ${
+        navbarShadow || showPill ? "bg-white" : ""
+      }`}
+      style={{
+        boxShadow: searchDock.available ? dockShadowCss : navbarShadowCss(navbarShadow ? 1 : 0),
+      }}
     >
       <div className="xl:px-16 px-6 2xl:px-32 sm:px-16">
         {/* Desktop Navigation */}
-        <div className="-ml-4 -mt-2 hidden lg:flex flex-wrap items-center justify-between sm:flex-nowrap md:px-14 px-2">
+        <div className="relative -ml-4 -mt-2 hidden lg:flex flex-wrap items-center justify-between sm:flex-nowrap md:px-14 px-2">
           <div className="flex">
             <Link href="/" className="mb-4 mt-6 h-14 w-48">
               <Image
@@ -182,7 +232,13 @@ export default function Navbar() {
                 style={{ width: "auto", height: "auto" }}
               />
             </Link>
-            <div className="ml-10 mt-11">
+            {/* Como las pestañas de la referencia: suben y se desvanecen al
+                aparecer la píldora, y vuelven al desacoplar. */}
+            <motion.div
+              className="ml-10 mt-11"
+              style={{ opacity: linksOpacity, y: linksY, pointerEvents: showPill ? "none" : "auto" }}
+              aria-hidden={showPill}
+            >
               <Link
                 href="/buscar-doctor"
                 className="4xl:text-lg text-base inline-flex font-medium leading-6 text-blue-700 border-b-2 border-white transition duration-300 ease-in-out hover:border-blue-700 mx-4"
@@ -201,7 +257,13 @@ export default function Navbar() {
               >
                 {t("nav.contact")}
               </Link>
-            </div>
+            </motion.div>
+          </div>
+
+          {/* Píldora compacta de búsqueda: la barra de la página se transforma
+              en ella al bajar y vuelve a crecer al subir (ver morphFrom). */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            {showPill && <SearchDockPill />}
           </div>
           {(loading || !isAuthenticated) ? (
                 <div className="ml-4 mt-4 flex-shrink-0">
@@ -238,51 +300,91 @@ export default function Navbar() {
                           leaveFrom="opacity-100 translate-y-0"
                           leaveTo="opacity-0 translate-y-1"
                         >
-                          <Popover.Panel className="absolute -right-28 z-10 mt-3 w-60 max-w-sm -translate-x-1/2 transform px-4 sm:px-0 lg:max-w-3xl">
-                            <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
-                              <div className="relative grid gap-8 bg-white p-7">
-                                {desktopLinks.map((item) => (
-                                  <Link
-                                    key={item.key}
-                                    href={item.href}
-                                    className="-m-3 flex items-center rounded-lg p-2 transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus-visible:ring focus-visible:ring-blue-500 focus-visible:ring-opacity-50"
-                                  >
-                                    <div className="ml-4">
-                                      <p className="text-sm font-medium text-gray-900 hover:text-blue-500 transition duration-200 ease-in-out">
-                                        {t(item.key)}
-                                      </p>
-                                      <p className="text-sm text-gray-500">
-                                        {t(item.descKey)}
-                                      </p>
-                                    </div>
-                                  </Link>
-                                ))}
+                          {/*
+                            Menú de la cuenta. Antes cada opción tenía una
+                            descripción debajo y el panel era casi todo texto.
+                            Ahora: quién eres arriba, opciones de una línea con
+                            ícono, idioma compacto y cerrar sesión aparte.
+                          */}
+                          <Popover.Panel className="absolute right-0 z-10 mt-2 w-72 origin-top-right">
+                            {({ close }) => (
+                            <div className="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
+                              <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+                                <UserAvatar
+                                  src={(user?.profile_picture as string | null | undefined) ?? undefined}
+                                  name={user?.name}
+                                  lastname={user?.lastname}
+                                  width={40}
+                                  height={40}
+                                  className="h-10 w-10 shrink-0 rounded-full object-cover"
+                                />
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-semibold text-gray-900">
+                                    {[user?.name, user?.lastname].filter(Boolean).join(" ")}
+                                  </p>
+                                  <p className="truncate text-xs text-gray-500" title={user?.email}>{user?.email}</p>
+                                  <div className="mt-1">
+                                    <RoleBadge role={userRole} size="sm" />
+                                  </div>
+                                </div>
                               </div>
-                              {/*
-                                bg-white explícito: este bloque es hermano del
-                                grid de enlaces (que sí lo trae) y de la franja
-                                de cerrar sesión. Sin fondo propio se veía la
-                                página a través del panel.
-                              */}
-                              <div className="border-t bg-white px-7 py-4">
-                                <LanguagePicker />
+
+                              <nav className="border-t border-gray-100 p-1.5">
+                                {desktopLinks.map((item) => {
+                                  const Icon = MENU_ICONS[item.href] ?? LayoutDashboard;
+                                  const active = pathname === item.href;
+                                  return (
+                                    <Link
+                                      key={item.key}
+                                      href={item.href}
+                                      onClick={() => close()}
+                                      aria-current={active ? "page" : undefined}
+                                      className={`flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                                        active ? "bg-blue-50 font-medium text-blue-700" : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                                      }`}
+                                    >
+                                      <Icon className={`h-4 w-4 shrink-0 ${active ? "text-blue-600" : "text-gray-400"}`} aria-hidden />
+                                      {t(item.key)}
+                                    </Link>
+                                  );
+                                })}
+                              </nav>
+
+                              <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-4 py-2.5">
+                                <span className="flex items-center gap-2 text-sm text-gray-600">
+                                  <Globe className="h-4 w-4 text-gray-400" aria-hidden />
+                                  {t("nav.languageLabel")}
+                                </span>
+                                <div role="group" aria-label={t("nav.languageLabel")} className="flex rounded-full bg-gray-100 p-0.5">
+                                  {LOCALES.map((code) => (
+                                    <button
+                                      key={code}
+                                      type="button"
+                                      onClick={() => setLocale(code)}
+                                      aria-pressed={locale === code}
+                                      title={LOCALE_LABELS[code]}
+                                      className={`rounded-full px-2.5 py-0.5 text-xs font-medium uppercase transition-colors ${
+                                        locale === code ? "bg-white text-blue-700 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                                      }`}
+                                    >
+                                      {code}
+                                    </button>
+                                  ))}
+                                </div>
                               </div>
-                              <div className="bg-gray-50 p-4">
+
+                              <div className="border-t border-gray-100 p-1.5">
                                 <button
-                                  onClick={handleLogout}
-                                  className="w-full rounded-md px-2 py-2 transition duration-150 ease-in-out hover:bg-gray-100 focus:outline-none focus-visible:ring focus-visible:ring-orange-500 focus-visible:ring-opacity-50"
+                                  type="button"
+                                  onClick={() => { close(); handleLogout(); }}
+                                  className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                                 >
-                                  <span className="flex items-center">
-                                    <span className="text-sm font-medium text-blue-500">
-                                      {t("nav.logout")}
-                                    </span>
-                                  </span>
-                                  <span className="block text-sm text-gray-500 text-left">
-                                    {t("nav.logoutDesc")}
-                                  </span>
+                                  <LogOut className="h-4 w-4 shrink-0" aria-hidden />
+                                  {t("nav.logout")}
                                 </button>
                               </div>
                             </div>
+                            )}
                           </Popover.Panel>
                         </Transition>
                       </>
@@ -324,6 +426,12 @@ export default function Navbar() {
                   >
                     <Popover.Panel className="absolute top-10 right-0 w-screen h-screen mt-10 origin-top-right bg-white shadow-lg ring-1 ring-black ring-opacity-5">
                       <div className="flex flex-col p-8 mt-10 gap-4">
+                        {!loading && isAuthenticated && (
+                          <div className="flex items-center gap-2 border-b pb-4">
+                            <span className="text-lg font-medium text-gray-900">{user?.name}</span>
+                            <RoleBadge role={userRole} size="sm" />
+                          </div>
+                        )}
                         {/* Mostrar enlaces: cuando está cargando o no autenticado → enlaces públicos (incl. Iniciar sesión, Registrarse) */}
                         {(loading || !isAuthenticated ? publicLinks : mobileLinks).map((item) => (
                           <Link
@@ -352,6 +460,6 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }

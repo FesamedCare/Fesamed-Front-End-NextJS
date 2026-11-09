@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { login } from "@/lib/api";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useTranslation } from "@/i18n/LocaleProvider";
+import { FACEBOOK_LOGIN_ENABLED, GOOGLE_LOGIN_ENABLED, googleLoginUrl } from "@/lib/features";
 
 function Form() {
   const { t } = useTranslation();
@@ -15,6 +16,13 @@ function Form() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get('redirect') || '/dashboard';
+  // La API vuelve aquí con ?error=google si el login con Google no se completó.
+  const googleError =
+    searchParams.get('error') === 'google'
+      ? searchParams.get('reason') === 'cancelado'
+        ? t("auth.googleCancelled")
+        : t("auth.googleError")
+      : '';
   const { refreshUser } = useAuthContext();
 
   const [formData, setFormData] = useState({
@@ -34,13 +42,15 @@ function Form() {
     setIsLoading(true);
     
     try {
-      await login(email, password);
+      const res = (await login(email, password)) as { reactivated?: boolean } | undefined;
       const me = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/me/`, { credentials: 'include' }).then(r => r.json());
       await refreshUser();
       localStorage.setItem('auth_event', Date.now().toString());
       const roleName = (me?.role?.name ?? me?.role ?? '').toLowerCase();
       const destination = roleName === 'admin' ? '/admin/review-queue' : redirectPath;
-      router.push(destination);
+      // Si la cuenta estaba desactivada, entrar la reactivó: se avisa al llegar.
+      const notice = res?.reactivated ? `${destination.includes('?') ? '&' : '?'}cuenta=reactivada` : '';
+      router.push(destination + notice);
     } catch (err) {
       console.error("Error de login:", err);
       if (err instanceof Error) {
@@ -108,7 +118,9 @@ function Form() {
                       )}
                     </button>
                   </div>
-                  {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
+                  {(errorMessage || googleError) && (
+                    <p className="text-red-500 text-sm">{errorMessage || googleError}</p>
+                  )}
                   <button
                     type="submit"
                     className="w-full text-white bg-blue-950 hover:bg-primary-700 focus:ring-2 focus:outline-none focus:ring-blue-300 focus:text-blue-500 focus:bg-white font-medium rounded-full text-lg px-5 py-1.5 text-center disabled:opacity-70"
@@ -136,7 +148,8 @@ function Form() {
                     </p>
                   </div>
                 </form>
-                {/* espacio para poder iniciar sesión con google o facebook */}
+                {/* Ingreso con cuentas de terceros (lib/features): Google activo, Facebook oculto. */}
+                {(GOOGLE_LOGIN_ENABLED || FACEBOOK_LOGIN_ENABLED) && (
                 <div className="flex flex-col gap-3">
                   <div>
                     <p className="w-full text-sm text-gray-500 text-center pt-5 ">
@@ -144,9 +157,11 @@ function Form() {
                     </p>
                   </div>
                   <div className="flex justify-center gap-4">
+                    {GOOGLE_LOGIN_ENABLED && (
                     <button 
+                      type="button"
                       className="gsi-material-button"
-                      onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
+                      onClick={() => { window.location.href = googleLoginUrl(redirectPath); }}
                       disabled={isLoading}
                     >
                       <div className=""></div>
@@ -180,10 +195,13 @@ function Form() {
                         <span className="">Google</span>
                       </div>
                     </button>
+                    )}
                     {/* boton para ingresar por medio de Facebook */}
+                    {FACEBOOK_LOGIN_ENABLED && (
                     <button 
+                      type="button"
                       className="gsi-material-button"
-                      onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/facebook`}
+                      onClick={() => { window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/facebook`; }}
                       disabled={isLoading}
                     >
                       <div className="flex items-center justify-center h-4 gap-2">
@@ -206,8 +224,10 @@ function Form() {
                         </div>
                       </div>
                     </button>
+                    )}
                   </div>
                 </div>
+                )}
               </div>
             </div>
           </div>

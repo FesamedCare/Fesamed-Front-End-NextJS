@@ -3,6 +3,7 @@ import "@/app/globals.css";
 import aboutUsSVG from '@/../public/media/abooutus.svg';
 import Image from "next/image";
 import { getTranslations } from "@/i18n/server";
+import { specialtySearchUrl } from "@/lib/specialtySearchUrl";
 
 async function WhoAreWe() {
   const { t } = await getTranslations();
@@ -34,7 +35,7 @@ async function WhoAreWe() {
           <ul className="flex flex-wrap gap-2 py-5 sm:flex-row items-center">
             <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
               <Link
-                href="/services/service1"
+                href={specialtySearchUrl("Médico general")}
                 className=" leading-8 text-gray-500 sm:text-center"
               >
                 {t("landing.specialtyGeneral")} {">"}
@@ -42,7 +43,7 @@ async function WhoAreWe() {
             </li>
             <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
               <Link
-                href="/services/service2"
+                href={specialtySearchUrl("Ginecólogo")}
                 className=" leading-8 text-gray-500 sm:text-center"
               >
                 {t("landing.specialtyPregnancy")} {">"}
@@ -50,7 +51,7 @@ async function WhoAreWe() {
             </li>
             <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
               <Link
-                href="/services/service3"
+                href={specialtySearchUrl("Oftalmólogo")}
                 className="  leading-8 text-gray-500 sm:text-center"
               >
                 {t("landing.specialtyOphthalmology")} {">"}
@@ -58,7 +59,7 @@ async function WhoAreWe() {
             </li>
             <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
               <Link
-                href="/services/service3"
+                href={specialtySearchUrl("Psiquiatra")}
                 className="  leading-8 text-gray-500 sm:text-center"
               >
                 {t("landing.specialtyPsychiatry")} {">"}
@@ -66,7 +67,7 @@ async function WhoAreWe() {
             </li>
             <li className="w-40 lg:w-auto xl:w-auto md:w-auto inline-flex relative items-center justify-center rounded-full border border-gray-500 bg-white-button px-3 text-base  transition duration-300 ease-in-out hover:bg-gray-200 focus:outline-none">
               <Link
-                href="/services/service3"
+                href={"/buscar-doctor"}
                 className="  leading-8 text-gray-500 sm:text-center"
               >
                 {t("landing.specialtyOther")} {">"}

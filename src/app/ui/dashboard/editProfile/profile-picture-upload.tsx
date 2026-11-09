@@ -14,6 +14,7 @@ interface UserMe {
   id: string;
   /** El paciente no tiene borrador de perfil: su foto sale de acá. */
   profile_picture?: string | null;
+  role?: { name?: string } | string;
 }
 
 interface ProfileDraft {
@@ -32,16 +33,20 @@ export function ProfilePictureUpload() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // El borrador de perfil es solo de doctores: para un paciente devuelve 403.
-    // Se pide aparte y tolerando el fallo, porque antes iba en un Promise.all y
-    // ese 403 tumbaba también la carga del usuario, dejando el botón de subir
-    // deshabilitado para siempre.
+    // El borrador de perfil es solo de doctores: a un paciente la API le
+    // responde 403. Se pide solo si el usuario es doctor (antes se pedía siempre
+    // y el 403 quedaba en la consola), y tolerando el fallo, porque antes iba en
+    // un Promise.all y un error tumbaba también la carga del usuario.
     async function cargar() {
       try {
         const user = await apiClient<UserMe>("/api/v1/user/me/");
         setUserId(user.id);
 
-        const draft = await apiClient<ProfileDraft>("/api/v1/me/profile-draft/").catch(() => null);
+        const role = typeof user.role === "string" ? user.role : user.role?.name;
+        const draft =
+          role === "doctor"
+            ? await apiClient<ProfileDraft>("/api/v1/me/profile-draft/").catch(() => null)
+            : null;
 
         // Sin cache-buster: ya viene prefirmada del backend.
         // El doctor ve la del borrador, que es la que está editando; el
