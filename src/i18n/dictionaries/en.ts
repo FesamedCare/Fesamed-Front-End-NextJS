@@ -200,6 +200,7 @@ export const en: Dictionary = {
     availableSlots: "Available times",
     noSlots: "No openings on this date. Try another one.",
     confirmBooking: "Confirm appointment",
+    emergencyNotice: "FesamedCare does not handle emergencies. In an emergency, call 123 or go to the nearest emergency room.",
     confirming: "Confirming...",
   },
 
@@ -603,6 +604,7 @@ export const en: Dictionary = {
   reviews: {
     title: "Reviews ({count})",
     count: "{count} reviews",
+    countOne: "1 review",
     starsLabel: "{n} out of 5 stars",
     showMore: "Show more reviews",
     pendingNote: "Your comment is under review. We'll publish it once approved.",

@@ -203,6 +203,7 @@ export const es = {
     availableSlots: "Horarios disponibles",
     noSlots: "No hay turnos para esta fecha. Elige otra.",
     confirmBooking: "Confirmar cita",
+    emergencyNotice: "FesamedCare no atiende urgencias. Si es una emergencia, llama a la línea 123 o ve al servicio de urgencias más cercano.",
     confirming: "Confirmando...",
   },
 
@@ -613,6 +614,7 @@ export const es = {
   reviews: {
     title: "Opiniones ({count})",
     count: "{count} opiniones",
+    countOne: "1 opinión",
     starsLabel: "{n} de 5 estrellas",
     showMore: "Ver más opiniones",
     pendingNote: "Tu comentario está en revisión. Lo publicaremos cuando lo aprobemos.",
