@@ -13,7 +13,7 @@ import { SearchDockPill } from "@/components/SearchDockPill";
 import { RoleBadge } from "@/components/RoleBadge";
 import { UserAvatar } from "@/components/UserAvatar";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Clock, Globe, LayoutDashboard, LogOut, MessageSquareQuote, ShieldCheck, type LucideIcon } from "lucide-react";
+import { CalendarDays, Clock, Globe, Inbox, LayoutDashboard, LogOut, MessageSquareQuote, ShieldCheck, type LucideIcon } from "lucide-react";
 import "../../globals.css";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useTranslation, type TranslationKey } from "@/i18n/LocaleProvider";
@@ -55,6 +55,7 @@ const solutionsDesktop: NavItem[] = [
 const adminLinks: NavItem[] = [
   { key: "nav.adminPanel", descKey: "nav.adminPanelDesc", href: "/admin/review-queue" },
   { key: "reviews.adminTitle", descKey: "nav.adminPanelDesc", href: "/admin/reviews" },
+  { key: "contactAdmin.title", descKey: "nav.adminPanelDesc", href: "/admin/messages" },
 ];
 
 // Publicar horarios es la tarea que un doctor repite cada semana. Vivía dentro
@@ -75,6 +76,7 @@ const MENU_ICONS: Record<string, LucideIcon> = {
   "/dashboard/availability": Clock,
   "/admin/review-queue": ShieldCheck,
   "/admin/reviews": MessageSquareQuote,
+  "/admin/messages": Inbox,
 };
 
 /**

@@ -639,6 +639,17 @@ export const es = {
     actionError: "No pudimos completar la acción.",
   },
 
+  contactAdmin: {
+    title: "Mensajes",
+    subtitle: "Lo que llega por el formulario de contacto. Responde por correo o teléfono y márcalo como atendido.",
+    tabPending: "Por atender",
+    tabHandled: "Atendidos",
+    empty: "No hay mensajes en esta lista.",
+    noSubject: "Sin asunto",
+    budget: "Presupuesto:",
+    markHandled: "Marcar como atendido",
+  },
+
   roles: {
     accountType: "Tipo de cuenta",
     doctor: "Especialista",

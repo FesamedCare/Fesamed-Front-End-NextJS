@@ -55,6 +55,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <Link href="/admin/reviews" className="text-sm text-gray-600 hover:text-blue-600">
           {t("reviews.adminTitle")}
         </Link>
+        <Link href="/admin/messages" className="text-sm text-gray-600 hover:text-blue-600">
+          {t("contactAdmin.title")}
+        </Link>
       </div>
       <div className="px-8 sm:px-20 xl:px-24 2xl:px-40 py-8">
         {children}

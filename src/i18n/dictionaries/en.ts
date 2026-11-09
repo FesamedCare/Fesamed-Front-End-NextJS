@@ -629,6 +629,17 @@ export const en: Dictionary = {
     actionError: "We couldn't complete the action.",
   },
 
+  contactAdmin: {
+    title: "Messages",
+    subtitle: "Messages from the contact form. Reply by email or phone and mark them as handled.",
+    tabPending: "To handle",
+    tabHandled: "Handled",
+    empty: "No messages in this list.",
+    noSubject: "No subject",
+    budget: "Budget:",
+    markHandled: "Mark as handled",
+  },
+
   roles: {
     accountType: "Account type",
     doctor: "Specialist",

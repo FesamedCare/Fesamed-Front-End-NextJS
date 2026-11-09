@@ -23,6 +23,8 @@ export default function Form() {
   const { t } = useTranslation();
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Aviso bajo el botón en lugar de alert(): se lee mejor y no bloquea la página.
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
@@ -49,14 +51,17 @@ export default function Form() {
     e.preventDefault();
 
     if (!enabled) {
-      alert(t("misc.acceptTermsAlert"));
+      setStatus({ ok: false, text: t("misc.acceptTermsAlert") });
       return;
     }
 
     setLoading(true);
+    setStatus(null);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/contact`, {
+      // Antes enviaba a /contact, una ruta que la API no tiene: los mensajes se
+      // perdían. Ahora la API los guarda y avisa al equipo por correo.
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/contact/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, phone, subject, message, budget }),
@@ -72,13 +77,13 @@ export default function Form() {
           message: '',
           budget: '',
         });
-        alert(t("misc.messageSent"));
+        setStatus({ ok: true, text: t("misc.messageSent") });
       } else {
         throw new Error('Error al enviar el mensaje.');
       }
     } catch (error) {
       setLoading(false);
-      alert(t("misc.messageError"));
+      setStatus({ ok: false, text: t("misc.messageError") });
     }
   };
 
@@ -220,6 +225,11 @@ export default function Form() {
             >
               {loading ? <CircleLoader loading={loading} size={15} color="#ffffff" /> : 'Enviar'}
             </button>
+            {status && (
+              <p role={status.ok ? "status" : "alert"} className={`text-sm ${status.ok ? "text-emerald-700" : "text-red-600"}`}>
+                {status.text}
+              </p>
+            )}
           </form>
         </div>
       </div>
